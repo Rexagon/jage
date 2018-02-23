@@ -1,0 +1,148 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Core.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceManager.cpp">
+      <Filter>Core\Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneManager.cpp">
+      <Filter>Core\Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="FileManager.cpp">
+      <Filter>Core\Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="CursorManager.cpp">
+      <Filter>Core\Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureFactory.cpp">
+      <Filter>Core\Resources\Texture</Filter>
+    </ClCompile>
+    <ClCompile Include="FontFactory.cpp">
+      <Filter>Core\Resources\Font</Filter>
+    </ClCompile>
+    <ClCompile Include="Input.cpp">
+      <Filter>Core\Stuff</Filter>
+    </ClCompile>
+    <ClCompile Include="Log.cpp">
+      <Filter>Core\Stuff</Filter>
+    </ClCompile>
+    <ClCompile Include="Math.cpp">
+      <Filter>Core\Stuff</Filter>
+    </ClCompile>
+    <ClCompile Include="Time.cpp">
+      <Filter>Core\Stuff</Filter>
+    </ClCompile>
+    <ClCompile Include="Game.cpp">
+      <Filter>Game\Scenes</Filter>
+    </ClCompile>
+    <ClCompile Include="SoundBufferFactory.cpp">
+      <Filter>Core\Resources\SoundBuffer</Filter>
+    </ClCompile>
+    <ClCompile Include="MusicFactory.cpp">
+      <Filter>Core\Resources\Music</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderFactory.cpp">
+      <Filter>Core\Resources\Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>Core\Resources\Shader</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Core">
+      <UniqueIdentifier>{60b8d9de-cbab-4306-a5ad-0713689356af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Managers">
+      <UniqueIdentifier>{a58b6d5d-1d7b-43a7-bc9c-ec62427d222c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Resources">
+      <UniqueIdentifier>{9b1f6ec1-ef0e-4d95-9946-7fe7236813da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Resources\Texture">
+      <UniqueIdentifier>{3b2eaad8-dd83-4676-b830-0fc0f6415e6c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Resources\Font">
+      <UniqueIdentifier>{9deb816e-91a5-44ab-950e-3b0b64ad4734}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Stuff">
+      <UniqueIdentifier>{5d729b7a-edc5-4610-a62b-4c0da9406b98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Resources\Music">
+      <UniqueIdentifier>{a4899431-e71e-4aff-85d6-7792fcea900d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game">
+      <UniqueIdentifier>{0cc26151-d86c-4244-82c3-5a54c723dbe9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Scenes">
+      <UniqueIdentifier>{c512f2a7-5ca4-4c71-a4b7-3a28da1ea80e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Resources\Shader">
+      <UniqueIdentifier>{de612c4a-439b-41ae-8363-d1cffb6b7fb6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Resources\SoundBuffer">
+      <UniqueIdentifier>{712e9c7c-4b8a-4d91-ad35-235113b60ae5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Core.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceManager.h">
+      <Filter>Core\Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneManager.h">
+      <Filter>Core\Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="FileManager.h">
+      <Filter>Core\Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="CursorManager.h">
+      <Filter>Core\Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureFactory.h">
+      <Filter>Core\Resources\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="FontFactory.h">
+      <Filter>Core\Resources\Font</Filter>
+    </ClInclude>
+    <ClInclude Include="Constants.h">
+      <Filter>Core\Stuff</Filter>
+    </ClInclude>
+    <ClInclude Include="Delegate.h">
+      <Filter>Core\Stuff</Filter>
+    </ClInclude>
+    <ClInclude Include="Input.h">
+      <Filter>Core\Stuff</Filter>
+    </ClInclude>
+    <ClInclude Include="Log.h">
+      <Filter>Core\Stuff</Filter>
+    </ClInclude>
+    <ClInclude Include="Math.h">
+      <Filter>Core\Stuff</Filter>
+    </ClInclude>
+    <ClInclude Include="Time.h">
+      <Filter>Core\Stuff</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
+      <Filter>Game\Scenes</Filter>
+    </ClInclude>
+    <ClInclude Include="AbstractFactory.h">
+      <Filter>Core\Stuff</Filter>
+    </ClInclude>
+    <ClInclude Include="MusicFactory.h">
+      <Filter>Core\Resources\Music</Filter>
+    </ClInclude>
+    <ClInclude Include="SoundBufferFactory.h">
+      <Filter>Core\Resources\SoundBuffer</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderFactory.h">
+      <Filter>Core\Resources\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>Core\Resources\Shader</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

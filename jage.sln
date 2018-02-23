@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2020
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "jage", "jage\jage.vcxproj", "{0A96D547-8CCF-4393-A269-6F6E9EDF9F7C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+		ReleaseWithoutConsole|x64 = ReleaseWithoutConsole|x64
+		ReleaseWithoutConsole|x86 = ReleaseWithoutConsole|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0A96D547-8CCF-4393-A269-6F6E9EDF9F7C}.Release|x64.ActiveCfg = Release|x64
+		{0A96D547-8CCF-4393-A269-6F6E9EDF9F7C}.Release|x64.Build.0 = Release|x64
+		{0A96D547-8CCF-4393-A269-6F6E9EDF9F7C}.Release|x86.ActiveCfg = Release|Win32
+		{0A96D547-8CCF-4393-A269-6F6E9EDF9F7C}.Release|x86.Build.0 = Release|Win32
+		{0A96D547-8CCF-4393-A269-6F6E9EDF9F7C}.ReleaseWithoutConsole|x64.ActiveCfg = ReleaseWithoutConsole|x64
+		{0A96D547-8CCF-4393-A269-6F6E9EDF9F7C}.ReleaseWithoutConsole|x64.Build.0 = ReleaseWithoutConsole|x64
+		{0A96D547-8CCF-4393-A269-6F6E9EDF9F7C}.ReleaseWithoutConsole|x86.ActiveCfg = ReleaseWithoutConsole|Win32
+		{0A96D547-8CCF-4393-A269-6F6E9EDF9F7C}.ReleaseWithoutConsole|x86.Build.0 = ReleaseWithoutConsole|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F9B36C46-581C-492A-B982-F262AF5CD5A4}
+	EndGlobalSection
+EndGlobal
