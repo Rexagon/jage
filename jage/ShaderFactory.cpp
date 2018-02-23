@@ -1,6 +1,7 @@
 #include "ShaderFactory.h"
 
 #include "FileManager.h"
+#include "Log.h"
 
 ShaderFactory::ShaderFactory(const ShaderSource & vertexShaderSource) :
 	AbstractFactory(tag<Shader>{}),

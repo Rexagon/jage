@@ -44,11 +44,11 @@ public:
 
 	unsigned int getUniformLocation(const std::string& name);
 
-	GLuint getHandle() const { return m_id; }
+	GLuint getHandle() const { return m_program; }
 
 private:
-	GLuint m_id;
+	GLuint m_program;
 
-	std::vector<GLint> m_programs;
+	std::vector<GLint> m_shaders;
 	std::map<std::string, GLint> m_uniformLocations;
 };

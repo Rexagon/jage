@@ -2,7 +2,9 @@
 
 #include "SceneManager.h"
 
-#include "ShaderFactory.h"
+#include "FrameBuffer.h"
+#include "Shader.h"
+#include "Mesh.h"
 
 class Game : public Scene
 {
@@ -18,7 +20,11 @@ public:
 	void onResize(const vec2& windowSize) override;
 
 private:
-	Shader * m_shader;
+	Shader* m_fxaaShader;
+	Shader* m_solidShader;
 
-	GLuint m_VBO;
+	std::unique_ptr<Mesh> m_mesh;
+	std::unique_ptr<Mesh> m_quad;
+
+	std::unique_ptr<FrameBuffer> m_framebuffer;
 };

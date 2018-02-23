@@ -192,11 +192,13 @@
     <ClCompile Include="CursorManager.cpp" />
     <ClCompile Include="FileManager.cpp" />
     <ClCompile Include="FontFactory.cpp" />
+    <ClCompile Include="FrameBuffer.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Math.cpp" />
+    <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MusicFactory.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="SceneManager.cpp" />
@@ -214,10 +216,13 @@
     <ClInclude Include="Delegate.h" />
     <ClInclude Include="FileManager.h" />
     <ClInclude Include="FontFactory.h" />
+    <ClInclude Include="FrameBuffer.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="Math.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="MeshFactory.h" />
     <ClInclude Include="MusicFactory.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="SceneManager.h" />

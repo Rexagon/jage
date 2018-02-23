@@ -3,14 +3,14 @@
 #include "Game.h"
 
 int main() {
-	Core::Parameters parameters;
-	parameters.width = 1024;
-	parameters.height = 768;
-	parameters.title = "jage test";
-	parameters.vsync = true;
-	Core::init(parameters);
-
 	try {
+		Core::Parameters parameters;
+		parameters.width = 1024;
+		parameters.height = 768;
+		parameters.title = "jage test";
+		parameters.vsync = true;
+		Core::init(parameters);
+
 		SceneManager::addScene<Game>();
 
 		Core::run();

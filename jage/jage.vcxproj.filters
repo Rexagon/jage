@@ -50,6 +50,12 @@
     <ClCompile Include="Shader.cpp">
       <Filter>Core\Resources\Shader</Filter>
     </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>Core\Resources\Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="FrameBuffer.cpp">
+      <Filter>Core\Stuff</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">
@@ -84,6 +90,9 @@
     </Filter>
     <Filter Include="Core\Resources\SoundBuffer">
       <UniqueIdentifier>{712e9c7c-4b8a-4d91-ad35-235113b60ae5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Resources\Mesh">
+      <UniqueIdentifier>{06d15ad9-3cdd-4ab4-b967-dd114a9d0499}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -143,6 +152,15 @@
     </ClInclude>
     <ClInclude Include="Shader.h">
       <Filter>Core\Resources\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>Core\Resources\Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshFactory.h">
+      <Filter>Core\Resources\Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameBuffer.h">
+      <Filter>Core\Stuff</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

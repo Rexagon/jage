@@ -3,38 +3,63 @@
 
 void Game::onInit()
 {
-	glGenBuffers(1, &m_VBO);
+	glCullFace(GL_BACK);
+	glEnable(GL_CULL_FACE);
+	//glEnable(GL_DEPTH_TEST);
 
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+	m_mesh = std::make_unique<Mesh>();
+	m_mesh->init({
+		vec3(-0.5f, -0.5f, 0.0f),
+		vec3(0.5f, -0.5f, 0.0f),
+		vec3(0.0f, 0.5f, 0.0f)
+	},
+	{
+		vec2(0.0f, 0.0f),
+		vec2(0.0f, 0.0f),
+		vec2(0.0f, 0.0f)
+	},
+	{
+		0, 1, 2
+	});
 
-	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
-		0.0f,  0.5f, 0.0f
-	};
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	m_quad = std::make_unique<Mesh>();
+	m_quad->init({
+		vec3(-1.0f, -1.0f, 0.0f),
+		vec3(1.0f, -1.0f, 0.0f),
+		vec3(1.0f, 1.0f, 0.0f),
+		vec3(-1.0f, 1.0f, 0.0f)
+	},
+	{
+		vec2(0.0f, 0.0f),
+		vec2(1.0f, 0.0f),
+		vec2(1.0f, 1.0f),
+		vec2(0.0f, 1.0f)
+	},
+	{
+		0, 1, 2,
+		0, 2, 3
+	});
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	ShaderFactory::FromFile vertexSource("shaders/quad.vert");
 
+	ShaderFactory::FromFile fxaaFragmentShader("shaders/fxaa.frag");
+	ShaderFactory::FromFile solidFragmentShader("shaders/solid.frag");
 
-	ShaderFactory::FromString source(R"(
-#version 330 core
-layout (location = 0) in vec3 aPos;
+	ResourceManager::bind<ShaderFactory>("fxaa_shader", vertexSource, fxaaFragmentShader);
+	m_fxaaShader = ResourceManager::get<Shader>("fxaa_shader");
+	m_fxaaShader->setAttribute(0, "position");
+	m_fxaaShader->setAttribute(1, "texCoord");
 
-void main()
-    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-}
-)");
-
-	ResourceManager::bind<ShaderFactory>("test_shader", source);
-	m_shader = ResourceManager::get<Shader>("test_shader");
+	ResourceManager::bind<ShaderFactory>("solid_shader", vertexSource, solidFragmentShader);
+	m_solidShader = ResourceManager::get<Shader>("solid_shader");
+	m_solidShader->setAttribute(0, "position");
+	m_solidShader->setAttribute(1, "texCoord");
 
 	onResize(toGLM((Core::getWindow().getSize())));
 }
 
 void Game::onClose()
 {
-	glDeleteBuffers(1, &m_VBO);
 }
 
 void Game::onUpdate(const float dt)
@@ -47,15 +72,38 @@ void Game::onUpdate(const float dt)
 
 void Game::onDraw(const float dt)
 {
-	Core::getWindow().clear(sf::Color(60, 60, 60));
+	m_framebuffer->bind();
+	glViewport(0.0f, 0.0f, Core::getWindow().getSize().x, Core::getWindow().getSize().y);
 
-	m_shader->bind();
+	glClearColor(0.2f, 0.2f, 0.2f, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-	m_shader->unbind();
+	m_solidShader->bind();
+	m_solidShader->setUniform("u_color", vec4(1.0f, 0.5f, 0.2f, 1.0f));
+	m_mesh->draw();
+	m_solidShader->unbind();
+
+	m_framebuffer->unbind();
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_framebuffer->getColorTexture().getNativeHandle());
+
+	m_fxaaShader->bind();
+	m_quad->draw();
+	m_fxaaShader->unbind();
 }
 
 void Game::onResize(const vec2& windowSize)
 {
-	// properly resizing
-	Core::getWindow().setView(sf::View(sf::FloatRect(0.0f, 0.0f, windowSize.x, windowSize.y)));
+	glViewport(0.0f, 0.0f, windowSize.x, windowSize.y);
+	m_framebuffer = std::make_unique<FrameBuffer>(
+		static_cast<unsigned int>(windowSize.x),
+		static_cast<unsigned int>(windowSize.y),
+		true);
+
+
+	m_fxaaShader->bind();
+	m_fxaaShader->setUniform("u_resolution", windowSize);
+	m_fxaaShader->setUniform("u_colorTexture", 0);
+	m_fxaaShader->unbind();
 }

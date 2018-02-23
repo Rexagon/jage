@@ -4,63 +4,62 @@
 
 Shader::Shader()
 {
-	m_id = glCreateProgram();
+	m_program = glCreateProgram();
 }
 
 Shader::~Shader()
 {
-	glDeleteProgram(m_id);
+	glDeleteProgram(m_program);
 
-	for (auto& program : m_programs) {
-		glDeleteShader(program);
+	for (auto& shader : m_shaders) {
+		glDeleteShader(shader);
 	}
 }
 
 bool Shader::attachPart(const std::string & source, GLenum type, std::string& infoLog)
 {
-	GLint program = glCreateShader(type);
+	GLint shader = glCreateShader(type);
 
-	const GLchar* data = source.data();
+	const GLchar* data = source.c_str();
 	const GLint size = source.size();
-	glShaderSource(program, 1, &data, &size);
 
-	glCompileShader(program);
+	glShaderSource(shader, 1, &data, nullptr);
+
+	glCompileShader(shader);
 
 	GLint compilationStatus;
-	glGetShaderiv(program, GL_COMPILE_STATUS, &compilationStatus);
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &compilationStatus);
 	if (compilationStatus == GL_FALSE)
 	{
 		GLint infoLogLength;
-		glGetShaderiv(program, GL_INFO_LOG_LENGTH, &infoLogLength);
+		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
 
 		infoLog.resize(infoLogLength);
-		glGetShaderInfoLog(program, infoLogLength, NULL, &infoLog[0]);
+		glGetShaderInfoLog(shader, infoLogLength, NULL, &infoLog[0]);
 
 		glDeleteShader(type);
 
 		return false;
 	}
-	else {
-		m_programs.push_back(program);
-	}
 
-	glAttachShader(m_id, program);
+	m_shaders.push_back(shader);
+	glAttachShader(m_program, shader);
 
 	return true;
 }
 
 bool Shader::link(std::string& infoLog)
 {
-	glLinkProgram(m_id);
+	glLinkProgram(m_program);
 
 	GLint linkStatus;
-	glGetProgramiv(m_id, GL_LINK_STATUS, &linkStatus);
+	glGetProgramiv(m_program, GL_LINK_STATUS, &linkStatus);
 	if (linkStatus == GL_FALSE) {
 		GLint infoLogLength;
-		glGetProgramiv(m_id, GL_INFO_LOG_LENGTH, &infoLogLength);
+		glGetProgramiv(m_program, GL_INFO_LOG_LENGTH, &infoLogLength);
 
 		infoLog.resize(infoLogLength);
-		glGetProgramInfoLog(m_id, infoLogLength, NULL, &infoLog[0]);
+		glGetProgramInfoLog(m_program, infoLogLength, NULL, &infoLog[0]);
 
 		return false;
 	}
@@ -70,7 +69,7 @@ bool Shader::link(std::string& infoLog)
 
 void Shader::bind()
 {
-	glUseProgram(m_id);
+	glUseProgram(m_program);
 }
 
 void Shader::unbind()
@@ -80,7 +79,7 @@ void Shader::unbind()
 
 void Shader::setAttribute(unsigned int index, const std::string & name)
 {
-	glBindAttribLocation(m_id, index, name.c_str());
+	glBindAttribLocation(m_program, index, name.c_str());
 }
 
 void Shader::setUniform(const std::string & name, int data)
@@ -177,7 +176,7 @@ unsigned int Shader::getUniformLocation(const std::string & name)
 {
 	auto it = m_uniformLocations.find(name);
 	if (it == m_uniformLocations.end()) {
-		GLuint location = glGetUniformLocation(m_id, name.c_str());
+		GLuint location = glGetUniformLocation(m_program, name.c_str());
 		m_uniformLocations[name] = location;
 		return location;
 	}

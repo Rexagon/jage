@@ -1,7 +1,5 @@
 #include "Core.h"
 
-
-
 bool Core::m_isInitialized = false;
 bool Core::m_isRunning = false;
 sf::RenderWindow Core::m_window;
@@ -14,7 +12,7 @@ void Core::init(const Parameters& parameters)
 	Log::init();
 
 	sf::ContextSettings settings;
-	settings.majorVersion = 3;
+	settings.majorVersion = 4;
     settings.minorVersion = 3;
 	settings.antialiasingLevel = 0;
 	settings.depthBits = 24;
@@ -37,10 +35,8 @@ void Core::init(const Parameters& parameters)
 	CursorManager::init(m_window.getSystemHandle());
 	FileManager::init<DefaultFileSystem>();
 
-	m_window.resetGLStates();
-
-	m_gui = std::make_unique<sfg::SFGUI>();
-	m_guiDesktop = std::make_unique<sfg::Desktop>();
+	//m_gui = std::make_unique<sfg::SFGUI>();
+	//m_guiDesktop = std::make_unique<sfg::Desktop>();
 
 	m_isInitialized = true;
 }
@@ -56,8 +52,8 @@ void Core::close()
 	ResourceManager::close();
 	FileManager::close();
 
-	m_guiDesktop.reset();
-	m_gui.reset();
+	//m_guiDesktop.reset();
+	//m_gui.reset();
 
 	m_window.close();
 
@@ -89,7 +85,7 @@ void Core::run()
 		if (m_isRunning == true &&
 			(currentScene = SceneManager::getCurrentScene()) != nullptr)
 		{
-			m_guiDesktop->Update(dt);
+			//m_guiDesktop->Update(dt);
 		}
 
 		if (m_isRunning == true &&
@@ -172,6 +168,6 @@ void Core::handleEvents()
 		}
 
 		Input::handleEvent(e);
-		m_guiDesktop->HandleEvent(e);
+		//m_guiDesktop->HandleEvent(e);
 	}
 }
