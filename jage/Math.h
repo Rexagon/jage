@@ -31,7 +31,7 @@ typedef glm::ivec4 ivec4;
 
 typedef glm::mat4 mat4;
 
-using quat = glm::quat;
+typedef glm::quat quat;
 
 // GLM conversions
 vec2 toGLM(const sf::Vector2f& v);

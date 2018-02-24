@@ -15,8 +15,8 @@
 #include "TextureFactory.h"
 #include "ShaderFactory.h"
 #include "MusicFactory.h"
+#include "ModelFactory.h"
 #include "FontFactory.h"
-#include "MeshFactory.h"
 
 #include "Delegate.h"
 #include "Input.h"

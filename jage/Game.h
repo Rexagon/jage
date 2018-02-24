@@ -2,9 +2,11 @@
 
 #include "SceneManager.h"
 
+#include "Transformation.h"
 #include "FrameBuffer.h"
 #include "Shader.h"
-#include "Mesh.h"
+#include "Model.h"
+#include "Camera.h"
 
 class Game : public Scene
 {
@@ -21,10 +23,12 @@ public:
 
 private:
 	Shader* m_fxaaShader;
-	Shader* m_solidShader;
+	Shader* m_meshShader;
 
-	std::unique_ptr<Mesh> m_mesh;
+	Model* m_ghost;
+
+	std::shared_ptr<PerspectiveCamera> m_camera;
+
 	std::unique_ptr<Mesh> m_quad;
-
 	std::unique_ptr<FrameBuffer> m_framebuffer;
 };

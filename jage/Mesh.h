@@ -22,8 +22,9 @@ public:
 	void init(const std::vector<vec3>& positions, const std::vector<vec2>& textureCoords,
 		const std::vector<vec3>& normals, const std::vector<unsigned int>& indices);
 
-	void draw();
+	void draw() const;
 
+	void setName(const std::string& name);
 	std::string getName() const;
 
 	GLuint getVAO() const;

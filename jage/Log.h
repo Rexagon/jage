@@ -4,10 +4,11 @@
 #include <fstream>
 #include <time.h>
 
-#include "Time.h"
-
 #include <SFML/System/Vector2.hpp>
 #include <SFML/System/Vector3.hpp>
+
+#include "Time.h"
+#include "Math.h"
 
 template<class T>
 std::ostream& operator<<(std::ostream& stream, const sf::Vector2<T>& v)
@@ -20,6 +21,41 @@ template<class T>
 std::ostream& operator<<(std::ostream& stream, const sf::Vector3<T>& v)
 {
 	stream << "[" << v.x << ", " << v.y << ", " << v.z << "]";
+	return stream;
+}
+
+template<glm::length_t L, class T>
+std::ostream& operator<<(std::ostream& stream, const glm::vec<L, T> &vec) {
+	stream << "[";
+
+	for (glm::length_t i = 0; i < L; ++i) {
+		if (i != 0) {
+			stream << ", ";
+		}
+
+		stream << vec[i];
+	}
+
+	stream << "]";
+
+	return stream;
+}
+
+template<glm::length_t M, glm::length_t N, class T>
+std::ostream& operator<<(std::ostream& stream, const glm::mat<M, N, T>& mat)
+{
+	stream << "[";
+
+	for (glm::length_t i = 0; i < M; ++i) {
+		if (i != 0) {
+			stream << ", ";
+		}
+
+		stream << mat[i];
+	}
+
+	stream << "]";
+
 	return stream;
 }
 

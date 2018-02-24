@@ -114,7 +114,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opengl32.lib;sfml-graphics-s.lib;sfml-window-s.lib;sfml-system-s.lib;sfml-audio-s.lib;ws2_32.lib;freetype.lib;winmm.lib;gdi32.lib;ogg.lib;jpeg.lib;sfgui-s.lib;openal32.lib;flac.lib;vorbisenc.lib;vorbisfile.lib;vorbis.lib;zlibstatic.lib;udt.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;sfml-graphics-s.lib;sfml-window-s.lib;sfml-system-s.lib;sfml-audio-s.lib;ws2_32.lib;freetype.lib;winmm.lib;gdi32.lib;ogg.lib;jpeg.lib;sfgui-s.lib;openal32.lib;flac.lib;vorbisenc.lib;vorbisfile.lib;vorbis.lib;zlibstatic.lib;udt.lib;glew32s.lib;assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseWithoutConsole|Win32'">
@@ -136,7 +136,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opengl32.lib;sfml-graphics-s.lib;sfml-window-s.lib;sfml-system-s.lib;sfml-audio-s.lib;ws2_32.lib;freetype.lib;winmm.lib;gdi32.lib;ogg.lib;jpeg.lib;sfgui-s.lib;openal32.lib;flac.lib;vorbisenc.lib;vorbisfile.lib;vorbis.lib;zlibstatic.lib;udt.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;sfml-graphics-s.lib;sfml-window-s.lib;sfml-system-s.lib;sfml-audio-s.lib;ws2_32.lib;freetype.lib;winmm.lib;gdi32.lib;ogg.lib;jpeg.lib;sfgui-s.lib;openal32.lib;flac.lib;vorbisenc.lib;vorbisfile.lib;vorbis.lib;zlibstatic.lib;udt.lib;glew32s.lib;assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
@@ -160,7 +160,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opengl32.lib;sfml-graphics-s.lib;sfml-window-s.lib;sfml-system-s.lib;sfml-audio-s.lib;ws2_32.lib;freetype.lib;winmm.lib;gdi32.lib;ogg.lib;jpeg.lib;sfgui-s.lib;openal32.lib;flac.lib;vorbisenc.lib;vorbisfile.lib;vorbis.lib;zlibstatic.lib;udt.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;sfml-graphics-s.lib;sfml-window-s.lib;sfml-system-s.lib;sfml-audio-s.lib;ws2_32.lib;freetype.lib;winmm.lib;gdi32.lib;ogg.lib;jpeg.lib;sfgui-s.lib;openal32.lib;flac.lib;vorbisenc.lib;vorbisfile.lib;vorbis.lib;zlibstatic.lib;udt.lib;glew32s.lib;assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseWithoutConsole|x64'">
@@ -182,23 +182,29 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opengl32.lib;sfml-graphics-s.lib;sfml-window-s.lib;sfml-system-s.lib;sfml-audio-s.lib;ws2_32.lib;freetype.lib;winmm.lib;gdi32.lib;ogg.lib;jpeg.lib;sfgui-s.lib;openal32.lib;flac.lib;vorbisenc.lib;vorbisfile.lib;vorbis.lib;zlibstatic.lib;udt.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;sfml-graphics-s.lib;sfml-window-s.lib;sfml-system-s.lib;sfml-audio-s.lib;ws2_32.lib;freetype.lib;winmm.lib;gdi32.lib;ogg.lib;jpeg.lib;sfgui-s.lib;openal32.lib;flac.lib;vorbisenc.lib;vorbisfile.lib;vorbis.lib;zlibstatic.lib;udt.lib;glew32s.lib;assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Core.cpp" />
     <ClCompile Include="CursorManager.cpp" />
     <ClCompile Include="FileManager.cpp" />
     <ClCompile Include="FontFactory.cpp" />
     <ClCompile Include="FrameBuffer.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Material.cpp" />
     <ClCompile Include="Math.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="MeshObject.cpp" />
+    <ClCompile Include="Model.cpp" />
+    <ClCompile Include="ModelFactory.cpp" />
     <ClCompile Include="MusicFactory.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="SceneManager.cpp" />
@@ -207,9 +213,11 @@
     <ClCompile Include="SoundBufferFactory.cpp" />
     <ClCompile Include="TextureFactory.cpp" />
     <ClCompile Include="Time.cpp" />
+    <ClCompile Include="Transformation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractFactory.h" />
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="Core.h" />
     <ClInclude Include="CursorManager.h" />
@@ -218,11 +226,15 @@
     <ClInclude Include="FontFactory.h" />
     <ClInclude Include="FrameBuffer.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="GameObject.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Log.h" />
+    <ClInclude Include="Material.h" />
     <ClInclude Include="Math.h" />
     <ClInclude Include="Mesh.h" />
-    <ClInclude Include="MeshFactory.h" />
+    <ClInclude Include="MeshObject.h" />
+    <ClInclude Include="Model.h" />
+    <ClInclude Include="ModelFactory.h" />
     <ClInclude Include="MusicFactory.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="SceneManager.h" />
@@ -231,6 +243,7 @@
     <ClInclude Include="SoundBufferFactory.h" />
     <ClInclude Include="TextureFactory.h" />
     <ClInclude Include="Time.h" />
+    <ClInclude Include="Transformation.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

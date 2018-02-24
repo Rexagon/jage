@@ -5,7 +5,6 @@
 Mesh::Mesh()
 {
 	glGenVertexArrays(1, &m_VAO);
-	Log::write(m_VAO, glGetError());
 }
 
 Mesh::Mesh(const std::string & name) :
@@ -24,7 +23,7 @@ void Mesh::init(const std::vector<vec3>& positions, const std::vector<unsigned i
 {
 	glBindVertexArray(m_VAO);
 
-	m_positionsNum = positions.size();
+	m_positionsNum = static_cast<unsigned int>(positions.size());
 	initAttribute(0, positions);
 	initIndices(indices);
 
@@ -36,7 +35,7 @@ void Mesh::init(const std::vector<vec3>& positions, const std::vector<vec2>& tex
 {
 	glBindVertexArray(m_VAO);
 
-	m_positionsNum = positions.size();
+	m_positionsNum = static_cast<unsigned int>(positions.size());
 	initAttribute(0, positions);
 	initAttribute(1, textureCoords);
 	initIndices(indices);
@@ -49,7 +48,7 @@ void Mesh::init(const std::vector<vec3>& positions, const std::vector<vec2>& tex
 {
 	glBindVertexArray(m_VAO);
 
-	m_positionsNum = positions.size();
+	m_positionsNum = static_cast<unsigned int>(positions.size());
 	initAttribute(0, positions);
 	initAttribute(1, textureCoords);
 	initAttribute(2, normals);
@@ -58,7 +57,7 @@ void Mesh::init(const std::vector<vec3>& positions, const std::vector<vec2>& tex
 	glBindVertexArray(0);
 }
 
-void Mesh::draw()
+void Mesh::draw() const
 {
 	glBindVertexArray(m_VAO);
 
@@ -75,6 +74,11 @@ void Mesh::draw()
 	}
 
 	glBindVertexArray(0);
+}
+
+void Mesh::setName(const std::string & name)
+{
+	m_name = name;
 }
 
 std::string Mesh::getName() const

@@ -51,10 +51,31 @@
       <Filter>Core\Resources\Shader</Filter>
     </ClCompile>
     <ClCompile Include="Mesh.cpp">
-      <Filter>Core\Resources\Mesh</Filter>
+      <Filter>Core\Resources\Model</Filter>
     </ClCompile>
     <ClCompile Include="FrameBuffer.cpp">
       <Filter>Core\Stuff</Filter>
+    </ClCompile>
+    <ClCompile Include="Transformation.cpp">
+      <Filter>Core\Stuff</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Game\GameObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="GameObject.cpp">
+      <Filter>Core\Stuff</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelFactory.cpp">
+      <Filter>Core\Resources\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>Core\Resources\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Model.cpp">
+      <Filter>Core\Resources\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshObject.cpp">
+      <Filter>Game\GameObjects</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -91,7 +112,10 @@
     <Filter Include="Core\Resources\SoundBuffer">
       <UniqueIdentifier>{712e9c7c-4b8a-4d91-ad35-235113b60ae5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Resources\Mesh">
+    <Filter Include="Game\GameObjects">
+      <UniqueIdentifier>{279ace33-439b-4590-958e-e3b563c18b9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Resources\Model">
       <UniqueIdentifier>{06d15ad9-3cdd-4ab4-b967-dd114a9d0499}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -154,13 +178,31 @@
       <Filter>Core\Resources\Shader</Filter>
     </ClInclude>
     <ClInclude Include="Mesh.h">
-      <Filter>Core\Resources\Mesh</Filter>
-    </ClInclude>
-    <ClInclude Include="MeshFactory.h">
-      <Filter>Core\Resources\Mesh</Filter>
+      <Filter>Core\Resources\Model</Filter>
     </ClInclude>
     <ClInclude Include="FrameBuffer.h">
       <Filter>Core\Stuff</Filter>
+    </ClInclude>
+    <ClInclude Include="Transformation.h">
+      <Filter>Core\Stuff</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Game\GameObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObject.h">
+      <Filter>Core\Stuff</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelFactory.h">
+      <Filter>Core\Resources\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>Core\Resources\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>Core\Resources\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshObject.h">
+      <Filter>Game\GameObjects</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

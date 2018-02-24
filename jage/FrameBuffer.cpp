@@ -42,11 +42,13 @@ void FrameBuffer::init(unsigned int width, unsigned int height, bool depthEnable
 	if (!m_colorTexture.create(width, height)) {
 		throw std::runtime_error("Unable to create framebuffer color texture");
 	}
+
+	m_colorTexture.setSmooth(false);
+
 	glGenFramebuffers(1, &m_id);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_id);
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_colorTexture.getNativeHandle(), 0);
-	Log::write(m_id, glGetError());
 
 	if (depthEnabled) {
 		glGenRenderbuffers(1, &m_depthBuffer);
