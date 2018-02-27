@@ -23,23 +23,21 @@ Camera::Camera(const std::string& name, const vec2& zRange) :
 mat4 Camera::getViewProjection() const
 {
 	bool positionChanged = false;
-	vec3 position = m_transformation.getPosition();
+	vec3 position = m_position;
 	if (position != m_oldPosition) {
 		positionChanged = true;
 		m_oldPosition = position;
 	}
 
 	bool rotationChanged = false;
-	quat rotation = m_transformation.getRotation();
+	quat rotation = m_rotation;
 	if (rotation != m_oldRotation) {
 		rotationChanged = true;
 		m_oldRotation = rotation;
 	}
 
 	if (positionChanged || rotationChanged) {
-		m_viewMatrix = glm::lookAt(m_transformation.getPosition(), 
-			m_transformation.getPosition() + m_transformation.getDirectionFront(), 
-			vec3(0.0f, 1.0f, 0.0));
+		m_viewMatrix = glm::inverse(getGlobalTransformation());
 	}
 
 	return getProjection() * m_viewMatrix;

@@ -192,6 +192,7 @@
     <ClCompile Include="Core.cpp" />
     <ClCompile Include="CursorManager.cpp" />
     <ClCompile Include="FileManager.cpp" />
+    <ClCompile Include="FirstPersonCamera.cpp" />
     <ClCompile Include="FontFactory.cpp" />
     <ClCompile Include="FrameBuffer.cpp" />
     <ClCompile Include="Game.cpp" />
@@ -213,7 +214,7 @@
     <ClCompile Include="SoundBufferFactory.cpp" />
     <ClCompile Include="TextureFactory.cpp" />
     <ClCompile Include="Time.cpp" />
-    <ClCompile Include="Transformation.cpp" />
+    <ClCompile Include="Transformable.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractFactory.h" />
@@ -223,6 +224,7 @@
     <ClInclude Include="CursorManager.h" />
     <ClInclude Include="Delegate.h" />
     <ClInclude Include="FileManager.h" />
+    <ClInclude Include="FirstPersonCamera.h" />
     <ClInclude Include="FontFactory.h" />
     <ClInclude Include="FrameBuffer.h" />
     <ClInclude Include="Game.h" />
@@ -243,7 +245,7 @@
     <ClInclude Include="SoundBufferFactory.h" />
     <ClInclude Include="TextureFactory.h" />
     <ClInclude Include="Time.h" />
-    <ClInclude Include="Transformation.h" />
+    <ClInclude Include="Transformable.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

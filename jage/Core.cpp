@@ -14,7 +14,7 @@ void Core::init(const Parameters& parameters)
 	sf::ContextSettings settings;
 	settings.majorVersion = 4;
     settings.minorVersion = 3;
-	settings.antialiasingLevel = 0;
+	settings.antialiasingLevel = 4;
 	settings.depthBits = 24;
 	settings.stencilBits = 8;
 

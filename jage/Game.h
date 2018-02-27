@@ -2,11 +2,10 @@
 
 #include "SceneManager.h"
 
-#include "Transformation.h"
 #include "FrameBuffer.h"
 #include "Shader.h"
 #include "Model.h"
-#include "Camera.h"
+#include "FirstPersonCamera.h"
 
 class Game : public Scene
 {
@@ -29,7 +28,7 @@ private:
 	Model* m_castle;
 	Model* m_baracks;
 
-	std::shared_ptr<PerspectiveCamera> m_camera;
+	std::shared_ptr<FirstPersonCamera> m_camera;
 
 	GLuint m_gridVAO;
 	GLuint m_gridVBO;

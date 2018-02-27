@@ -6,9 +6,9 @@
 #include <string>
 #include <map>
 
-#include "Transformation.h"
+#include "Transformable.h"
 
-class GameObject
+class GameObject : public Transformable
 {
 public:
 
@@ -32,6 +32,10 @@ public:
 	void setTag(const std::string& tag);
 	std::string getTag() const;
 
+	mat4 getGlobalTransformation() const;
+
+
+	// Tree structure functions
 	void setParent(GameObject* parent);
 	GameObject* getParent() const;
 	
@@ -45,8 +49,6 @@ public:
 
 	std::vector<std::shared_ptr<GameObject>>& getChildren();
 
-	Transformation& getTransformation();
-
 protected:
 	std::string m_name;
 	std::string m_tag;
@@ -56,6 +58,4 @@ protected:
 
 	GameObject* m_parent;
 	std::vector<std::shared_ptr<GameObject>> m_children;
-
-	Transformation m_transformation;
 };

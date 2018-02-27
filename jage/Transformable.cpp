@@ -1,4 +1,4 @@
-#include "Transformation.h"
+#include "Transformable.h"
 
 #ifndef GLM_ENABLE_EXPERIMENTAL
 #define GLM_ENABLE_EXPERIMENTAL
@@ -6,17 +6,16 @@
 
 #include <glm/gtx/matrix_decompose.hpp>
 
-Transformation::Transformation(Transformation* parent) :
-	m_parent(parent), m_parentGlobalTransform(1.0f),
-	m_position(0.0f, 0.0f, 0.0f), m_rotation(0.0f, 0.0f, 0.0f, 1.0f), m_scale(1.0f, 1.0f, 1.0f),
+#include "Log.h"
+
+Transformable::Transformable(Transformable* parent) :
+	m_transformation(1.0f),
+	m_position(0.0f, 0.0f, 0.0f), m_rotation(1.0f, 0.0f, 0.0f, 0.0f), m_scale(1.0f, 1.0f, 1.0f),
 	m_positionChanged(true), m_rotationChanged(true), m_scaleChanged(true)
 {
-	if (m_parent != nullptr) {
-		m_parentGlobalTransform = m_parent->getGlobalTransform();
-	}
 }
 
-void Transformation::setLocalTransform(const mat4 & transform)
+void Transformable::setTransformation(const mat4 & transform)
 {
 	glm::vec3 skew;
 	glm::vec4 perspective;
@@ -25,25 +24,16 @@ void Transformation::setLocalTransform(const mat4 & transform)
 	m_rotation = glm::conjugate(m_rotation);
 }
 
-mat4 Transformation::getLocalTransform() const
+mat4 Transformable::getTransformation() const
 {
 	if (wasUpdated()) {
-		m_transform = getPositionMatrix() * getRotationMatrix() * getScaleMatrix();
+		m_transformation = getPositionMatrix() * getRotationMatrix() * getScaleMatrix();
 	}
 
-	return m_transform;
+	return m_transformation;
 }
 
-mat4 Transformation::getGlobalTransform() const
-{
-	if (m_parent != nullptr && m_parent->wasUpdated()) {
-		m_parentGlobalTransform = m_parent->getGlobalTransform();
-	}
-
-	return m_parentGlobalTransform * getLocalTransform();
-}
-
-mat4 Transformation::getPositionMatrix() const
+mat4 Transformable::getPositionMatrix() const
 {
 	if (m_positionChanged) {
 		m_positionMatrix = glm::translate(mat4(1.0f), m_position);
@@ -53,7 +43,7 @@ mat4 Transformation::getPositionMatrix() const
 	return m_positionMatrix;
 }
 
-mat4 Transformation::getRotationMatrix() const
+mat4 Transformable::getRotationMatrix() const
 {
 	if (m_rotationChanged) {
 		m_rotationMatrix = glm::mat4_cast(m_rotation);
@@ -63,7 +53,7 @@ mat4 Transformation::getRotationMatrix() const
 	return m_rotationMatrix;
 }
 
-mat4 Transformation::getScaleMatrix() const
+mat4 Transformable::getScaleMatrix() const
 {
 	if (m_scaleChanged) {
 		m_scaleMatrix = glm::scale(mat4(1.0f), m_scale);
@@ -73,7 +63,7 @@ mat4 Transformation::getScaleMatrix() const
 	return m_scaleMatrix;
 }
 
-void Transformation::move(float x, float y, float z)
+void Transformable::move(float x, float y, float z)
 {
 	m_position.x += x;
 	m_position.y += y;
@@ -81,118 +71,123 @@ void Transformation::move(float x, float y, float z)
 	m_positionChanged = true;
 }
 
-void Transformation::move(const vec3 & vector)
+void Transformable::move(const vec3 & vector)
 {
 	m_position += vector;
 	m_positionChanged = true;
 }
 
-void Transformation::setPosition(float x, float y, float z)
+void Transformable::setPosition(float x, float y, float z)
 {
 	m_position = vec3(x, y, z);
 	m_positionChanged = true;
 }
 
-void Transformation::setPosition(const vec3 & position)
+void Transformable::setPosition(const vec3 & position)
 {
 	m_position = position;
 	m_positionChanged = true;
 }
 
-vec3 Transformation::getPosition() const
+vec3 Transformable::getPosition() const
 {
 	return m_position;
 }
 
-void Transformation::rotate(float x, float y, float z)
+void Transformable::rotate(float x, float y, float z)
 {
 	m_rotation = quat(vec3(x, y, z)) * m_rotation;
 	m_rotation = glm::normalize(m_rotation);
 	m_rotationChanged = true;
 }
 
-void Transformation::rotate(const vec3 & eulerAngles)
+void Transformable::rotate(const vec3 & eulerAngles)
 {
 	m_rotation = quat(eulerAngles) * m_rotation;
 	m_rotation = glm::normalize(m_rotation);
 	m_rotationChanged = true;
 }
 
-void Transformation::rotate(const quat & rotation)
+void Transformable::rotate(const quat & rotation)
 {
 	m_rotation = rotation * m_rotation;
 	m_rotation = glm::normalize(m_rotation);
 	m_rotationChanged = true;
 }
 
-void Transformation::setRotation(float x, float y, float z)
+void Transformable::setRotation(float x, float y, float z)
 {
 	m_rotation = quat(vec3(x, y, z));
 	m_rotation = glm::normalize(m_rotation);
 	m_rotationChanged = true;
 }
 
-void Transformation::setRotation(const vec3 & eulerAngles)
+void Transformable::setRotation(const vec3 & eulerAngles)
 {
 	m_rotation = quat(eulerAngles);
 	m_rotation = glm::normalize(m_rotation);
 	m_rotationChanged = true;
 }
 
-void Transformation::setRotation(const quat & rotation)
+void Transformable::setRotation(const quat & rotation)
 {
 	m_rotation = rotation;
 	m_rotation = glm::normalize(m_rotation);
 	m_rotationChanged = true;
 }
 
-quat Transformation::getRotation() const
+quat Transformable::getRotation() const
 {
 	return m_rotation;
 }
 
-void Transformation::scale(float s)
+vec3 Transformable::getEulerRotation() const
+{
+	return glm::eulerAngles(m_rotation);
+}
+
+void Transformable::scale(float s)
 {
 	m_scale *= s;
 	m_scaleChanged = true;
 }
 
-void Transformation::scale(float x, float y, float z)
+void Transformable::scale(float x, float y, float z)
 {
 	m_scale *= vec3(x, y, z);
 	m_scaleChanged = true;
 }
 
-void Transformation::scale(const vec3 & s)
+void Transformable::scale(const vec3 & s)
 {
 	m_scale *= s;
 	m_scaleChanged = true;
 }
 
-void Transformation::setScale(float s)
+void Transformable::setScale(float s)
 {
 	m_scale = vec3(s, s, s);
 	m_scaleChanged = true;
 }
 
-void Transformation::setScale(float x, float y, float z)
+void Transformable::setScale(float x, float y, float z)
 {
 	m_scale = vec3(x, y, z);
 	m_scaleChanged = true;
 }
 
-void Transformation::setScale(const vec3 & s)
+void Transformable::setScale(const vec3 & s)
 {
 	m_scale = s;
 	m_scaleChanged = true;
 }
 
-vec3 Transformation::getScale() const
+vec3 Transformable::getScale() const
 {
 	return m_scale;
 }
 
-vec3 Transformation::getDirectionFront() const
+vec3 Transformable::getDirectionFront() const
 {
 	vec4 temp(0.0f, 0.0f, -1.0f, 1.0f);
 	temp = getRotationMatrix() * temp;
@@ -201,35 +196,19 @@ vec3 Transformation::getDirectionFront() const
 	return glm::normalize(result);
 }
 
-vec3 Transformation::getDirectionRight() const
+vec3 Transformable::getDirectionRight() const
 {
 	return glm::normalize(glm::cross(getDirectionFront(), vec3(0.0f, 1.0f, 0.0f)));
 }
 
-vec3 Transformation::getDirectionUp() const
+vec3 Transformable::getDirectionUp() const
 {
 	vec3 directionFront = getDirectionFront();
 
 	return glm::normalize(glm::cross(glm::cross(directionFront, vec3(0.0f, 1.0f, 0.0f)), directionFront));
 }
 
-void Transformation::setParent(Transformation * parent)
-{
-	m_parent = parent;
-	if (m_parent == nullptr) {
-		m_parentGlobalTransform = mat4();
-	}
-	else {
-		m_parentGlobalTransform = parent->getGlobalTransform();
-	}
-}
-
-Transformation * Transformation::getParent() const
-{
-	return m_parent;
-}
-
-bool Transformation::wasUpdated() const
+bool Transformable::wasUpdated() const
 {
 	return m_positionChanged || m_rotationChanged || m_scaleChanged;
 }

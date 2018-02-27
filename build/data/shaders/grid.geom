@@ -1,7 +1,7 @@
 #version 330
 
 layout (points) in;
-layout (line_strip, max_vertices = 128) out;
+layout (line_strip, max_vertices = 256) out;
 
 uniform mat4 u_cameraViewProjection;
 
@@ -12,7 +12,7 @@ void main()
 {
     float offset = 2.0f;
 
-    int size = 10;
+    int size = 20;
     
     v_color = vec4(1.0f);
     for (int i = -size; i <= size; ++i) {

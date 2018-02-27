@@ -95,16 +95,19 @@ std::string GameObject::getTag() const
 	return m_tag;
 }
 
+mat4 GameObject::getGlobalTransformation() const
+{
+	if (m_parent == nullptr) {
+		return getTransformation();
+	}
+	else {
+		return m_parent->getGlobalTransformation() * getTransformation();
+	}
+}
+
 void GameObject::setParent(GameObject * parent)
 {
 	m_parent = parent;
-
-	if (m_parent == nullptr) {
-		m_transformation.setParent(nullptr);
-	}
-	else {
-		m_transformation.setParent(&parent->getTransformation());
-	}
 }
 
 GameObject * GameObject::getParent() const
@@ -210,9 +213,4 @@ std::shared_ptr<GameObject> GameObject::detachChildByName(const std::string & na
 std::vector<std::shared_ptr<GameObject>>& GameObject::getChildren()
 {
 	return m_children;
-}
-
-Transformation & GameObject::getTransformation()
-{
-	return m_transformation;
 }

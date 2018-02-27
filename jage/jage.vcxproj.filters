@@ -56,9 +56,6 @@
     <ClCompile Include="FrameBuffer.cpp">
       <Filter>Core\Stuff</Filter>
     </ClCompile>
-    <ClCompile Include="Transformation.cpp">
-      <Filter>Core\Stuff</Filter>
-    </ClCompile>
     <ClCompile Include="Camera.cpp">
       <Filter>Game\GameObjects</Filter>
     </ClCompile>
@@ -76,6 +73,12 @@
     </ClCompile>
     <ClCompile Include="MeshObject.cpp">
       <Filter>Game\GameObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="FirstPersonCamera.cpp">
+      <Filter>Game\GameObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="Transformable.cpp">
+      <Filter>Core\Stuff</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -183,9 +186,6 @@
     <ClInclude Include="FrameBuffer.h">
       <Filter>Core\Stuff</Filter>
     </ClInclude>
-    <ClInclude Include="Transformation.h">
-      <Filter>Core\Stuff</Filter>
-    </ClInclude>
     <ClInclude Include="Camera.h">
       <Filter>Game\GameObjects</Filter>
     </ClInclude>
@@ -203,6 +203,12 @@
     </ClInclude>
     <ClInclude Include="MeshObject.h">
       <Filter>Game\GameObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="FirstPersonCamera.h">
+      <Filter>Game\GameObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="Transformable.h">
+      <Filter>Core\Stuff</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

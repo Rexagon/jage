@@ -98,7 +98,7 @@ void * ModelFactory::load()
 
 			currentObject->setName(nodeData->mName.C_Str());
 
-			currentObject->getTransformation().setLocalTransform(toGLM(nodeData->mTransformation));
+			currentObject->setTransformation(toGLM(nodeData->mTransformation));
 
 			for (size_t i = 0; i < nodeData->mNumChildren; ++i) {
 				auto child = std::make_shared<GameObject>(nodeData->mChildren[i]->mName.C_Str());

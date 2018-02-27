@@ -33,7 +33,7 @@ void Game::onInit()
 	ResourceManager::bind<ModelFactory>("baracks", "baracks.fbx");
 	m_baracks = ResourceManager::get<Model>("baracks");
 
-	m_baracks->getRootObject()->getTransformation().setPosition(-10.0f, 0.0f, 10.0f);
+	m_baracks->getRootObject()->setPosition(-15.0f, 0.0f, 15.0f);
 
 	m_quad = std::make_unique<Mesh>();
 	m_quad->init({
@@ -66,14 +66,15 @@ void Game::onInit()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	m_camera = std::make_unique<PerspectiveCamera>("main_camera", glm::radians(90.0f), 1.0f);
-	m_camera->getTransformation().setPosition(0.0f, 1.0f, 2.0f);
+	m_camera = std::make_unique<FirstPersonCamera>("main_camera");
+	m_camera->setPosition(0.0f, 1.0f, 10.0f);
 
 	glCullFace(GL_BACK);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 
-	m_rotationX = m_rotationY = 0.0f;
+	m_rotationX = 0.0f;
+	m_rotationY = 0.0f;
 
 	onResize(toGLM((Core::getWindow().getSize())));
 }
@@ -91,46 +92,12 @@ void Game::onUpdate(const float dt)
 		return;
 	}
 
-	vec3 direction(0.0f, 0.0f, 0.0f);
-	if (Input::getKey(Key::W)) {
-		direction += m_camera->getTransformation().getDirectionFront();
-	}
-	else if(Input::getKey(Key::S)) {
-		direction -= m_camera->getTransformation().getDirectionFront();
-	}
-
-	if (Input::getKey(Key::A)) {
-		direction -= m_camera->getTransformation().getDirectionRight();
-	}
-	else if (Input::getKey(Key::D)) {
-		direction += m_camera->getTransformation().getDirectionRight();
-	}
-
-	if (Input::getKey(Key::Space)) {
-		direction += vec3(0.0f, 1.0f, 0.0f);
-	}
-	else if (Input::getKey(Key::LControl)) {
-		direction -= vec3(0.0f, 1.0f, 0.0f);
-	}
-
-	if (direction != vec3(0.0f, 0.0f, 0.0f)) {
-		m_camera->getTransformation().move(glm::normalize(direction) * dt * 10.0f);
-	}
-
-	if (Input::getMouse(MouseButton::Right)) {
-		m_rotationY -= Input::getMouseDeltaPosition().x * dt;
-		m_rotationX -= Input::getMouseDeltaPosition().y * dt;
-
-		m_camera->getTransformation().setRotation(0.0f, m_rotationY, 0.0f);
-
-		m_camera->getTransformation().rotate(quat(m_rotationX,
-			m_camera->getTransformation().getDirectionRight()));
-	}
+	m_camera->onUpdate(dt);
 }
 
 void Game::onDraw(const float dt)
 {
-	m_framebuffer->bind();
+	//m_framebuffer->bind();
 	
 	glViewport(0, 0, 
 		static_cast<GLsizei>(Core::getWindow().getSize().x), 
@@ -150,7 +117,7 @@ void Game::onDraw(const float dt)
 		GameObject* gameObject = gameObjects.top();
 		gameObjects.pop();
 
-		m_meshShader->setUniform("u_transformation", gameObject->getTransformation().getGlobalTransform());
+		m_meshShader->setUniform("u_transformation", gameObject->getGlobalTransformation());
 		gameObject->onDraw();
 
 		for (auto it = gameObject->getChildren().rbegin(); it != gameObject->getChildren().rend(); ++it) {
@@ -162,7 +129,7 @@ void Game::onDraw(const float dt)
 
 	m_gridShader->bind();
 	m_gridShader->setUniform("u_cameraViewProjection", m_camera->getViewProjection());
-	m_gridShader->setUniform("u_cameraPosition", m_camera->getTransformation().getPosition());
+	m_gridShader->setUniform("u_cameraPosition", m_camera->getPosition());
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glBindVertexArray(m_gridVAO);
@@ -173,7 +140,7 @@ void Game::onDraw(const float dt)
 	glDisable(GL_BLEND);
 	m_gridShader->unbind();
 
-	m_framebuffer->unbind();
+	/*m_framebuffer->unbind();
 
 
 	glActiveTexture(GL_TEXTURE0);
@@ -183,7 +150,7 @@ void Game::onDraw(const float dt)
 	m_fxaaShader->bind();
 	m_quad->draw();
 	m_fxaaShader->unbind();
-	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);*/
 }
 
 void Game::onResize(const vec2& windowSize)
