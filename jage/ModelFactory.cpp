@@ -98,15 +98,7 @@ void * ModelFactory::load()
 
 			currentObject->setName(nodeData->mName.C_Str());
 
-			aiVector3D	position;
-			aiQuaternion rotation;
-			aiVector3D	scaling;
-
-			nodeData->mTransformation.Decompose(scaling, rotation, position);
-
-			currentObject->getTransformation().setPosition(position.x, position.y, position.y);
-			currentObject->getTransformation().setRotation(quat(rotation.w, rotation.x, rotation.y, rotation.z));
-			currentObject->getTransformation().setScale(scaling.x, scaling.y, scaling.z);
+			currentObject->getTransformation().setLocalTransform(toGLM(nodeData->mTransformation));
 
 			for (size_t i = 0; i < nodeData->mNumChildren; ++i) {
 				auto child = std::make_shared<GameObject>(nodeData->mChildren[i]->mName.C_Str());
@@ -118,8 +110,6 @@ void * ModelFactory::load()
 			}
 
 			for (size_t i = 0; i < nodeData->mNumMeshes; ++i) {
-				Log::write("[", scaling.x, scaling.y, scaling.z, "]");
-
 				const Mesh& mesh = model->m_meshes[nodeData->mMeshes[i]];
 				std::shared_ptr<MeshObject> meshObject = std::make_shared<MeshObject>(mesh.getName(), &mesh);
 				currentObject->addChild(std::move(meshObject));

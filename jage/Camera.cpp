@@ -4,7 +4,7 @@
 
 Camera::Camera(const std::string& name) :
 	GameObject(name),
-	m_depthRange(0.1f, 100.0f), m_projectionChanged(true)
+	m_depthRange(0.1f, 100.0f), m_viewMatrix(1.0f), m_projectionChanged(true)
 {
 }
 
@@ -22,7 +22,27 @@ Camera::Camera(const std::string& name, const vec2& zRange) :
 
 mat4 Camera::getViewProjection() const
 {
-	return getProjection() * m_transformation.getRotationMatrix() * m_transformation.getPositionMatrix();
+	bool positionChanged = false;
+	vec3 position = m_transformation.getPosition();
+	if (position != m_oldPosition) {
+		positionChanged = true;
+		m_oldPosition = position;
+	}
+
+	bool rotationChanged = false;
+	quat rotation = m_transformation.getRotation();
+	if (rotation != m_oldRotation) {
+		rotationChanged = true;
+		m_oldRotation = rotation;
+	}
+
+	if (positionChanged || rotationChanged) {
+		m_viewMatrix = glm::lookAt(m_transformation.getPosition(), 
+			m_transformation.getPosition() + m_transformation.getDirectionFront(), 
+			vec3(0.0f, 1.0f, 0.0));
+	}
+
+	return getProjection() * m_viewMatrix;
 }
 
 mat4 Camera::getProjection() const

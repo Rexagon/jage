@@ -1109,4 +1109,6 @@ void main()
 		ConsoleRcpFrameOpt, ConsoleRcpFrameOpt2, Console360RcpFrameOpt2, 
 		QualitySubpix, QualityEdgeThreshold, QualityEdgeThresholdMin, 
 		ConsoleEdgeSharpness, ConsoleEdgeThreshold, ConsoleEdgeThresholdMin, Console360ConstDir);
+
+    gl_FragColor = texture(u_colorTexture, v_texCoord);
 }

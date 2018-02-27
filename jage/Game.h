@@ -24,10 +24,18 @@ public:
 private:
 	Shader* m_fxaaShader;
 	Shader* m_meshShader;
+	Shader* m_gridShader;
 
-	Model* m_ghost;
+	Model* m_castle;
+	Model* m_baracks;
 
 	std::shared_ptr<PerspectiveCamera> m_camera;
+
+	GLuint m_gridVAO;
+	GLuint m_gridVBO;
+
+	float m_rotationX;
+	float m_rotationY;
 
 	std::unique_ptr<Mesh> m_quad;
 	std::unique_ptr<FrameBuffer> m_framebuffer;

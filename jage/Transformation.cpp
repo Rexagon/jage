@@ -203,7 +203,7 @@ vec3 Transformation::getDirectionFront() const
 
 vec3 Transformation::getDirectionRight() const
 {
-	return glm::normalize(glm::cross(vec3(0.0f, 1.0f, 0.0f), getDirectionFront()));
+	return glm::normalize(glm::cross(getDirectionFront(), vec3(0.0f, 1.0f, 0.0f)));
 }
 
 vec3 Transformation::getDirectionUp() const

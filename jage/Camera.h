@@ -28,11 +28,7 @@ protected:
 	vec2 m_depthRange;
 
 	mutable mat4 m_viewMatrix;
-
-	mutable mat4 m_positionMatrix;
 	mutable vec3 m_oldPosition;
-
-	mutable mat4 m_rotationMatrix;
 	mutable quat m_oldRotation;
 
 	mutable mat4 m_projection;
