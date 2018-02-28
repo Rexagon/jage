@@ -2,6 +2,8 @@
 
 #include "GameObject.h"
 #include "Material.h"
+#include "Camera.h"
+#include "Shader.h"
 #include "Mesh.h"
 
 class MeshObject : public GameObject
@@ -19,6 +21,8 @@ public:
 	Material getMaterial() const;
 
 private:
+	Shader* m_meshShader;
+
 	const Mesh* m_mesh;
 	Material m_material;
 };

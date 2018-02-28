@@ -80,6 +80,9 @@
     <ClCompile Include="Transformable.cpp">
       <Filter>Core\Stuff</Filter>
     </ClCompile>
+    <ClCompile Include="Grid.cpp">
+      <Filter>Game\GameObjects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">
@@ -209,6 +212,9 @@
     </ClInclude>
     <ClInclude Include="Transformable.h">
       <Filter>Core\Stuff</Filter>
+    </ClInclude>
+    <ClInclude Include="Grid.h">
+      <Filter>Game\GameObjects</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
