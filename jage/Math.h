@@ -33,6 +33,9 @@ typedef glm::mat4 mat4;
 
 typedef glm::quat quat;
 
+typedef std::uint64_t uint64_t;
+typedef std::uint32_t uint32_t;
+
 // GLM conversions
 vec2 toGLM(const sf::Vector2f& v);
 uvec2 toGLM(const sf::Vector2u& v);

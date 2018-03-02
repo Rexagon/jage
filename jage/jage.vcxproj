@@ -191,6 +191,7 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Core.cpp" />
     <ClCompile Include="CursorManager.cpp" />
+    <ClCompile Include="EntityManager.cpp" />
     <ClCompile Include="FileManager.cpp" />
     <ClCompile Include="FirstPersonCamera.cpp" />
     <ClCompile Include="FontFactory.cpp" />
@@ -208,6 +209,7 @@
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelFactory.cpp" />
     <ClCompile Include="MusicFactory.cpp" />
+    <ClCompile Include="Pool.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Shader.cpp" />
@@ -224,6 +226,7 @@
     <ClInclude Include="Core.h" />
     <ClInclude Include="CursorManager.h" />
     <ClInclude Include="Delegate.h" />
+    <ClInclude Include="EntityManager.h" />
     <ClInclude Include="FileManager.h" />
     <ClInclude Include="FirstPersonCamera.h" />
     <ClInclude Include="FontFactory.h" />
@@ -240,6 +243,7 @@
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModelFactory.h" />
     <ClInclude Include="MusicFactory.h" />
+    <ClInclude Include="Pool.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="Shader.h" />

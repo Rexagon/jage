@@ -83,6 +83,12 @@
     <ClCompile Include="Grid.cpp">
       <Filter>Game\GameObjects</Filter>
     </ClCompile>
+    <ClCompile Include="EntityManager.cpp">
+      <Filter>Core\Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="Pool.cpp">
+      <Filter>Core\Stuff</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">
@@ -215,6 +221,12 @@
     </ClInclude>
     <ClInclude Include="Grid.h">
       <Filter>Game\GameObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="EntityManager.h">
+      <Filter>Core\Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="Pool.h">
+      <Filter>Core\Stuff</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

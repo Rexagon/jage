@@ -6,7 +6,7 @@ Grid::Grid(const std::string & name) :
 	std::vector<vec3> gridVertices = { 
 		vec3(0.0f, 0.0f, 0.0f) 
 	};
-	m_vertexCount = gridVertices.size();
+	m_vertexCount = static_cast<unsigned int>(gridVertices.size());
 
 	glGenVertexArrays(1, &m_VAO);
 	glBindVertexArray(m_VAO);

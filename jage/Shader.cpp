@@ -21,7 +21,7 @@ bool Shader::attachPart(const std::string & source, GLenum type, std::string& in
 	GLint shader = glCreateShader(type);
 
 	const GLchar* data = source.c_str();
-	const GLint size = source.size();
+	const GLint size = static_cast<GLint>(source.size());
 
 	glShaderSource(shader, 1, &data, nullptr);
 
