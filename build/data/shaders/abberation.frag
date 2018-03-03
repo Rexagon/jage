@@ -17,5 +17,5 @@ void main()
     vec4 colG = texture2D(u_colorTexture, uvG);
     vec4 colB = texture2D(u_colorTexture, uvB);
 
-    gl_FragColor = vec4(colR.r, colG.g, colB.b, 1.0);
+    gl_FragColor = texture2D(u_colorTexture, v_texCoord) * 0.2 + 0.8 * vec4(colR.r, colG.g, colB.b, 1.0);
 }
