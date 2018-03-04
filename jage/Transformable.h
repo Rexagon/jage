@@ -8,10 +8,8 @@ public:
 	Transformable(Transformable* parent = nullptr);
 	virtual ~Transformable() {}
 	
-	void setTransformation(const mat4& transformation);
-	mat4 getTransformation() const;
-
-	mat4 getGlobalTransformation() const;
+	void setTransformationMatrix(const mat4& transformation);
+	mat4 getTransformationMatrix() const;
 
 	mat4 getPositionMatrix() const;
 	mat4 getRotationMatrix() const;
@@ -56,8 +54,12 @@ protected:
 	mutable mat4 m_scaleMatrix;
 
 private:
-	bool wasUpdated() const;
+	void updatePosition() const;
+	void updateRotation() const;
+	void updateScale() const;
+
 	mutable bool m_positionChanged;
 	mutable bool m_rotationChanged;
 	mutable bool m_scaleChanged;
+	mutable bool m_transformationChanged;
 };

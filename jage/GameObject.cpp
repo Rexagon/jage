@@ -98,10 +98,10 @@ std::string GameObject::getTag() const
 mat4 GameObject::getGlobalTransformation() const
 {
 	if (m_parent == nullptr) {
-		return getTransformation();
+		return getTransformationMatrix();
 	}
 	else {
-		return m_parent->getGlobalTransformation() * getTransformation();
+		return m_parent->getGlobalTransformation() * getTransformationMatrix();
 	}
 }
 

@@ -42,28 +42,31 @@ void Game::onInit()
 
 
 	// Loading models
+	m_rootObject = std::make_shared<GameObject>("root");
+
 	ResourceManager::bind<ModelFactory>("castle", "castle.fbx");
-	m_castle = ResourceManager::get<Model>("castle");
-	m_castle->getRootObject()->setScale(0.01f);
-	m_castle->getRootObject()->setPosition(15.0f, 0.0f, -15.0f);
-	m_castle->getRootObject()->setRotation(0.0f, glm::pi<float>() / 4.0f, 0.0f);
+	Model* castle = ResourceManager::get<Model>("castle");
+	castle->getRootObject()->setScale(0.01f);
+	castle->getRootObject()->setPosition(15.0f, 0.0f, -15.0f);
+	castle->getRootObject()->setRotation(0.0f, glm::pi<float>() / 4.0f, 0.0f);
+	m_rootObject->addChild(castle->getRootObject());
 
 	ResourceManager::bind<ModelFactory>("baracks", "baracks.fbx");
-	m_baracks = ResourceManager::get<Model>("baracks");
+	Model* baracks = ResourceManager::get<Model>("baracks");
+	baracks->getRootObject()->setPosition(-15.0f, 0.0f, 15.0f);
+	m_rootObject->addChild(baracks->getRootObject());
 
 	ResourceManager::bind<ModelFactory>("ghost", "ghost.fbx");
-	m_ghost = ResourceManager::get<Model>("ghost");
+	Model* ghost = ResourceManager::get<Model>("ghost");
+	m_rootObject->addChild(ghost->getRootObject());
 
-	m_baracks->getRootObject()->setPosition(-15.0f, 0.0f, 15.0f);
+	ResourceManager::bind<ModelFactory>("terrain", "terrain.fbx");
+	Model* terrain = ResourceManager::get<Model>("terrain");
+	m_rootObject->addChild(terrain->getRootObject());
+
 
 	m_quad = std::make_shared<Mesh>();
 	m_quad->init(MeshGeometry::createQuad());
-
-	m_plane = std::make_shared<Mesh>();
-	m_plane->init(MeshGeometry::createPlane());
-	m_planeObject = std::make_shared<MeshObject>("plane");
-	m_planeObject->setMesh(m_plane.get());
-	m_planeObject->setScale(100.0f);
 
 	m_grid = std::make_shared<Grid>("grid");
 	m_grid->setPosition(0.0f, 0.001f, 0.0f);
@@ -138,7 +141,7 @@ void Game::onDraw(const float dt)
 	RenderStateManager::setCurrentShader(m_skyShader);
 	glDepthMask(GL_FALSE);
 	RenderStateManager::setFaceCullingEnabled(false);
-	m_skyShader->setUniform("u_cameraViewProjection", m_camera->getProjection() * glm::inverse(m_camera->getRotationMatrix()));
+	m_skyShader->setUniform("u_cameraViewProjection", m_camera->getProjectionMatrix() * glm::inverse(m_camera->getRotationMatrix()));
 
 	m_skyShader->setUniform("u_sunDirection", glm::normalize(quat(m_sunDirection) * vec3(0.0f, 0.0f, 1.0f)));
 	m_skyShader->setUniform("u_rayleigh", m_rayleigh);
@@ -155,14 +158,11 @@ void Game::onDraw(const float dt)
 	RenderStateManager::setDepthTestFunction(GL_GEQUAL);
 
 	RenderStateManager::setCurrentShader(m_meshShader);
-	m_meshShader->setUniform("u_cameraViewProjection", m_camera->getViewProjection());
+	m_meshShader->setUniform("u_cameraViewProjection", m_camera->getViewProjectionMatrix());
 	m_meshShader->setUniform("u_sunDirection", glm::normalize(quat(m_sunDirection) * vec3(0.0f, 0.0f, 1.0f)));
 
 	std::stack<GameObject*> gameObjects;
-	gameObjects.push(m_castle->getRootObject().get());
-	gameObjects.push(m_baracks->getRootObject().get());
-	gameObjects.push(m_ghost->getRootObject().get());
-	gameObjects.push(m_planeObject.get());
+	gameObjects.push(m_rootObject.get());
 
 	while (!gameObjects.empty()) {
 		GameObject* gameObject = gameObjects.top();
@@ -177,7 +177,7 @@ void Game::onDraw(const float dt)
 	}
 
 	RenderStateManager::setCurrentShader(m_gridShader);
-	m_gridShader->setUniform("u_cameraViewProjection", m_camera->getViewProjection());
+	m_gridShader->setUniform("u_cameraViewProjection", m_camera->getViewProjectionMatrix());
 	m_gridShader->setUniform("u_cameraPosition", m_camera->getPosition());
 	m_gridShader->setUniform("u_transformation", m_grid->getGlobalTransformation());
 	m_grid->onDraw();

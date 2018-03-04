@@ -4,7 +4,8 @@
 
 Camera::Camera(const std::string& name) :
 	GameObject(name),
-	m_depthRange(0.1f, 100.0f), m_viewMatrix(1.0f), m_projectionChanged(true)
+	m_depthRange(0.1f, 100.0f), m_viewMatrix(1.0f), m_globalTransformation(1.0f), 
+	m_viewProjectionChanged(true), m_projectionChanged(true)
 {
 }
 
@@ -20,37 +21,31 @@ Camera::Camera(const std::string& name, const vec2& zRange) :
 {
 }
 
-mat4 Camera::getViewProjection() const
+mat4 Camera::getViewProjectionMatrix() const
 {
-	bool positionChanged = false;
-	vec3 position = m_position;
-	if (position != m_oldPosition) {
-		positionChanged = true;
-		m_oldPosition = position;
+	updateView();
+	updateProjection();
+
+	if (m_viewProjectionChanged) {
+		m_viewProjectionMatrix = m_projectionMatrix * m_viewMatrix;
+		m_viewProjectionChanged = false;
 	}
 
-	bool rotationChanged = false;
-	quat rotation = m_rotation;
-	if (rotation != m_oldRotation) {
-		rotationChanged = true;
-		m_oldRotation = rotation;
-	}
-
-	if (positionChanged || rotationChanged) {
-		m_viewMatrix = glm::inverse(getGlobalTransformation());
-	}
-
-	return getProjection() * m_viewMatrix;
+	return m_viewProjectionMatrix;
 }
 
-mat4 Camera::getProjection() const
+mat4 Camera::getViewMatrix() const
 {
-	if (m_projectionChanged) {
-		updateProjection();
-		m_projectionChanged = false;
-	}
+	updateView();
 
-	return m_projection;
+	return m_viewMatrix;
+}
+
+mat4 Camera::getProjectionMatrix() const
+{
+	updateProjection();
+
+	return m_projectionMatrix;
 }
 
 void Camera::setMinDepth(float minDepth)
@@ -84,6 +79,17 @@ void Camera::setDepthRange(const vec2 & depthRange)
 vec2 Camera::getDepthRange()
 {
 	return m_depthRange;
+}
+
+void Camera::updateView() const
+{
+	mat4 globalTransfromation = getGlobalTransformation();
+	if (globalTransfromation != m_globalTransformation) {
+		m_viewMatrix = glm::inverse(globalTransfromation);
+
+		m_globalTransformation = globalTransfromation;
+		m_viewProjectionChanged = true;
+	}
 }
 
 
@@ -124,14 +130,20 @@ float PerspectiveCamera::getAspect() const
 
 void PerspectiveCamera::updateProjection() const
 {
-	float f = 1.0f / tan(m_fov / 2.0f);
-	m_projection = mat4(
-		f / m_aspect, 0.0f, 0.0f, 0.0f,
-		0.0f, f, 0.0f, 0.0f,
-		0.0f, 0.0f, 0.0f, -1.0f,
-		0.0f, 0.0f, m_depthRange.x, 0.0f);
+	if (m_projectionChanged) {
+		float f = 1.0f / tan(m_fov / 2.0f);
+		
+		m_projectionMatrix = mat4(
+			f / m_aspect, 0.0f, 0.0f, 0.0f,
+			0.0f, f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, -1.0f,
+			0.0f, 0.0f, m_depthRange.x, 0.0f);
+		//m_projectionMatrix = glm::perspective(m_fov, m_aspect, m_depthRange.x, m_depthRange.y);
 
-	//m_projection = glm::perspective(m_fov, m_aspect, m_depthRange.x, m_depthRange.y);
+		m_projectionChanged = false;
+		m_viewProjectionChanged = true;
+	}
+
 }
 
 
@@ -194,5 +206,10 @@ float IsometricCamera::getTopDimension() const
 
 void IsometricCamera::updateProjection() const
 {
-	m_projection = glm::ortho(m_left, m_right, m_bottom, m_top, m_depthRange.x, m_depthRange.y);
+	if (m_projectionChanged) {
+		m_projectionMatrix = glm::ortho(m_left, m_right, m_bottom, m_top, m_depthRange.x, m_depthRange.y);
+
+		m_projectionChanged = false;
+		m_viewProjectionChanged = true;
+	}
 }

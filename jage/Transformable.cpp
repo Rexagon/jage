@@ -11,11 +11,11 @@
 Transformable::Transformable(Transformable* parent) :
 	m_transformation(1.0f),
 	m_position(0.0f, 0.0f, 0.0f), m_rotation(1.0f, 0.0f, 0.0f, 0.0f), m_scale(1.0f, 1.0f, 1.0f),
-	m_positionChanged(true), m_rotationChanged(true), m_scaleChanged(true)
+	m_positionChanged(true), m_rotationChanged(true), m_scaleChanged(true), m_transformationChanged(true)
 {
 }
 
-void Transformable::setTransformation(const mat4 & transform)
+void Transformable::setTransformationMatrix(const mat4 & transform)
 {
 	glm::vec3 skew;
 	glm::vec4 perspective;
@@ -23,13 +23,15 @@ void Transformable::setTransformation(const mat4 & transform)
 	glm::decompose(transform, m_scale, m_rotation, m_position, skew, perspective);
 }
 
-mat4 Transformable::getTransformation() const
+mat4 Transformable::getTransformationMatrix() const
 {
-	if (wasUpdated()) {
+	updatePosition();
+	updateRotation();
+	updateScale();
+
+	if (m_transformationChanged) {
 		m_transformation = getPositionMatrix() * getRotationMatrix() * getScaleMatrix();
-		m_positionChanged = false;
-		m_rotationChanged = false;
-		m_scaleChanged = false;
+		m_transformationChanged = false;
 	}
 
 	return m_transformation;
@@ -37,27 +39,21 @@ mat4 Transformable::getTransformation() const
 
 mat4 Transformable::getPositionMatrix() const
 {
-	if (m_positionChanged) {
-		m_positionMatrix = glm::translate(mat4(1.0f), m_position);
-	}
+	updatePosition();
 
 	return m_positionMatrix;
 }
 
 mat4 Transformable::getRotationMatrix() const
 {
-	if (m_rotationChanged) {
-		m_rotationMatrix = glm::mat4_cast(m_rotation);
-	}
+	updateRotation();
 
 	return m_rotationMatrix;
 }
 
 mat4 Transformable::getScaleMatrix() const
 {
-	if (m_scaleChanged) {
-		m_scaleMatrix = glm::scale(mat4(1.0f), m_scale);
-	}
+	updateScale();
 
 	return m_scaleMatrix;
 }
@@ -207,7 +203,29 @@ vec3 Transformable::getDirectionUp() const
 	return glm::normalize(glm::cross(glm::cross(directionFront, vec3(0.0f, 1.0f, 0.0f)), directionFront));
 }
 
-bool Transformable::wasUpdated() const
+void Transformable::updatePosition() const
 {
-	return m_positionChanged || m_rotationChanged || m_scaleChanged;
+	if (m_positionChanged) {
+		m_positionMatrix = glm::translate(mat4(1.0f), m_position);
+		m_positionChanged = false;
+		m_transformationChanged = true;
+	}
+}
+
+void Transformable::updateRotation() const
+{
+	if (m_rotationChanged) {
+		m_rotationMatrix = glm::mat4_cast(m_rotation);
+		m_rotationChanged = false;
+		m_transformationChanged = true;
+	}
+}
+
+void Transformable::updateScale() const
+{
+	if (m_scaleChanged) {
+		m_scaleMatrix = glm::scale(mat4(1.0f), m_scale);
+		m_scaleChanged = false;
+		m_transformationChanged = true;
+	}
 }

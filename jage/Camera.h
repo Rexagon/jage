@@ -10,8 +10,10 @@ public:
 	Camera(const std::string& name, const vec2& zRange);
 	virtual ~Camera() {}
 
-	mat4 getViewProjection() const;
-	mat4 getProjection() const;
+	mat4 getViewProjectionMatrix() const;
+
+	mat4 getViewMatrix() const;
+	mat4 getProjectionMatrix() const;
 
 	void setMinDepth(float nearZ);
 	float getMinDepth() const;
@@ -23,15 +25,18 @@ public:
 	vec2 getDepthRange();
 
 protected:
+	void updateView() const;
 	virtual void updateProjection() const = 0;
 	
 	vec2 m_depthRange;
 
 	mutable mat4 m_viewMatrix;
-	mutable vec3 m_oldPosition;
-	mutable quat m_oldRotation;
+	mutable mat4 m_globalTransformation;
 
-	mutable mat4 m_projection;
+	mutable mat4 m_viewProjectionMatrix;
+	mutable bool m_viewProjectionChanged;
+
+	mutable mat4 m_projectionMatrix;
 	mutable bool m_projectionChanged;
 };
 

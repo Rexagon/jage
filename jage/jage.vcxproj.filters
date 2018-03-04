@@ -93,7 +93,7 @@
       <Filter>Core\Resources\Model</Filter>
     </ClCompile>
     <ClCompile Include="FrameBuffer.cpp">
-      <Filter>Core\Stuff</Filter>
+      <Filter>Core\Renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -135,6 +135,9 @@
     </Filter>
     <Filter Include="Core\Resources\Model">
       <UniqueIdentifier>{06d15ad9-3cdd-4ab4-b967-dd114a9d0499}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Renderer">
+      <UniqueIdentifier>{d96594e8-82a5-4300-9b60-fb34ebae5ebe}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -238,7 +241,7 @@
       <Filter>Core\Resources\Model</Filter>
     </ClInclude>
     <ClInclude Include="FrameBuffer.h">
-      <Filter>Core\Stuff</Filter>
+      <Filter>Core\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
