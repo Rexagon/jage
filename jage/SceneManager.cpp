@@ -1,6 +1,6 @@
 #include "SceneManager.h"
 
-std::stack<std::unique_ptr<Scene>> SceneManager::m_scenes;
+std::stack<std::unique_ptr<BaseScene>> SceneManager::m_scenes;
 
 void SceneManager::deleteScene()
 {
@@ -14,7 +14,7 @@ void SceneManager::deleteScene()
 	}
 }
 
-Scene * SceneManager::getCurrentScene()
+BaseScene * SceneManager::getCurrentScene()
 {
 	if (m_scenes.empty()) {
 		return nullptr;

@@ -32,11 +32,19 @@ void Game::onInit()
 	ResourceManager::bind<ShaderFactory>("grid_shader", gridVertexSource, gridGeometrySource, gridFragmentSource);
 	m_gridShader = ResourceManager::get<Shader>("grid_shader");
 	m_gridShader->setAttribute(0, "position");
+	m_gridShader->setAttribute(1, "chunkId");
+
+	ShaderFactory::FromFile skyVertexSource("shaders/sky.vert");
+	ShaderFactory::FromFile skyFragmentSource("shaders/sky.frag");
+	ResourceManager::bind<ShaderFactory>("sky_shader", skyVertexSource, skyFragmentSource);
+	m_skyShader = ResourceManager::get<Shader>("sky_shader");
+	m_skyShader->setAttribute(0, "position");
 
 
 	// Loading models
 	ResourceManager::bind<ModelFactory>("castle", "castle.fbx");
 	m_castle = ResourceManager::get<Model>("castle");
+	m_castle->getRootObject()->setScale(0.01f);
 	m_castle->getRootObject()->setPosition(15.0f, 0.0f, -15.0f);
 	m_castle->getRootObject()->setRotation(0.0f, glm::pi<float>() / 4.0f, 0.0f);
 
@@ -48,32 +56,30 @@ void Game::onInit()
 
 	m_baracks->getRootObject()->setPosition(-15.0f, 0.0f, 15.0f);
 
-	m_quad = std::make_unique<Mesh>();
-	m_quad->init({
-		vec3(-1.0f, -1.0f, 0.0f),
-		vec3(1.0f, -1.0f, 0.0f),
-		vec3(1.0f, 1.0f, 0.0f),
-		vec3(-1.0f, 1.0f, 0.0f)
-	},
-	{
-		vec2(0.0f, 0.0f),
-		vec2(1.0f, 0.0f),
-		vec2(1.0f, 1.0f),
-		vec2(0.0f, 1.0f)
-	},
-	{
-		0, 1, 2,
-		0, 2, 3
-	});
+	m_quad = std::make_shared<Mesh>();
+	m_quad->init(MeshGeometry::createQuad());
+
+	m_plane = std::make_shared<Mesh>();
+	m_plane->init(MeshGeometry::createPlane());
+	m_planeObject = std::make_shared<MeshObject>("plane");
+	m_planeObject->setMesh(m_plane.get());
+	m_planeObject->setScale(100.0f);
 
 	m_grid = std::make_shared<Grid>("grid");
+	m_grid->setPosition(0.0f, 0.001f, 0.0f);
 
-	m_camera = std::make_unique<FirstPersonCamera>("main_camera");
+	m_circle = std::make_shared<Mesh>();
+	m_circle->init(MeshGeometry::createCube());
+
+	m_camera = std::make_shared<FirstPersonCamera>("main_camera");
 	m_camera->setPosition(0.0f, 1.0f, 10.0f);
 
-	glCullFace(GL_BACK);
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_DEPTH_TEST);
+	m_sunDirection = vec3(-1.0f, 0.0f, 0.0f);
+	m_turbidity = 10.0f;
+	m_rayleigh = 2.0f;
+
+	RenderStateManager::setFaceCullingEnabled(true);
+	RenderStateManager::setFaceCullingSide(GL_BACK);
 
 	onResize(toGLM((Core::getWindow().getSize())));
 }
@@ -89,6 +95,34 @@ void Game::onUpdate(const float dt)
 		return;
 	}
 
+	if (Input::getKey(Key::Up)) {
+		m_sunDirection.x += dt;
+	}
+	if (Input::getKey(Key::Down)) {
+		m_sunDirection.x -= dt;
+	}
+
+	if (Input::getKey(Key::Left)) {
+		m_sunDirection.y += dt;
+	}
+	if (Input::getKey(Key::Right)) {
+		m_sunDirection.y -= dt;
+	}
+
+	if (Input::getKey(Key::O)) {
+		m_turbidity += dt;
+	}
+	if (Input::getKey(Key::L)) {
+		m_turbidity -= dt;
+	}
+
+	if (Input::getKey(Key::I)) {
+		m_rayleigh += dt;
+	}
+	if (Input::getKey(Key::K)) {
+		m_rayleigh -= dt;
+	}
+
 	m_camera->onUpdate(dt);
 }
 
@@ -96,17 +130,39 @@ void Game::onDraw(const float dt)
 {
 	m_framebuffer->bind();
 	
+	RenderStateManager::setClearColor(0.2f, 0.2f, 0.2f);
 
-	glClearColor(0.2f, 0.2f, 0.2f, 1.0);
+	glClearDepth(0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-	m_meshShader->bind();
+	RenderStateManager::setCurrentShader(m_skyShader);
+	glDepthMask(GL_FALSE);
+	RenderStateManager::setFaceCullingEnabled(false);
+	m_skyShader->setUniform("u_cameraViewProjection", m_camera->getProjection() * glm::inverse(m_camera->getRotationMatrix()));
+
+	m_skyShader->setUniform("u_sunDirection", glm::normalize(quat(m_sunDirection) * vec3(0.0f, 0.0f, 1.0f)));
+	m_skyShader->setUniform("u_rayleigh", m_rayleigh);
+	m_skyShader->setUniform("u_turbidity", m_turbidity);
+	m_skyShader->setUniform("u_mieCoefficient", 0.005f);
+	m_skyShader->setUniform("u_mieDirectionalG", 0.8f);
+	m_skyShader->setUniform("u_luminance", 1.0f);
+	m_circle->draw();
+	glDepthMask(GL_TRUE);
+	RenderStateManager::setFaceCullingEnabled(true);
+
+	// Scene rendering
+	RenderStateManager::setDepthTestEnabled(true);
+	RenderStateManager::setDepthTestFunction(GL_GEQUAL);
+
+	RenderStateManager::setCurrentShader(m_meshShader);
 	m_meshShader->setUniform("u_cameraViewProjection", m_camera->getViewProjection());
+	m_meshShader->setUniform("u_sunDirection", glm::normalize(quat(m_sunDirection) * vec3(0.0f, 0.0f, 1.0f)));
 
 	std::stack<GameObject*> gameObjects;
 	gameObjects.push(m_castle->getRootObject().get());
 	gameObjects.push(m_baracks->getRootObject().get());
 	gameObjects.push(m_ghost->getRootObject().get());
+	gameObjects.push(m_planeObject.get());
 
 	while (!gameObjects.empty()) {
 		GameObject* gameObject = gameObjects.top();
@@ -120,14 +176,11 @@ void Game::onDraw(const float dt)
 		}
 	}
 
-	m_meshShader->unbind();
-
-	m_gridShader->bind();
+	RenderStateManager::setCurrentShader(m_gridShader);
 	m_gridShader->setUniform("u_cameraViewProjection", m_camera->getViewProjection());
 	m_gridShader->setUniform("u_cameraPosition", m_camera->getPosition());
 	m_gridShader->setUniform("u_transformation", m_grid->getGlobalTransformation());
 	m_grid->onDraw();
-	m_gridShader->unbind();
 
 	m_framebuffer->unbind();
 
@@ -135,27 +188,24 @@ void Game::onDraw(const float dt)
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_framebuffer->getColorTexture().getNativeHandle());
 
-	glDisable(GL_DEPTH_TEST);
+	RenderStateManager::setDepthTestEnabled(false);
 
 	m_postEffectFramebuffer->bind();
-	m_fxaaShader->bind();
+	RenderStateManager::setCurrentShader(m_fxaaShader);
 	m_quad->draw();
-	m_fxaaShader->unbind();
 	m_postEffectFramebuffer->unbind();
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_postEffectFramebuffer->getColorTexture().getNativeHandle());
 
-	m_abberationShader->bind();
+	RenderStateManager::setCurrentShader(m_abberationShader);
+	m_abberationShader->setUniform("u_chromaticAberration", 0.001f);
 	m_quad->draw();
-	m_abberationShader->unbind();
-
-	glEnable(GL_DEPTH_TEST);
 }
 
 void Game::onResize(const vec2& windowSize)
 {
-	glViewport(0, 0, static_cast<GLsizei>(windowSize.x), static_cast<GLsizei>(windowSize.y));
+	RenderStateManager::setViewport(ivec2(windowSize));
 
 	m_camera->setAspect(windowSize.x / windowSize.y);
 
@@ -170,13 +220,10 @@ void Game::onResize(const vec2& windowSize)
 		false);
 
 
-	m_fxaaShader->bind();
+	RenderStateManager::setCurrentShader(m_fxaaShader);
 	m_fxaaShader->setUniform("u_colorTexture", 0);
 	m_fxaaShader->setUniform("u_inversedResolution", vec2(1.0f / windowSize.x , 1.0f / windowSize.y));
-	m_fxaaShader->unbind();
 
-	m_abberationShader->bind();
+	RenderStateManager::setCurrentShader(m_abberationShader);
 	m_abberationShader->setUniform("u_colorTexture", 0);
-	m_abberationShader->setUniform("u_chromaticAberration", 0.002f);
-	m_abberationShader->unbind();
 }

@@ -3,15 +3,13 @@
 #include <memory>
 #include <stack>
 
-#include <SFGUI/Window.hpp>
-
 #include "Math.h"
 
-// Base 
-class Scene
+// Base class for scenes
+class BaseScene
 {
 public:
-    virtual ~Scene() {}
+    virtual ~BaseScene() {}
 
     // Is called when this Scene object is added to Game scenes stack
 	virtual void onInit() {}
@@ -44,8 +42,6 @@ public:
 
 protected:
 	friend class Core;
-
-	sfg::Window::Ptr m_guiWindow;
 };
 
 
@@ -53,20 +49,23 @@ protected:
 class SceneManager
 {
 public:
+	// Removes all scenes
+	static void close();
+
 	// Adds new scene on top of the stack
 	// T - Scene child class type
 	// Args - Scene child class constructor arguments
 	template <class T, class... Args>
 	static void addScene(Args&&... args)
 	{
-		static_assert(std::is_base_of<Scene, T>::value, 
-			"template parameter in SceneManager::addScene accepts only classes derived from Scene");
+		static_assert(std::is_base_of<BaseScene, T>::value, 
+			"template parameter in SceneManager::addScene accepts only classes derived from BaseScene");
 
 		if (!m_scenes.empty()) {
 			m_scenes.top()->onLeave();
 		}
 
-		std::unique_ptr<Scene> scene(new T(std::forward(args)...));
+		std::unique_ptr<BaseScene> scene(new T(std::forward(args)...));
 		scene->onInit();
 		m_scenes.push(std::move(scene));
 	}
@@ -77,15 +76,15 @@ public:
 	template <class T, class... Args>
 	static void changeScene(Args&&... args)
 	{
-		static_assert(std::is_base_of<Scene, T>::value,
-			"template parameter in SceneManager::addScene accepts only classes derived from Scene");
+		static_assert(std::is_base_of<BaseScene, T>::value,
+			"template parameter in SceneManager::addScene accepts only classes derived from BaseScene");
 
 		if (!m_scenes.empty()) {
 			m_scenes.top()->onClose();
 			m_scenes.pop();
 		}
 
-		std::unique_ptr<Scene> scene(new T(std::forward(args)...));
+		std::unique_ptr<BaseScene> scene(new T(std::forward(args)...));
 		scene->onInit();
 		m_scenes.push(std::move(scene));
 	}
@@ -94,14 +93,11 @@ public:
 	static void deleteScene();
 
 	// Returns current scene if it exists, otherwise nullptr
-	static Scene* getCurrentScene();
+	static BaseScene* getCurrentScene();
 
 	// Returns true if there is at least one scene in stack
 	static bool hasScenes() { return !m_scenes.empty(); }
 
-	// Removes all scenes
-	static void close();
-
 private:
-	static std::stack<std::unique_ptr<Scene>> m_scenes;
+	static std::stack<std::unique_ptr<BaseScene>> m_scenes;
 };

@@ -2,10 +2,9 @@
 
 bool Core::m_isInitialized = false;
 bool Core::m_isRunning = false;
+uint64_t Core::m_globalTimer = 0;
+
 sf::RenderWindow Core::m_window;
-std::unique_ptr<sfg::SFGUI> Core::m_gui = nullptr;
-std::unique_ptr<sfg::Desktop> Core::m_guiDesktop = nullptr;
-unsigned long long Core::m_globalTimer = 0;
 
 void Core::init(const Parameters& parameters)
 {
@@ -31,13 +30,11 @@ void Core::init(const Parameters& parameters)
 		throw std::runtime_error("Unable to initialize glew");
 	}
 
+	RenderStateManager::init();
 	ResourceManager::init();
 	CursorManager::init(m_window.getSystemHandle());
 	FileManager::init<DefaultFileSystem>();
-
-	//m_gui = std::make_unique<sfg::SFGUI>();
-	//m_guiDesktop = std::make_unique<sfg::Desktop>();
-
+	
 	m_isInitialized = true;
 }
 
@@ -51,9 +48,6 @@ void Core::close()
 	CursorManager::close();
 	ResourceManager::close();
 	FileManager::close();
-
-	//m_guiDesktop.reset();
-	//m_gui.reset();
 
 	m_window.close();
 
@@ -80,7 +74,7 @@ void Core::run()
 		// Handle window and keyboard events
 		handleEvents();
 
-		Scene* currentScene;
+		BaseScene* currentScene;
 
 		if (m_isRunning == true &&
 			(currentScene = SceneManager::getCurrentScene()) != nullptr)
@@ -114,16 +108,6 @@ void Core::stop()
 sf::RenderWindow& Core::getWindow()
 {
 	return m_window;
-}
-
-sfg::SFGUI * Core::getGui()
-{
-	return m_gui.get();
-}
-
-sfg::Desktop * Core::getGuiDesktop()
-{
-	return m_guiDesktop.get();
 }
 
 unsigned long long Core::getGlobalTimer()
@@ -168,6 +152,5 @@ void Core::handleEvents()
 		}
 
 		Input::handleEvent(e);
-		//m_guiDesktop->HandleEvent(e);
 	}
 }

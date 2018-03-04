@@ -9,6 +9,10 @@ public:
 
 	void onUpdate(const float dt) override;
 
+	void setSpeed(float speed);
+	float getSpeed() const;
+
 private:
 	vec2 m_rotations;
+	float m_speed;
 };

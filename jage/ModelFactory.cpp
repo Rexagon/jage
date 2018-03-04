@@ -33,7 +33,11 @@ void * ModelFactory::load()
 
 		std::string data = FileManager::open(m_filename);
 		const aiScene* scene = importer.ReadFileFromMemory(data.c_str(), data.size(),
-			aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs);
+			aiProcess_GenSmoothNormals |
+			aiProcess_CalcTangentSpace |
+			aiProcess_Triangulate |
+			aiProcess_JoinIdenticalVertices |
+			aiProcess_SortByPType);
 
 		if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
 			throw std::runtime_error("Unable to load model: \"" + m_assignedName + "\" (" + m_filename + 
@@ -47,38 +51,44 @@ void * ModelFactory::load()
 		for (size_t i = 0; i < scene->mNumMeshes; ++i) {
 			const aiMesh* meshData = scene->mMeshes[i];
 
-			std::vector<vec3> positions(meshData->mNumVertices);
-			std::vector<vec2> texCoords(meshData->mNumVertices);
-			std::vector<vec3> normals(meshData->mNumVertices);
-			std::vector<unsigned int> indices;
+			MeshGeometry geometry;
+
+			geometry.positions = std::vector<vec3>(meshData->mNumVertices);
+			geometry.texCoords = std::vector<vec2>(meshData->mNumVertices);
+			geometry.normals = std::vector<vec3>(meshData->mNumVertices);
 
 			for (size_t j = 0; j < meshData->mNumVertices; ++j) {
-				positions[j].x = meshData->mVertices[j].x;
-				positions[j].y = meshData->mVertices[j].y;
-				positions[j].z = meshData->mVertices[j].z;
+				geometry.positions[j].x = meshData->mVertices[j].x;
+				geometry.positions[j].y = meshData->mVertices[j].y;
+				geometry.positions[j].z = meshData->mVertices[j].z;
 
 				if (meshData->mNormals) {
-					normals[j].x = meshData->mNormals[j].x;
-					normals[j].y = meshData->mNormals[j].y;
-					normals[j].z = meshData->mNormals[j].z;
+					geometry.normals[j].x = meshData->mNormals[j].x;
+					geometry.normals[j].y = meshData->mNormals[j].y;
+					geometry.normals[j].z = meshData->mNormals[j].z;
 				}
 
 				if (meshData->mTextureCoords && meshData->mTextureCoords[0]) {
-					texCoords[j].x = meshData->mTextureCoords[0][j].x;
-					texCoords[j].y = meshData->mTextureCoords[0][j].y;
+					geometry.texCoords[j].x = meshData->mTextureCoords[0][j].x;
+					geometry.texCoords[j].y = meshData->mTextureCoords[0][j].y;
 				}
 			}
 
-			indices.reserve(meshData->mNumFaces * 3);
+			geometry.indices = std::vector<unsigned int>(meshData->mNumFaces * 3);
 			for (size_t j = 0; j < meshData->mNumFaces; ++j) {
 				const aiFace& face = meshData->mFaces[j];
+				if (face.mNumIndices != 3)
+				{
+					Log::write("Warning: Mesh face with not exactly 3 indices, ignoring this primitive.");
+					continue;
+				}
+
 				for (size_t k = 0; k < face.mNumIndices; ++k) {
-					indices.push_back(face.mIndices[k]);
+					geometry.indices.push_back(face.mIndices[k]);
 				}
 			}
 
-			model->m_meshes[i].setName(meshData->mName.C_Str());
-			model->m_meshes[i].init(positions, texCoords, normals, indices);
+			model->m_meshes[i].init(geometry);
 		}
 
 		// Loading tree
@@ -111,7 +121,7 @@ void * ModelFactory::load()
 
 			for (size_t i = 0; i < nodeData->mNumMeshes; ++i) {
 				const Mesh& mesh = model->m_meshes[nodeData->mMeshes[i]];
-				std::shared_ptr<MeshObject> meshObject = std::make_shared<MeshObject>(mesh.getName(), &mesh);
+				std::shared_ptr<MeshObject> meshObject = std::make_shared<MeshObject>(scene->mMeshes[nodeData->mMeshes[i]]->mName.C_Str(), &mesh);
 				currentObject->addChild(std::move(meshObject));
 			}
 		}

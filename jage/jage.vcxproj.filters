@@ -53,9 +53,6 @@
     <ClCompile Include="Mesh.cpp">
       <Filter>Core\Resources\Model</Filter>
     </ClCompile>
-    <ClCompile Include="FrameBuffer.cpp">
-      <Filter>Core\Stuff</Filter>
-    </ClCompile>
     <ClCompile Include="Camera.cpp">
       <Filter>Game\GameObjects</Filter>
     </ClCompile>
@@ -87,6 +84,15 @@
       <Filter>Core\Managers</Filter>
     </ClCompile>
     <ClCompile Include="Pool.cpp">
+      <Filter>Core\Stuff</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderStateManager.cpp">
+      <Filter>Core\Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshGeometry.cpp">
+      <Filter>Core\Resources\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="FrameBuffer.cpp">
       <Filter>Core\Stuff</Filter>
     </ClCompile>
   </ItemGroup>
@@ -192,9 +198,6 @@
     <ClInclude Include="Mesh.h">
       <Filter>Core\Resources\Model</Filter>
     </ClInclude>
-    <ClInclude Include="FrameBuffer.h">
-      <Filter>Core\Stuff</Filter>
-    </ClInclude>
     <ClInclude Include="Camera.h">
       <Filter>Game\GameObjects</Filter>
     </ClInclude>
@@ -226,6 +229,15 @@
       <Filter>Core\Managers</Filter>
     </ClInclude>
     <ClInclude Include="Pool.h">
+      <Filter>Core\Stuff</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderStateManager.h">
+      <Filter>Core\Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshGeometry.h">
+      <Filter>Core\Resources\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameBuffer.h">
       <Filter>Core\Stuff</Filter>
     </ClInclude>
   </ItemGroup>

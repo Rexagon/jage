@@ -1,23 +1,44 @@
 #include "Grid.h"
 
+#include "RenderStateManager.h"
+
 Grid::Grid(const std::string & name) :
 	GameObject(name)
 {
-	std::vector<vec3> gridVertices = { 
-		vec3(0.0f, 0.0f, 0.0f) 
-	};
+	int size = 5;
+	float chunkSize = 20.0f;
+
+	std::vector<vec3> gridVertices;
+	std::vector<ivec2> chunkIds;
+
+	for (int i = -size; i <= size; ++i) {
+		for (int j = -size; j <= size; ++j) {
+			chunkIds.push_back(vec2(i, j));
+			gridVertices.push_back(chunkSize * vec3(i, 0.0f, j));
+		}
+	}
+
 	m_vertexCount = static_cast<unsigned int>(gridVertices.size());
+
+	size_t positionsBufferSize = sizeof(vec3) * gridVertices.size();
+	size_t chunkIdsBufferSize = sizeof(vec2) * chunkIds.size();
 
 	glGenVertexArrays(1, &m_VAO);
 	glBindVertexArray(m_VAO);
 
 	glGenBuffers(1, &m_VBO);
+
 	glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * gridVertices.size(), gridVertices.data(), GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * sizeof(float), 0);
+	std::vector<char> data(positionsBufferSize + chunkIdsBufferSize);	
+	std::memcpy(&data[0], gridVertices.data(), positionsBufferSize);
+	std::memcpy(&data[0] + positionsBufferSize, chunkIds.data(), chunkIdsBufferSize);
 
+	glBufferData(GL_ARRAY_BUFFER, data.size(), data.data(), GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+	glVertexAttribIPointer(1, 2, GL_INT, 0, reinterpret_cast<GLvoid*>(positionsBufferSize));
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 	glBindVertexArray(0);
 }
 
@@ -29,12 +50,16 @@ Grid::~Grid()
 
 void Grid::onDraw()
 {
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	RenderStateManager::setBlendingEnabled(true);
+	RenderStateManager::setBlendingFunction(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	glBindVertexArray(m_VAO);
 	glEnableVertexAttribArray(0);
-	glDrawArrays(GL_POINTS, 0, 1);
-	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glDrawArrays(GL_POINTS, 0, m_vertexCount);
+	glDisableVertexAttribArray(1);
+	glDisableVertexAttribArray(0);
 	glBindVertexArray(0);
-	glDisable(GL_BLEND);
+
+	RenderStateManager::setBlendingEnabled(false);
 }

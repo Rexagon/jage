@@ -2,11 +2,8 @@
 
 // Entity //
 ///////////
-Entity::Entity()
-{
-}
-
-Entity::Entity(EntityManager * manager, Entity::Id id)
+Entity::Entity(EntityManager * manager, Entity::Id id) :
+	m_manager(manager), m_id(id)
 {
 }
 
@@ -18,9 +15,34 @@ void Entity::invalidate()
 {
 }
 
+bool Entity::isValid() const
+{
+	return false;
+}
+
+Entity::Id Entity::getId() const
+{
+	return Id();
+}
+
 std::bitset<MAX_COMPONENTS> Entity::getComponentMask() const
 {
 	return std::bitset<MAX_COMPONENTS>();
+}
+
+bool Entity::operator==(const Entity & other) const
+{
+	return m_manager == other.m_manager && m_id == other.m_id;
+}
+
+bool Entity::operator!=(const Entity & other) const
+{
+	return m_manager != other.m_manager || m_id != other.m_id;
+}
+
+bool Entity::operator<(const Entity & other) const
+{
+	return m_id > other.m_id;
 }
 
 

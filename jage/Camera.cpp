@@ -124,7 +124,14 @@ float PerspectiveCamera::getAspect() const
 
 void PerspectiveCamera::updateProjection() const
 {
-	m_projection = glm::perspective(m_fov, m_aspect, m_depthRange.x, m_depthRange.y);
+	float f = 1.0f / tan(m_fov / 2.0f);
+	m_projection = mat4(
+		f / m_aspect, 0.0f, 0.0f, 0.0f,
+		0.0f, f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, -1.0f,
+		0.0f, 0.0f, m_depthRange.x, 0.0f);
+
+	//m_projection = glm::perspective(m_fov, m_aspect, m_depthRange.x, m_depthRange.y);
 }
 
 

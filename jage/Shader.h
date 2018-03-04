@@ -17,9 +17,6 @@ public:
 	bool attachPart(const std::string& source, GLenum type, std::string& infoLog);
 	bool link(std::string& infoLog);
 
-	void bind();
-	static void unbind();
-
 	void setAttribute(unsigned int index, const std::string& name);
 
 	void setUniform(const std::string& name, int data);

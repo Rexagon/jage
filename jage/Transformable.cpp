@@ -21,13 +21,15 @@ void Transformable::setTransformation(const mat4 & transform)
 	glm::vec4 perspective;
 
 	glm::decompose(transform, m_scale, m_rotation, m_position, skew, perspective);
-	m_rotation = glm::conjugate(m_rotation);
 }
 
 mat4 Transformable::getTransformation() const
 {
 	if (wasUpdated()) {
 		m_transformation = getPositionMatrix() * getRotationMatrix() * getScaleMatrix();
+		m_positionChanged = false;
+		m_rotationChanged = false;
+		m_scaleChanged = false;
 	}
 
 	return m_transformation;
@@ -37,7 +39,6 @@ mat4 Transformable::getPositionMatrix() const
 {
 	if (m_positionChanged) {
 		m_positionMatrix = glm::translate(mat4(1.0f), m_position);
-		m_positionChanged = false;
 	}
 
 	return m_positionMatrix;
@@ -47,7 +48,6 @@ mat4 Transformable::getRotationMatrix() const
 {
 	if (m_rotationChanged) {
 		m_rotationMatrix = glm::mat4_cast(m_rotation);
-		m_rotationChanged = false;
 	}
 
 	return m_rotationMatrix;
@@ -57,7 +57,6 @@ mat4 Transformable::getScaleMatrix() const
 {
 	if (m_scaleChanged) {
 		m_scaleMatrix = glm::scale(mat4(1.0f), m_scale);
-		m_scaleChanged = false;
 	}
 
 	return m_scaleMatrix;

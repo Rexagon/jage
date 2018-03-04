@@ -2,13 +2,8 @@
 
 #include "Log.h"
 
-Mesh::Mesh()
-{
-	glGenVertexArrays(1, &m_VAO);
-}
-
-Mesh::Mesh(const std::string & name) :
-	m_name(name)
+Mesh::Mesh() :
+	m_initialized(false)
 {
 	glGenVertexArrays(1, &m_VAO);
 }
@@ -16,105 +11,118 @@ Mesh::Mesh(const std::string & name) :
 Mesh::~Mesh()
 {
 	glDeleteVertexArrays(1, &m_VAO);
-	glDeleteBuffers(static_cast<int>(m_buffers.size()), &m_buffers[0]);
+	glDeleteBuffers(1, &m_VBO);
+	glDeleteBuffers(1, &m_EBO);
 }
 
-void Mesh::init(const std::vector<vec3>& positions, const std::vector<unsigned int>& indices)
+void Mesh::init(const MeshGeometry& geometry)
 {
+	if (m_initialized) return;
+
+	// Calculating buffer layout
+	m_topology = geometry.topology;
+
+	m_indexCount = geometry.indices.size();
+	m_vertexCount = 0;
+	m_attributeCount = 0;
+
+	size_t bufferSize = 0;
+
+	size_t positionsBufferSize = 0;
+	if (geometry.vertexComponents & MeshGeometry::POSITIONS) {
+		m_vertexCount = geometry.positions.size();
+		positionsBufferSize = sizeof(vec3) * m_vertexCount;
+		bufferSize += positionsBufferSize;
+		++m_attributeCount;
+	}
+
+	size_t texCoordsBufferSize = 0;
+	if (geometry.vertexComponents & MeshGeometry::TEX_COORDS) {
+		texCoordsBufferSize = sizeof(vec2) * m_vertexCount;
+		bufferSize += texCoordsBufferSize;
+		++m_attributeCount;
+	}
+
+	size_t normalsBufferSize = 0;
+	if (geometry.vertexComponents & MeshGeometry::NORMALS) {
+		normalsBufferSize = sizeof(vec3) * m_vertexCount;
+		bufferSize += normalsBufferSize;
+		++m_attributeCount;
+	}
+
 	glBindVertexArray(m_VAO);
 
-	m_positionsNum = static_cast<unsigned int>(positions.size());
-	initAttribute(0, positions);
-	initIndices(indices);
+	glGenBuffers(1, &m_VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+
+	std::vector<char> data(bufferSize);
+
+	size_t offset = 0;
+	if (geometry.vertexComponents & MeshGeometry::POSITIONS) {
+		std::memcpy(&data[0] + offset, geometry.positions.data(), positionsBufferSize);
+		glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, reinterpret_cast<GLvoid*>(offset));
+
+		offset += positionsBufferSize;
+	}
+
+	if (geometry.vertexComponents & MeshGeometry::TEX_COORDS) {
+		std::memcpy(&data[0] + offset, geometry.texCoords.data(), texCoordsBufferSize);
+		glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, reinterpret_cast<GLvoid*>(offset));
+
+		offset += texCoordsBufferSize;
+	}
+
+	if (geometry.vertexComponents & MeshGeometry::NORMALS) {
+		std::memcpy(&data[0] + offset, geometry.normals.data(), normalsBufferSize);
+		glVertexAttribPointer(2, 3, GL_FLOAT, false, 0, reinterpret_cast<GLvoid*>(offset));
+
+		offset += normalsBufferSize;
+	}
+
+	glBufferData(GL_ARRAY_BUFFER, bufferSize, data.data(), GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glGenBuffers(1, &m_EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * m_indexCount, &geometry.indices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	glBindVertexArray(0);
-}
 
-void Mesh::init(const std::vector<vec3>& positions, const std::vector<vec2>& textureCoords,
-	const std::vector<unsigned int>& indices)
-{
-	glBindVertexArray(m_VAO);
-
-	m_positionsNum = static_cast<unsigned int>(positions.size());
-	initAttribute(0, positions);
-	initAttribute(1, textureCoords);
-	initIndices(indices);
-
-	glBindVertexArray(0);
-}
-
-void Mesh::init(const std::vector<vec3>& positions, const std::vector<vec2>& textureCoords,
-	const std::vector<vec3>& normals, const std::vector<unsigned int>& indices)
-{
-	glBindVertexArray(m_VAO);
-
-	m_positionsNum = static_cast<unsigned int>(positions.size());
-	initAttribute(0, positions);
-	initAttribute(1, textureCoords);
-	initAttribute(2, normals);
-	initIndices(indices);
-
-	glBindVertexArray(0);
+	m_initialized = true;
 }
 
 void Mesh::draw() const
 {
 	glBindVertexArray(m_VAO);
 
-	for (int i = 0; i < m_buffers.size(); ++i) {
+	for (int i = 0; i < m_attributeCount; ++i) {
 		glEnableVertexAttribArray(i);
 	}
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_buffers.back());
-	glDrawElements(GL_TRIANGLES, m_indicesNum, GL_UNSIGNED_INT, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
+	glDrawElements(m_topology, m_indexCount, GL_UNSIGNED_INT, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-	for (int i = 0; i < m_buffers.size() - 1; ++i) {
+	for (int i = 0; i < m_attributeCount; ++i) {
 		glDisableVertexAttribArray(i);
 	}
 
 	glBindVertexArray(0);
 }
 
-void Mesh::setName(const std::string & name)
+unsigned int Mesh::getIndexCount() const
 {
-	m_name = name;
+	return m_indexCount;
 }
 
-std::string Mesh::getName() const
+unsigned int Mesh::getVertexCount() const
 {
-	return m_name;
+	return m_vertexCount;
 }
 
-GLuint Mesh::getVAO() const
+unsigned int Mesh::getAttributeCount() const
 {
-	return m_VAO;
-}
-
-GLuint Mesh::getPositionsBuffer() const
-{
-	return m_buffers[0];
-}
-
-unsigned int Mesh::getPositionsNum() const
-{
-	return m_positionsNum;
-}
-
-unsigned int Mesh::getIndicesNum() const
-{
-	return m_indicesNum;
-}
-
-void Mesh::initIndices(const std::vector<unsigned int>& indices)
-{
-	GLuint ebo;
-	glGenBuffers(1, &ebo);
-	m_buffers.push_back(ebo);
-
-	m_indicesNum = static_cast<unsigned int>(indices.size());
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * m_indicesNum, &indices[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	return m_attributeCount;
 }

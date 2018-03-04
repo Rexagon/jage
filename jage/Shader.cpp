@@ -67,16 +67,6 @@ bool Shader::link(std::string& infoLog)
 	return true;
 }
 
-void Shader::bind()
-{
-	glUseProgram(m_program);
-}
-
-void Shader::unbind()
-{
-	glUseProgram(0);
-}
-
 void Shader::setAttribute(unsigned int index, const std::string & name)
 {
 	glBindAttribLocation(m_program, index, name.c_str());

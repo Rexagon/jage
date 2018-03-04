@@ -40,7 +40,7 @@ public:
 
 	static const Id INVALID;
 
-	Entity();
+	Entity() = default;
 	Entity(EntityManager* manager, Entity::Id id);
 
 	void destroy();
@@ -113,14 +113,14 @@ public:
 	C* get();
 	const C* get() const;
 
-	bool operator==(const ComponentHandle<C> &other) const
+	bool operator==(const ComponentHandle<C, EM> &other) const
 	{
 		return m_manager == other.m_manager && m_id == other.m_id;
 	}
 
-	bool operator!=(const ComponentHandle<C> &other) const
+	bool operator!=(const ComponentHandle<C, EM> &other) const
 	{
-		return m_manager != other.m_manager || m_id != other.m_id);
+		return m_manager != other.m_manager || m_id != other.m_id;
 	}
 
 private:
@@ -130,7 +130,7 @@ private:
 		m_manager(manager), m_id(id)
 	{}
 
-	EntityManager* m_manager;
+	EM* m_manager;
 	Entity::Id m_id;
 };
 

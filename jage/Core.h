@@ -3,9 +3,7 @@
 #include <GL/glew.h>
 #include <SFML/Graphics.hpp>
 
-#include <SFGUI/Desktop.hpp>
-#include <SFGUI/SFGUI.hpp>
-
+#include "RenderStateManager.h"
 #include "ResourceManager.h"
 #include "CursorManager.h"
 #include "SceneManager.h"
@@ -20,8 +18,8 @@
 
 #include "Delegate.h"
 #include "Input.h"
-#include "Log.h"
 #include "Time.h"
+#include "Log.h"
 
 class Core
 {
@@ -52,9 +50,6 @@ public:
 	// Returns SFML window
 	static sf::RenderWindow& getWindow();
 
-	static sfg::SFGUI* getGui();
-	static sfg::Desktop* getGuiDesktop();
-
 	// Returns millisecond count since application start
 	static unsigned long long getGlobalTimer();
 
@@ -64,10 +59,7 @@ private:
 	static bool m_isInitialized;
 	static bool m_isRunning;
 
+	static uint64_t m_globalTimer;
+
 	static sf::RenderWindow m_window;
-
-	static std::unique_ptr<sfg::SFGUI> m_gui;
-	static std::unique_ptr<sfg::Desktop> m_guiDesktop;
-
-	static unsigned long long m_globalTimer;
 };

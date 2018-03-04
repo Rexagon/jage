@@ -3,7 +3,8 @@
 #include "Core.h"
 
 FirstPersonCamera::FirstPersonCamera(const std::string & name) :
-	PerspectiveCamera(name, glm::pi<float>() / 2.0f, 1.0f)
+	PerspectiveCamera(name, glm::pi<float>() * 0.38f, 1.0f), 
+	m_rotations(0.0f, 0.0f), m_speed(10.0f)
 {
 }
 
@@ -32,7 +33,11 @@ void FirstPersonCamera::onUpdate(const float dt)
 	}
 
 	if (direction != vec3(0.0f, 0.0f, 0.0f)) {
-		move(glm::normalize(direction) * dt * 10.0f);
+		float speed = m_speed;
+		if (Input::getKey(Key::LShift)) {
+			speed *= 2.0f;
+		}
+		move(glm::normalize(direction) * dt * speed);
 	}
 
 	if (Input::getMouse(MouseButton::Right)) {
@@ -42,4 +47,14 @@ void FirstPersonCamera::onUpdate(const float dt)
 		setRotation(m_rotations.x, 0.0f, 0.0f);
 		rotate(0.0f, m_rotations.y, 0.0f);
 	}
+}
+
+void FirstPersonCamera::setSpeed(float speed)
+{
+	m_speed = speed;
+}
+
+float FirstPersonCamera::getSpeed() const
+{
+	return m_speed;
 }
