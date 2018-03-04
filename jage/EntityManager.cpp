@@ -1,54 +1,7 @@
 #include "EntityManager.h"
 
-// Entity //
-///////////
-Entity::Entity(EntityManager * manager, Entity::Id id) :
-	m_manager(manager), m_id(id)
-{
-}
-
-void Entity::destroy()
-{
-}
-
-void Entity::invalidate()
-{
-}
-
-bool Entity::isValid() const
-{
-	return false;
-}
-
-Entity::Id Entity::getId() const
-{
-	return Id();
-}
-
-std::bitset<MAX_COMPONENTS> Entity::getComponentMask() const
-{
-	return std::bitset<MAX_COMPONENTS>();
-}
-
-bool Entity::operator==(const Entity & other) const
-{
-	return m_manager == other.m_manager && m_id == other.m_id;
-}
-
-bool Entity::operator!=(const Entity & other) const
-{
-	return m_manager != other.m_manager || m_id != other.m_id;
-}
-
-bool Entity::operator<(const Entity & other) const
-{
-	return m_id > other.m_id;
-}
-
-
-// EntityManager //
-//////////////////
-EntityManager::EntityManager()
+EntityManager::EntityManager() :
+	m_currentEntityId(0)
 {
 }
 
@@ -56,106 +9,65 @@ EntityManager::~EntityManager()
 {
 }
 
-Entity EntityManager::create()
+void EntityManager::onUpdate(const float dt)
 {
-	uint32_t index, version;
-	if (m_freeEntitiesList.empty()) {
-		index = m_indexCounter++;
-		accomodateEntity(index);
-		version = m_entityVersions[index] = 1;
-	}
-	else {
-		index = m_freeEntitiesList.back();
-		m_freeEntitiesList.pop_back();
-		version = m_entityVersions[index];
-	}
+	cleanup();
 
-	Entity entity(this, Entity::Id(index, version));
-	// TODO: emit entity created event
+	for (auto& system : m_systems) {
+		system->onUpdate(this, dt);
+	}
+}
+
+std::shared_ptr<Entity> EntityManager::create()
+{
+	++m_currentEntityId;
+	std::shared_ptr<Entity> entity = std::make_shared<Entity>(this, m_currentEntityId);
+	m_entities.push_back(entity);
+
+	emit<Events::OnEntityCreated>({ entity.get() });
+
 	return entity;
 }
 
-Entity EntityManager::createFromCopy(Entity original)
+void EntityManager::destroy(Entity * entity, bool immediate)
 {
-	assert(original.isValid());
-	Entity clone = create();
-	ComponentMask mask = original.getComponentMask();
-	for (size_t i = 0; i < m_componentHelpers.size(); ++i) {
-		BaseComponentHelper* helper = m_componentHelpers[i];
-		if (helper != nullptr && mask.test(i)) {
-			helper->copyComponentTo(original, clone);
-		}
-	}
 }
 
-void EntityManager::destroy(Entity::Id entityId)
+bool EntityManager::cleanup()
 {
-	assertValid(entityId);
-
-	uint32_t index = entityId.getIndex();
-	ComponentMask mask = m_entityComponentMasks[index];
-
-	for (size_t i = 0; i < m_componentHelpers.size(); ++i) {
-		BaseComponentHelper* helper = m_componentHelpers[i];
-		if (helper != nullptr && mask.test(i)) {
-			helper->removeComponent(Entity(this, entityId));
-		}
-	}
-
-	// TODO: emit entity destroyed event
-	m_entityComponentMasks[index].reset();
-	m_entityVersions[index]++;
-	m_freeEntitiesList.push_back(index);
+	return false;
 }
 
-Entity EntityManager::get(Entity::Id id)
+void EntityManager::reset()
 {
-	assertValid(id);
-	return Entity(this, id);
 }
 
-size_t EntityManager::getSize() const
+void EntityManager::all(std::function<void(Entity*)> func, bool includePendingDestroy)
 {
-	return m_entityComponentMasks.size() - m_freeEntitiesList.size();
 }
 
-size_t EntityManager::getCapacity() const
+
+
+Entity::Entity(const EntityManager * entityManager, size_t id) :
+	m_manager(entityManager), m_id(id), m_pendingDestroy(false)
 {
-	return m_entityComponentMasks.size();
 }
 
-void EntityManager::assertValid(Entity::Id id) const
+Entity::~Entity()
 {
-	assert(id.getIndex() < m_entityComponentMasks.size() && "Entity::Id ID outside entity vector range");
-	assert(m_entityVersions[id.getIndex()] == id.getVersion() && "Attempt to access Entity via a stale Entity::Id");
 }
 
-EntityManager::ComponentMask EntityManager::getComponentMask(Entity::Id id)
+const EntityManager * Entity::getEntityManager() const
 {
-	assertValid(id);
-	return m_entityComponentMasks[id.getIndex()];
+	return m_manager;
 }
 
-void EntityManager::accomodateEntity(uint32_t index)
+size_t Entity::getId() const
 {
-	if (m_entityComponentMasks.size() <= index) {
-		m_entityComponentMasks.resize(index + 1);
-		m_entityVersions.resize(index + 1);
-		for (BasePool* pool : m_componentPools) {
-			if (pool) {
-				pool->expand(index + 1);
-			}
-		}
-	}
+	return m_id;
 }
 
-Entity::Id EntityManager::createId(uint32_t index) const
+bool Entity::isPendingDestroy() const
 {
-	return Entity::Id(index, m_entityVersions[index]);
-}
-
-bool EntityManager::isValid(Entity::Id id) const
-{
-	return id.getIndex() < m_entityVersions.size() && 
-		m_entityVersions[id.getIndex()] == id.getVersion();
+	return m_pendingDestroy;
 }

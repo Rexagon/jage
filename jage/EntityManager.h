@@ -1,306 +1,255 @@
 #pragma once
 
-#include <cstdint>
-#include <cassert>
-#include <bitset>
+#include <unordered_map>
+#include <functional>
+#include <typeindex>
+#include <algorithm>
+#include <memory>
 #include <vector>
 
-#include "Math.h"
-#include "Pool.h"
-
-#define MAX_COMPONENTS 64
-
+class Entity;
 class EntityManager;
 
-template<class C, class EM = EntityManager>
-class ComponentHandle;
-
-
-class Entity
+namespace detail
 {
-public:
-	struct Id
+	template<class T>
+	struct ComparationPredicate
 	{
-		Id() : m_id(0) {}
-		Id(uint64_t id) : m_id(id) {}
-		Id(uint32_t index, uint32_t version) : m_id(uint64_t(index) | (uint64_t(version) << 32UL)) {}
+		ComparationPredicate(T* ptr) :
+			ptr(ptr)
+		{}
 
-		uint64_t getId() const { return m_id; }
-		uint32_t getIndex() const { return m_id & 0xffffffffUL; }
-		uint32_t getVersion() const { return m_id >> 32; }
+		template<typename P>
+		bool operator()(const std::shared_ptr<P>& other) const
+		{
+			return other.get() == ptr;
+		}
 
-		bool operator==(const Id& other) const { return m_id == other.m_id; }
-		bool operator!=(const Id& other) const { return m_id != other.m_id; }
-		bool operator<(const Id& other) const { return m_id < other.m_id; }
-		bool operator>(const Id& other) const { return m_id > other.m_id; }
-	private:
-		friend class EntityManager;
-		uint64_t m_id;
+		T* ptr;
 	};
 
-	static const Id INVALID;
+	template<class T>
+	ComparationPredicate<T> pointerComparator(T* ptr)
+	{
+		return ComparationPredicate<T>(ptr);
+	}
 
-	Entity() = default;
-	Entity(EntityManager* manager, Entity::Id id);
+	class BaseEventSubscriber
+	{
+	public:
+		virtual ~BaseEventSubscriber() {}
+	};
+	
+	struct BaseComponentContainer
+	{
+		virtual ~BaseComponentContainer() {}
+	};
 
-	void destroy();
-	void invalidate();
+	template<class T>
+	struct ComponentContainer : public BaseComponentContainer
+	{
+		ComponentContainer() {}
+		ComponentContainer(const T& data) : data(data) {}
 
-	template<class C, class... Args>
-	ComponentHandle<C> assign(Args&&... args);
-
-	template<class C>
-	ComponentHandle<C> assignFromCopy(const C& component);
-
-	template<class C, class... Args>
-	ComponentHandle<C> replace(Args&&... args);
-
-	template<class C>
-	void remove();
-
-	template<class C, class = typename std::enable_if<!std::is_const<C>::value>::type>
-	ComponentHandle<C> getComponent();
-
-	template<class C, class = typename std::enable_if<std::is_const<C>::value>::type>
-	const ComponentHandle<C, const EntityManager> getComponent() const;
-
-	template<class... Cs>
-	std::tuple<ComponentHandle<Cs>...> getComponents();
-
-	template<class... Cs>
-	std::tuple<ComponentHandle<const Cs, const EntityManager>...> getComponents() const;
-
-	template<class C>
-	bool hasComponent() const;
-
-	template<class C, class... Cs>
-	void unpack(ComponentHandle<C>& c, ComponentHandle<Cs>&... cs);
-
-	bool isValid() const;
-	Id getId() const;
-
-	std::bitset<MAX_COMPONENTS> getComponentMask() const;
-
-	bool operator==(const Entity& other) const;
-	bool operator!=(const Entity& other) const;
-	bool operator<(const Entity& other) const;
-
-private:
-	EntityManager * m_manager = nullptr;
-	Id m_id;
-};
+		T data;
+	};
+}
 
 
-template<class C, class EM>
+template<class T>
 class ComponentHandle
 {
 public:
-	typedef C ComponentType;
+	ComponentHandle() : m_component(nullptr) {}
+	ComponentHandle(T* component) : m_component(component) {}
 
-	ComponentHandle() : m_manager(nullptr) {}
+	bool isValid() const { return m_component != nullptr; }
 
-	void remove();
-	Entity getEntity() const;
+	T& get() { return *m_component; }
+	const T& get() const { return *m_component; }
 
-	bool isValid() const;
+	T* operator->() const { return m_component; }
+	const T* operator->() const { return m_component; }
 
-	C* operator->();
-	const C* operator->() const;
-
-	C& operator*();
-	const C& operator*() const;
-
-	C* get();
-	const C* get() const;
-
-	bool operator==(const ComponentHandle<C, EM> &other) const
-	{
-		return m_manager == other.m_manager && m_id == other.m_id;
-	}
-
-	bool operator!=(const ComponentHandle<C, EM> &other) const
-	{
-		return m_manager != other.m_manager || m_id != other.m_id;
-	}
+	operator bool() const { return isValid(); }
 
 private:
-	friend class EntityManager;
-
-	ComponentHandle(EM* manager, Entity::Id id) :
-		m_manager(manager), m_id(id)
-	{}
-
-	EM* m_manager;
-	Entity::Id m_id;
+	T* m_component;
 };
 
 
-class BaseComponent
+class EntitySystem
 {
 public:
-	typedef size_t Family;
+	virtual ~EntitySystem() {}
 
-	void operator delete(void *p) { fail(); }
-	void operator delete[](void *p) { fail(); }
+	virtual void onUpdate(EntityManager* entityManager, const float dt) {}
 
-protected:
-	static void fail() { throw std::bad_alloc(); }
-
-	static Family m_familyCounter;
-};
-
-
-template<class C>
-struct Component : public BaseComponent
-{
-public:
-	typedef ComponentHandle<C> Handle;
-	typedef ComponentHandle<const C, const EntityManager> ConstHandle;
+	virtual void configure(EntityManager* entityManager) {}
+	virtual void unconfigure(EntityManager* entityManager) {}
 
 private:
-	friend class EntityManager;
 
-	static Family getFamily();
 };
 
 
-class BaseComponentHelper
+template<class T>
+class EventSubscriber : public detail::BaseEventSubscriber
 {
 public:
-	virtual ~BaseComponentHelper() {}
-	virtual void removeComponent(Entity e) = 0;
-	virtual void copyComponentTo(Entity source, Entity target) = 0;
+	virtual ~EventSubscriber() {}
+
+	virtual void onReceive(EntityManager* entityManager, const T& event) = 0;
 };
 
 
-template<class C>
-class ComponentHelper
+namespace Events
 {
-public:
-	void removeComponent(Entity e) override
+	struct OnEntityCreated
 	{
-		e.remove<C>();
-	}
+		Entity* entity;
+	};
 
-	void copyComponentTo(Entity source, Entity target) override
+	struct OnEntityDestroyed
 	{
-		target.assignFromCopy(*source.getComponent<C>().get());
-	}
-};
+		Entity* entity;
+	};
+
+	template<class T>
+	struct OnComponentAssigned
+	{
+		Entity* entity;
+		ComponentHandle<T> component;
+	};
+}
 
 
 class EntityManager
 {
 public:
-	typedef std::bitset<MAX_COMPONENTS> ComponentMask;
-
 	EntityManager();
-	virtual ~EntityManager();
+	~EntityManager();
 
-	Entity create();
-	Entity createFromCopy(Entity original);
-	void destroy(Entity::Id entityId);
-	Entity get(Entity::Id id);
+	void onUpdate(const float dt);
 
-	Entity::Id createId(uint32_t index) const;
-	bool isValid(Entity::Id id) const;
+	std::shared_ptr<Entity> create();
+	void destroy(Entity* entity, bool immediate = false);
 
-	size_t getSize() const;
-	size_t getCapacity() const;
+	bool cleanup();
 
-	template<class C>
-	static BaseComponent::Family getComponentFamily() {
-		return Component<typename std::remove_const<C>::type>::getFamily();
-	}
-private:
-	void assertValid(Entity::Id id) const;
+	void reset();
 
-	template<class C>
-	C* getComponentPtr(Entity::Id id)
+	void registerSystem(std::shared_ptr<EntitySystem> system)
 	{
-		assertValid(id);
-		BasePool* pool = m_componentPools[getComponentFamily<C>()];
-		assert(pool);
-		return static_cast<C*>(pool->get(id.getIndex()));
+		if (system == nullptr) return;
+
+		m_systems.push_back(system);
+		system->configure(this);
 	}
 
-	template<class C>
-	const C* getComponentPtr(Entity::Id id)
+	void unregisterSystem(EntitySystem* system)
 	{
-		assertValid(id);
-		BasePool* pool = m_componentPools[getComponentFamily<C>()];
-		assert(pool);
-		return static_cast<const C*>(pool->get(id.getIndex()));
+		if (system == nullptr) return;
+
+		m_systems.erase(std::remove_if(m_systems.begin(), m_systems.end(), detail::pointerComparator(system)), m_systems.end());
+		system->unconfigure(this);
 	}
 
-	template<class C>
-	ComponentMask getComponentMask()
+	template<class T>
+	void subscribe(EventSubscriber<T>* subscriber)
 	{
-		ComponentMask mask;
-		mask.set(getComponentFamily<C>());
-		return mask;
+		std::type_index index(typeid(T));
+		auto it = m_subscribers.find(index);
+		if (it == m_subscribers.end()) {
+			m_subscribers.emplace(index, std::initializer_list<detail::BaseEventSubscriber*>{subscriber});
+		}
+		else {
+			it->second.push_back(subscriber);
+		}
 	}
 
-	template<class C1, class C2, class... Cs>
-	ComponentMask getComponentMask()
+	template<class T>
+	void unsubscribe(EventSubscriber<T>* subscriber)
 	{
-		return getComponentMask<C1>() | getComponentMask<C2, Cs>();
+		std::type_index index(typeid(T));
+		auto it = m_subscribers.find(index);
+		if (it != m_subscribers.end()) {
+			it->second.erase(std::remove(it->second.begin(), it->second.end(), subscriber), it->second.end());
+			if (it->second.empty()) {
+				m_subscribers.erase(it);
+			}
+		}
 	}
 
-	template<class C>
-	ComponentMask getComponentMask(const ComponentHandle<C>& c)
+	void unsubscribeAll(void* subscriber)
 	{
-		return getComponentMask<C>();
+		for (auto& it : m_subscribers) {
+			it.second.erase(std::remove(it.second.begin(), it.second.end(), subscriber), it.second.end());
+			if (it.second.empty()) {
+				m_subscribers.erase(it.first);
+			}
+		}
 	}
 
-	template<class C, class... Cs>
-	ComponentMask getComponentMask(const ComponentHandle<C>& c, const ComponentHandle<Cs>&... cs)
+	template<class T>
+	void emit(const T& event)
 	{
-		return getComponentMask<C, Cs...>();
+		auto it = m_subscribers.find(std::type_index(typeid(T)));
+		if (it != m_subscribers.end()) {
+			for (auto& base: it->second) {
+				EventSubscriber<T>* subscriber = reinterpret_cast<EventSubscriber<T>*>(base);
+				subscriber->onReceive(this, event);
+			}
+		}
 	}
 
-	ComponentMask getComponentMask(Entity::Id id);
-
-	void accomodateEntity(uint32_t index);
+	template<class... Types>
+	void each(typename std::common_type<std::function<void(Entity*, ComponentHandle<Types>...)>>::type func, 
+		bool includePendingDestroy = false);
 	
-	template<class C>
-	Pool<C>* accomodateComponent()
-	{
-		BaseComponent::Familt family = getComponentFamilt<C>();
-		if (m_componentPools.size() <= family) {
-			m_componentPools.resize(family + 1, nullptr);
-		}
+	void all(std::function<void(Entity*)> func, bool includePendingDestroy);
 
-		if (m_componentPools[family] == nullptr) {
-			Pool<C>* pool = new Pool<C>();
-			pool->expand(m_indexCounter);
-			m_componentPools[family] = pool;
-		}
+private:
+	std::vector<std::shared_ptr<Entity>> m_entities;
+	std::vector<std::shared_ptr<EntitySystem>> m_systems;
 
-		if (m_componentHelpers[family].size() <= family) {
-			m_componentHelpers.resize(family + 1, nullptr);
-		}
+	std::unordered_map<std::type_index,
+		std::vector<detail::BaseEventSubscriber*>,
+		std::hash<std::type_index>,
+		std::equal_to<std::type_index>> m_subscribers;
 
-		if (m_componentHelpers[family] == nullptr) {
-			ComponentHelper<C>* helper = new ComponentHelper<C>();
-			m_componentHelpers[family] = helper;
-		}
-		return static_cast<Pool<C>*>(m_componentPools[family]);
-	}
-
-	uint32_t m_indexCounter;
-
-	std::vector<BasePool*> m_componentPools;
-	std::vector<BaseComponentHelper*> m_componentHelpers;
-	std::vector<ComponentMask> m_entityComponentMasks;
-	std::vector<uint32_t> m_entityVersions;
-	std::vector<uint32_t> m_freeEntitiesList;
+	size_t m_currentEntityId;
 };
 
-template<class C>
-BaseComponent::Family Component<C>::getFamily()
+
+class Entity
 {
-	Family family = m_familyCounter++;
-	assert(family < EntityManager::MAX_COMPONENTS);
-	return family;
-}
+public:
+	Entity(const EntityManager* entityManager, size_t id);
+	virtual ~Entity();
+
+	template<class T>
+	ComponentHandle<T> get()
+	{
+		auto it = m_components.find(std::type_index(typeid(T)));
+		if (it == m_components.end()) {
+			return ComponentHandle<T>(nullptr);
+		}
+		else {
+			return ComponentHandle<T>(&reinterpret_cast<detail::ComponentContainer<T>*>(it->second.get())->data);
+		}
+	}
+
+	const EntityManager* getEntityManager() const;
+	size_t getId() const;
+
+	bool isPendingDestroy() const;
+
+private:
+	std::unordered_map<std::type_index, std::shared_ptr<detail::BaseComponentContainer>> m_components;
+
+	const EntityManager* m_manager;
+	size_t m_id;
+
+	int m_pendingDestroy;
+};
