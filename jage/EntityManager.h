@@ -240,6 +240,47 @@ public:
 		}
 	}
 
+	template<class T>
+	bool has() const
+	{
+		return m_components.find(std::type_index(typeid(T))) != m_components.end();
+	}
+
+	template<class T1, class T2, class... Ts>
+	bool has() const
+	{
+		return has<T1>() && has<T2, Ts>();
+	}
+
+	template<class T, class... Args>
+	ComponentHandle<T> assign(Args&&... args)
+	{
+		auto it = m_components.find(std::type_index(typeid(T)));
+		if (it == m_components.end()) {
+			detail::ComponentContainer<T>* container = reinterpret_cast<detail::ComponentContainer<T>*>(it->second);
+			container->data = T(args...);
+
+			ComponentHandle<T> handle(&container->data);
+			m_manager->emit<Events::OnComponentAssigned<T>>({ this, handle });
+			return handle;
+		}
+		else {
+			//TODO: assign
+		}
+	}
+
+
+	template<class... Ts>
+	bool with(typename std::common_type<std::function<void(ComponentHandle<Ts>...)>>::type func)
+	{
+		if (!has<Ts...>()) {
+			return false;
+		}
+
+		func(get<Ts>()...);
+		return true;
+	}
+
 	const EntityManager* getEntityManager() const;
 	size_t getId() const;
 
