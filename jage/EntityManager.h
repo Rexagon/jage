@@ -10,6 +10,8 @@
 class Entity;
 class EntityManager;
 
+class World;
+
 namespace detail
 {
 	template<class T>
@@ -52,6 +54,63 @@ namespace detail
 		ComponentContainer(const T& data) : data(data) {}
 
 		T data;
+	};
+
+	template<T>
+	class Iterator
+	{
+	public:
+		Iterator(const World* world, size_t index, bool isEnd, bool includePendingDestroy) :
+			m_world(world), m_index(index), m_isEnd(isEnd), m_includePendingDestroy(includePendingDestroy)
+		{}
+
+		Entity* get() const;
+
+		Entity* operator*() const {
+			return get();
+		}
+
+		const World* getWorld() const { return m_world; }
+		size_t getIndex() const { return m_index; }
+		bool isEnd() const { return m_isEnd; }
+		bool includePendingDestroy() const { return m_includePendingDestroy; }
+
+		bool operator==(const detail::Iterator<Ts...>& other) const {
+			if (m_world != other.m_world) return false;
+			if (m_isEnd) return other.m_isEnd;
+
+			return m_index == other.m_index;
+		}
+
+		bool operator!=(const detail::Iterator<Ts...>& other) const {
+			if (m_world != other.m_world) return true;
+			if (m_isEnd) return !other.m_isEnd;
+
+			return m_index != other.m_index;
+		}
+
+		Iterator<Ts...>& operator++();
+
+	private:
+		const World* m_world;
+		size_t m_index;
+		bool m_isEnd;
+		bool m_includePendingDestroy;
+	};
+
+
+	template<class... Ts>
+	class EntityComponentView
+	{
+	public:
+		EntityComponentView(const Iterator<Ts...>& begin, const Iterator<Ts...>& end);
+
+		Iterator<Ts...> begin() { return m_begin; }
+		Iterator<Ts...> end() { return m_end; }
+
+	private:
+		Iterator<Ts...> m_begin;
+		Iterator<Ts...> m_end;
 	};
 }
 
@@ -203,11 +262,22 @@ public:
 		}
 	}
 
-	template<class... Types>
-	void each(typename std::common_type<std::function<void(Entity*, ComponentHandle<Types>...)>>::type func, 
+	template<class... Ts>
+	void each(typename std::common_type<std::function<void(Entity*, ComponentHandle<Ts>...)>>::type func,
 		bool includePendingDestroy = false);
+
+	template<typename... Ts>
+	detail::EntityComponentView<Ts...> each(bool includePendingDestroy = false)
+	{
+		detail::Iterator<Ts...> first(this, 0, false, includePendingDestroy);
+		detail::Iterator<Ts...> last(this, getEntityCount(), true, includePendingDestroy);
+		return detail::EntityComponentView<Ts...>(first, last);
+	}
 	
 	void all(std::function<void(Entity*)> func, bool includePendingDestroy);
+
+	size_t getEntityCount() const;
+	Entity* getByIndex(size_t index) const;
 
 private:
 	std::vector<std::shared_ptr<Entity>> m_entities;
@@ -255,21 +325,25 @@ public:
 	template<class T, class... Args>
 	ComponentHandle<T> assign(Args&&... args)
 	{
-		auto it = m_components.find(std::type_index(typeid(T)));
-		if (it == m_components.end()) {
-			detail::ComponentContainer<T>* container = reinterpret_cast<detail::ComponentContainer<T>*>(it->second);
-			container->data = T(args...);
+		detail::ComponentContainer<T>* container;
 
-			ComponentHandle<T> handle(&container->data);
-			m_manager->emit<Events::OnComponentAssigned<T>>({ this, handle });
-			return handle;
+		std::type_index index(typeid(T));
+		auto it = m_components.find(index);
+		if (it == m_components.end()) {
+			std::shared_ptr<detail::ComponentContainer<T>> containerPtr = std::make_shared<detail::ComponentContainer<T>>(T(args...));
+			container = containerPtr.get();
+			m_components.insert({ index, containerPtr });
 		}
 		else {
-			//TODO: assign
+			container = reinterpret_cast<detail::ComponentContainer<T>*>(it->second.get());
+			container->data = T(args...);
 		}
+
+		ComponentHandle<T> handle(&container->data);
+		m_manager->emit<Events::OnComponentAssigned<T>>({ this, handle });
+		return handle;
 	}
-
-
+	
 	template<class... Ts>
 	bool with(typename std::common_type<std::function<void(ComponentHandle<Ts>...)>>::type func)
 	{
@@ -287,6 +361,8 @@ public:
 	bool isPendingDestroy() const;
 
 private:
+	friend class EntityManager;
+
 	std::unordered_map<std::type_index, std::shared_ptr<detail::BaseComponentContainer>> m_components;
 
 	const EntityManager* m_manager;
@@ -294,3 +370,48 @@ private:
 
 	int m_pendingDestroy;
 };
+
+template<class... Ts>
+inline Entity * detail::Iterator<Ts...>::get() const 
+{
+	return m_world->getByIndex(m_index);
+}
+
+template<class ...Ts>
+inline detail::Iterator<Ts...>& detail::Iterator<Ts...>::operator++()
+{
+	++m_index;
+	while (m_index < m_world->getEntityCount() && (get() == nullptr || !get()->has<Ts...>() ||
+		(get()->isPendingDestroy() && m_includePendingDestroy)))
+	{
+		++m_index;
+	}
+
+	if (m_index >= m_world->getEntityCount()) {
+		m_isEnd = true;
+	}
+
+	return *this;
+}
+
+template<class ...Ts>
+inline detail::EntityComponentView<Ts...>::EntityComponentView(const detail::Iterator<Ts...>& begin, 
+	const detail::Iterator<Ts...>& end) :
+	m_begin(begin), m_end(end)
+{
+	if (begin.get() == nullptr || (begin.get()->isPendingDestroy() && begin->includePendingDestroy()) ||
+		!begin.get()->has<Ts...>())
+	{
+		++begin;
+	}
+}
+
+template<class ...Ts>
+inline void EntityManager::each(typename std::common_type<std::function<void(Entity*, ComponentHandle<Ts>...)>>::type func, 
+	bool includePendingDestroy)
+{
+	detail::EntityComponentView<Ts...> entities = each<Ts...>(includePendingDestroy);
+	for (auto it = entities.begin(); it != entities.end(); ++it) {
+		func(it->get(), it->get()->get<Ts>()...);
+	}
+}

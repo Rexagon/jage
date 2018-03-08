@@ -7,6 +7,19 @@ EntityManager::EntityManager() :
 
 EntityManager::~EntityManager()
 {
+	for (auto entity : m_entities)
+	{
+		if (!entity->isPendingDestroy())
+		{
+			entity->m_pendingDestroy = true;
+			emit<Events::OnEntityDestroyed>({ entity.get() });
+		}
+	}
+
+	for (auto system : m_systems)
+	{
+		system->unconfigure(this);
+	}
 }
 
 void EntityManager::onUpdate(const float dt)
@@ -31,19 +44,65 @@ std::shared_ptr<Entity> EntityManager::create()
 
 void EntityManager::destroy(Entity * entity, bool immediate)
 {
+	if (entity == nullptr) return;
+
+	if (!entity->isPendingDestroy()) {
+		entity->m_pendingDestroy = true;
+		emit<Events::OnEntityDestroyed>({ entity });
+	}
+
+	if (immediate) {
+		m_entities.erase(std::remove(m_entities.begin(), m_entities.end(), detail::pointerComparator(entity)), m_entities.end());
+	}
 }
 
 bool EntityManager::cleanup()
 {
-	return false;
+	size_t count = 0;
+	m_entities.erase(std::remove_if(m_entities.begin(), m_entities.end(), [&, this](Entity* entity) {
+		if (entity->isPendingDestroy()) {
+			++count;
+			return true;
+		}
+
+		return false;
+	}), m_entities.end());
+
+	return count > 0;
 }
 
 void EntityManager::reset()
 {
+	for (auto entity : m_entities)
+	{
+		if (!entity->isPendingDestroy())
+		{
+			entity->m_pendingDestroy = true;
+			emit<Events::OnEntityDestroyed>({ entity.get() });
+		}
+	}
+
+	m_entities.clear();
+	m_currentEntityId = 0;
 }
 
 void EntityManager::all(std::function<void(Entity*)> func, bool includePendingDestroy)
 {
+}
+
+size_t EntityManager::getEntityCount() const
+{
+	return m_entities.size();
+}
+
+Entity * EntityManager::getByIndex(size_t index) const
+{
+	if (index < m_entities.size()) {
+		return m_entities[index].get();
+	}
+	else {
+		return nullptr;
+	}
 }
 
 
