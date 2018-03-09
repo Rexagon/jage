@@ -5,6 +5,13 @@ BasePool::BasePool(size_t elementSize, size_t chunkSize) :
 {
 }
 
+BasePool::~BasePool()
+{
+	for (auto chunk : m_chunks) {
+		delete[] chunk;
+	}
+}
+
 void BasePool::expand(size_t n)
 {
 	if (n >= m_size) {

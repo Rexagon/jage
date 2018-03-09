@@ -4,8 +4,10 @@
 
 #include "Log.h"
 
-GameObject::GameObject(const std::string & name) :
-	m_name(name), m_isActive(true), m_parent(nullptr)
+
+GameObject::GameObject(const EntityManager * manager, EntityId id) :
+	m_isActive(true), m_parent(nullptr), 
+	m_manager(manager), m_id(id), m_isPendingDestroy(false)
 {
 }
 
@@ -65,16 +67,6 @@ bool GameObject::isActive() const
 	return m_isActive;
 }
 
-void GameObject::setVisible(bool visible)
-{
-	m_isVisible = visible;
-}
-
-bool GameObject::isVisible() const
-{
-	return m_isVisible;
-}
-
 void GameObject::setName(const std::string & name)
 {
 	m_name = name;
@@ -103,6 +95,21 @@ mat4 GameObject::getGlobalTransformation() const
 	else {
 		return m_parent->getGlobalTransformation() * getTransformationMatrix();
 	}
+}
+
+const EntityManager * GameObject::getEntityManager() const
+{
+	return m_manager;
+}
+
+EntityId GameObject::getId() const
+{
+	return m_id;
+}
+
+bool GameObject::isPendingDestroy() const
+{
+	return m_isPendingDestroy;
 }
 
 void GameObject::setParent(GameObject * parent)
@@ -213,4 +220,24 @@ std::shared_ptr<GameObject> GameObject::detachChildByName(const std::string & na
 std::vector<std::shared_ptr<GameObject>>& GameObject::getChildren()
 {
 	return m_children;
+}
+
+bool GameObject::operator==(const GameObject & other) const
+{
+	return m_manager == other.m_manager && m_id == other.m_id;
+}
+
+bool GameObject::operator!=(const GameObject & other) const
+{
+	return m_manager != other.m_manager || m_id != other.m_id;
+}
+
+bool GameObject::operator<(const GameObject & other) const
+{
+	return other.m_id < m_id;
+}
+
+std::shared_ptr<GameObject> GameObject::create(const EntityManager * manager, EntityId id)
+{
+	return std::make_shared<GameObject>(manager, id);
 }

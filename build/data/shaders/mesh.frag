@@ -12,7 +12,7 @@ void main()
     vec3 diffuse = vec3(1.0);
 
     vec3 ambient = vec3(0.1);
-    vec3 light = clamp(dot(normalize(v_normal), u_sunDirection), 0.0, 1.0) * vec3(1.0, 1.0, 0.95);
+    vec3 light = clamp(dot(normalize(v_normal), u_sunDirection), 0.0, 1.0) * vec3(1.0, 1.0, 1.0);
 
     vec3 color = (ambient + light) * diffuse;
 

@@ -5,7 +5,8 @@
 class BasePool
 {
 public:
-	explicit BasePool(size_t elementSize, size_t chunkSize = 8192);
+	BasePool(size_t elementSize, size_t chunkSize = 8192);
+	virtual ~BasePool();
 
 	void expand(size_t n);
 	void reserve(size_t n);
@@ -27,7 +28,7 @@ private:
 };
 
 
-template<class T, size_t ChunkSize = 8192>
+template<typename T, size_t ChunkSize = 8192>
 class Pool : public BasePool
 {
 public:
@@ -35,12 +36,10 @@ public:
 		BasePool(sizeof(T), ChunkSize)
 	{}
 
-	virtual ~Pool() {}
-
 	virtual void destroy(size_t n) override
 	{
 		if (n < m_size) {
-			T* ptr = static_cast<T*>(get(n));
+			T* ptr = reinterpret_cast<T*>(get(n));
 			ptr->~T();
 		}
 	}

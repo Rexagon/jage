@@ -42,7 +42,8 @@ void Game::onInit()
 
 
 	// Loading models
-	m_rootObject = std::make_shared<GameObject>("root");
+	m_rootObject = m_entityManager.create();
+	m_rootObject->setName("root");
 
 	ResourceManager::bind<ModelFactory>("castle", "castle.fbx");
 	Model* castle = ResourceManager::get<Model>("castle");
@@ -62,6 +63,7 @@ void Game::onInit()
 
 	ResourceManager::bind<ModelFactory>("terrain", "terrain.fbx");
 	Model* terrain = ResourceManager::get<Model>("terrain");
+	terrain->getRootObject()->setScale(100.0f, 30.0f, 100.0f);
 	m_rootObject->addChild(terrain->getRootObject());
 
 
@@ -71,8 +73,8 @@ void Game::onInit()
 	m_grid = std::make_shared<Grid>("grid");
 	m_grid->setPosition(0.0f, 0.001f, 0.0f);
 
-	m_circle = std::make_shared<Mesh>();
-	m_circle->init(MeshGeometry::createCube());
+	m_sky = std::make_shared<Mesh>();
+	m_sky->init(MeshGeometry::createCube());
 
 	m_camera = std::make_shared<FirstPersonCamera>("main_camera");
 	m_camera->setPosition(0.0f, 1.0f, 10.0f);
@@ -149,7 +151,7 @@ void Game::onDraw(const float dt)
 	m_skyShader->setUniform("u_mieCoefficient", 0.005f);
 	m_skyShader->setUniform("u_mieDirectionalG", 0.8f);
 	m_skyShader->setUniform("u_luminance", 1.0f);
-	m_circle->draw();
+	m_sky->draw();
 	glDepthMask(GL_TRUE);
 	RenderStateManager::setFaceCullingEnabled(true);
 
