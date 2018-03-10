@@ -105,10 +105,10 @@ void Game::onUpdate(const float dt)
 	}
 
 	if (Input::getKey(Key::Up)) {
-		m_sunDirection.x += dt;
+		m_sunDirection.x -= dt;
 	}
 	if (Input::getKey(Key::Down)) {
-		m_sunDirection.x -= dt;
+		m_sunDirection.x += dt;
 	}
 
 	if (Input::getKey(Key::Left)) {

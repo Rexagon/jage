@@ -2,19 +2,19 @@
 
 CameraComponent::CameraComponent() :
 	m_depthRange(0.1f, 100.0f), m_projectionChanged(true), m_projectionType(PERSPECTIVE),
-	m_fov(glm::half_pi<float>()), m_aspect(1.0f), m_left(0.0f), m_right(0.0f), m_bottom(0.0f), m_top(0.0f)
+	m_fov(glm::half_pi<float>() * 0.77f), m_aspect(1.0f), m_left(0.0f), m_right(0.0f), m_bottom(0.0f), m_top(0.0f)
 {
 }
 
 CameraComponent::CameraComponent(float minDepth, float maxDepth) :
 	m_depthRange(minDepth, maxDepth), m_projectionChanged(true), m_projectionType(PERSPECTIVE),
-	m_fov(glm::half_pi<float>()), m_aspect(1.0f), m_left(0.0f), m_right(0.0f), m_bottom(0.0f), m_top(0.0f)
+	m_fov(glm::half_pi<float>() * 0.77f), m_aspect(1.0f), m_left(0.0f), m_right(0.0f), m_bottom(0.0f), m_top(0.0f)
 {
 }
 
 CameraComponent::CameraComponent(const vec2& zRange) :
 	m_depthRange(zRange), m_projectionChanged(true), m_projectionType(PERSPECTIVE),
-	m_fov(glm::half_pi<float>()), m_aspect(1.0f), m_left(0.0f), m_right(0.0f), m_bottom(0.0f), m_top(0.0f)
+	m_fov(glm::half_pi<float>() * 0.77f), m_aspect(1.0f), m_left(0.0f), m_right(0.0f), m_bottom(0.0f), m_top(0.0f)
 {
 }
 

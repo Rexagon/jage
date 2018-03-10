@@ -5,10 +5,16 @@
 #include "Log.h"
 
 size_t detail::BaseComponent::m_familyCounter = 0;
+const EntityId EntityId::INVALID;
 
 EntityManager::EntityManager() :
 	m_currentIndex(0)
 {
+}
+
+EntityId EntityManager::createId(uint32_t index) const
+{
+	return EntityId(index, m_entityVersions[index]);
 }
 
 bool EntityManager::isValid(EntityId id) const
@@ -54,6 +60,23 @@ std::shared_ptr<GameObject> EntityManager::create()
 	return gameObject;
 }
 
+void EntityManager::destroy(EntityId id)
+{
+	uint32_t index = id.getIndex();
+	ComponentMask mask = m_entityComponentMasks[index];
+	for (size_t i = 0; i < m_componentHelpers.size(); ++i) {
+		auto& helper = m_componentHelpers[i];
+		if (helper != nullptr && mask.test(i)) {
+			helper->removeComponent(this, id);
+		}
+	}
+
+	//TODO: emit destroyed
+	m_entityComponentMasks[index].reset();
+	m_entityVersions[index]++;
+	m_availableIndices.push_back(index);
+}
+
 std::shared_ptr<GameObject> EntityManager::get(EntityId id)
 {
 	if (m_gameObjects.size() < id.getIndex()) {
@@ -62,4 +85,9 @@ std::shared_ptr<GameObject> EntityManager::get(EntityId id)
 	else {
 		return nullptr;
 	}
+}
+
+EntityManager::ComponentMask EntityManager::getComponentMask(EntityId id)
+{
+	return m_entityComponentMasks.at(id.getIndex());
 }

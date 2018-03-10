@@ -30,8 +30,6 @@ object_ptr Model::createGameObject(EntityManager * manager, const std::string & 
 		gameObject->setName(modelNode->name);
 		gameObject->setTransformationMatrix(modelNode->localTransformation);
 
-		Log::write(modelNode->name, reinterpret_cast<uint64_t>(modelNode));
-
 		if (modelNode->mesh != nullptr) {
 			gameObject->assign<MeshComponent>(modelNode->mesh);
 		}

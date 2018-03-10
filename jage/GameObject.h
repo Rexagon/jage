@@ -56,11 +56,31 @@ public:
 	}
 
 	template<typename T>
+	ComponentHandle<T> assignFromCopy(const T& component)
+	{
+		return m_manager->assign<T>(m_id, std::forward<const T&>(component));
+	}
+
+	template<typename T, typename... Args>
+	ComponentHandle<T> replace(Args&&... args)
+	{
+		ComponentHandle<T> handle = getComponent<T>();
+		if (handle) {
+			(*handle.get()) = T(std::forward<Args>(args)...);
+		}
+		else {
+			handle = m_manager->assign<T>(m_id, std::forward<Args>(args)...);
+		}
+
+		return handle;
+	}
+
+	template<typename T>
 	void remove()
 	{
 		m_manager->remove<T>(m_id);
 	}
-
+	
 	template<typename T>
 	ComponentHandle<T> getComponent()
 	{
@@ -73,11 +93,35 @@ public:
 		return const_cast<const EntityManager*>(m_manager)->getComponent<const T>(m_id);
 	}
 
+	template<typename... Ts>
+	std::tuple<ComponentHandle<Ts>...> getComponents()
+	{
+		return m_manager->getComponents<Ts...>(m_id);
+	}
+
+	template<typename... Ts>
+	std::tuple<ComponentHandle<const Ts>...> getComponents() const
+	{
+		return const_cast<const EntityManager*>(m_manager)->getComponent<const Ts...>(m_id);
+	}
+
 	template<typename T>
 	bool hasComponent() const
 	{
 		return m_manager->hasComponent<T>(m_id);
 	}
+
+	template<typename T, typename... Ts>
+	void unpack(ComponentHandle<T>& c, ComponentHandle<Ts>&... cs)
+	{
+		return m_manager->unpack(m_id, cs...);
+	}
+
+	std::bitset<MAX_COMPONENTS> getComponentMask() const;
+
+	void destroy();
+	void invalidate();
+	bool isValid() const;
 
 	bool operator==(const GameObject& other) const;
 	bool operator!=(const GameObject& other) const;

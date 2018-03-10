@@ -187,6 +187,28 @@ std::vector<std::shared_ptr<GameObject>>& GameObject::getChildren()
 	return m_children;
 }
 
+std::bitset<MAX_COMPONENTS> GameObject::getComponentMask() const
+{
+	return m_manager->getComponentMask(m_id);
+}
+
+void GameObject::destroy()
+{
+	m_manager->destroy(m_id);
+	invalidate();
+}
+
+void GameObject::invalidate()
+{
+	m_id = EntityId::INVALID;
+	m_manager = nullptr;
+}
+
+bool GameObject::isValid() const
+{
+	return m_manager != nullptr && m_manager->isValid(m_id);
+}
+
 bool GameObject::operator==(const GameObject & other) const
 {
 	return m_manager == other.m_manager && m_id == other.m_id;

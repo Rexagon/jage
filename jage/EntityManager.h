@@ -12,29 +12,12 @@
 class GameObject;
 class EntityManager;
 
-namespace detail
-{	
-	class BaseComponent
-	{
-	public:
-		virtual ~BaseComponent() {}
-
-		void operator delete(void *p) { fail(); }
-		void operator delete[](void *p) { fail(); }
-	protected:
-		static void fail()
-		{
-			throw std::bad_alloc();
-		}
-
-		static size_t m_familyCounter;
-	};
-}
-
 
 class EntityId
 {
 public:
+	static const EntityId INVALID;
+
 	EntityId() : m_id(0) {}
 	EntityId(uint64_t id) : m_id(id) {}
 
@@ -66,6 +49,42 @@ private:
 
 	uint64_t m_id;
 };
+
+
+namespace detail
+{
+	class BaseComponent
+	{
+	public:
+		virtual ~BaseComponent() {}
+
+		void operator delete(void *p) { fail(); }
+		void operator delete[](void *p) { fail(); }
+	protected:
+		static void fail()
+		{
+			throw std::bad_alloc();
+		}
+
+		static size_t m_familyCounter;
+	};
+
+	class BaseComponentHelper
+	{
+	public:
+		virtual ~BaseComponentHelper() {}
+		virtual void removeComponent(EntityManager* manager, EntityId id) = 0;
+		virtual void copyComponentTo(EntityManager* manager, EntityId source, EntityId target) = 0;
+	};
+
+	template<typename T>
+	class ComponentHelper : public BaseComponentHelper
+	{
+	public:
+		void removeComponent(EntityManager* manager, EntityId id) override;
+		void copyComponentTo(EntityManager* manager, EntityId source, EntityId target) override;
+	};
+}
 
 
 template<typename T>
@@ -114,19 +133,22 @@ private:
 };
 
 
-template<typename T>
-class Component : public detail::BaseComponent
+namespace detail
 {
-public:
-	typedef ComponentHandle<T> Handle;
-	typedef ComponentHandle<const T> ConstHandle;
-
-	static size_t getFamily()
+	template<typename T>
+	class Component : public detail::BaseComponent
 	{
-		static size_t family = m_familyCounter++;
-		return family;
-	}
-};
+	public:
+		typedef ComponentHandle<T> Handle;
+		typedef ComponentHandle<const T> ConstHandle;
+
+		static size_t getFamily()
+		{
+			static size_t family = m_familyCounter++;
+			return family;
+		}
+	};
+}
 
 
 class EntityManager
@@ -136,9 +158,11 @@ public:
 
 	EntityManager();
 
+	EntityId createId(uint32_t index) const;
 	bool isValid(EntityId id) const;
 
 	std::shared_ptr<GameObject> create();
+	void destroy(EntityId id);
 
 	std::shared_ptr<GameObject> get(EntityId id);
 
@@ -152,12 +176,19 @@ public:
 			m_componentPools.emplace_back(nullptr);
 		}
 
-		BasePool* pool = m_componentPools[family].get();
+		while (m_componentHelpers.size() <= family) {
+			m_componentHelpers.emplace_back(nullptr);
+		}
+
+		auto& pool = m_componentPools[family];
 		if (pool == nullptr) {
-			std::unique_ptr<Pool<T>> newPool = std::make_unique<Pool<T>>();
-			pool = newPool.get();
-			m_componentPools[family] = std::move(newPool);
+			pool = std::move(std::make_unique<Pool<T>>());
 			pool->expand(m_currentIndex);
+		}
+
+		auto& helper = m_componentHelpers[family];
+		if (helper == nullptr) {
+			helper = std::move(std::make_unique<detail::ComponentHelper<T>>());
 		}
 		//
 
@@ -179,7 +210,7 @@ public:
 
 		m_entityComponentMasks[index].reset(family);
 
-		BasePool* pool = m_componentPools[family].get();
+		auto& pool = m_componentPools[family];
 		pool->destroy(index);
 	}
 
@@ -192,7 +223,7 @@ public:
 			return false;
 		}
 
-		BasePool* pool = m_componentPools[family].get();
+		auto& pool = m_componentPools[family];
 		if (pool == nullptr || !m_entityComponentMasks[id.getIndex()][family]) {
 			return false;
 		}
@@ -200,7 +231,7 @@ public:
 		return true;
 	}
 
-	template<typename T>
+	template<typename T, typename = typename std::enable_if<!std::is_const<T>::value>::type>
 	ComponentHandle<T> getComponent(EntityId id)
 	{
 		size_t family = getComponentFamily<T>();
@@ -209,7 +240,7 @@ public:
 			return ComponentHandle<T>();
 		}
 
-		BasePool* pool = m_componentPools[family].get();
+		auto& pool = m_componentPools[family];
 		if (pool == nullptr || !m_entityComponentMasks[id.getIndex()][family]) {
 			return ComponentHandle<T>();
 		}
@@ -217,10 +248,80 @@ public:
 		return ComponentHandle<T>(this, id);
 	}
 
+	template<typename T, typename = typename std::enable_if<std::is_const<T>::value>::type>
+	const ComponentHandle<T> getComponent(EntityId id) const
+	{
+		size_t family = getComponentFamily<T>();
+
+		if (family >= m_componentPools.size()) {
+			return ComponentHandle<T>();
+		}
+
+		auto& pool = m_componentPools[family];
+		if (pool == nullptr || !m_entityComponentMasks[id.getIndex()][family]) {
+			return ComponentHandle<T>();
+		}
+
+		return ComponentHandle<T>(this, id);
+	}
+
+	template<typename... Ts>
+	std::tuple<ComponentHandle<Ts>...> getComponents(EntityId id)
+	{
+		return std::make_tuple(getComponent<Ts>(id)...);
+	}
+
+	template<typename... Ts>
+	std::tuple<ComponentHandle<const Ts>...> getComponents(EntityId id) const
+	{
+		return std::make_tuple(getComponent<const Ts>(id)...);
+	}
+
+	template<typename T>
+	void unpack(EntityId id, ComponentHandle<T>& c)
+	{
+		c = getComponent<T>();
+	}
+
+	template<typename T, typename... Ts>
+	void unpack(EntityId id, ComponentHandle<T>& c, ComponentHandle<Ts>&... cs)
+	{
+		c = getComponent<T>();
+		unpack<Ts...>(id, cs...);
+	}
+
 	template<typename T>
 	static size_t getComponentFamily()
 	{
-		return Component<typename std::remove_const<T>::type>::getFamily();
+		return detail::Component<typename std::remove_const<T>::type>::getFamily();
+	}
+
+	ComponentMask getComponentMask(EntityId id);
+
+	template<typename T>
+	ComponentMask getComponentMask() 
+	{
+		ComponentMask mask;
+		mask.set(getComponentFamily<T>());
+		return mask;
+	}
+
+	template<typename T1, typename T2, typename... Ts>
+	ComponentMask getComponentMask() 
+	{
+		return getComponentMask<T1>() | getComponentMask<T2, Ts...>();
+	}
+
+	template<typename T>
+	ComponentMask getComponentMask(const ComponentHandle<T>& c) 
+	{
+		return getComponentMask<T>();
+	}
+
+	template<typename T1, typename... Ts>
+	ComponentMask getComponentMask(const ComponentHandle<T1>& c1, const ComponentHandle<Ts>&... args) 
+	{
+		return getComponentMask<T1, Ts...>();
 	}
 
 private:
@@ -244,6 +345,7 @@ private:
 	uint32_t m_currentIndex;
 
 	std::vector<std::unique_ptr<BasePool>> m_componentPools;
+	std::vector<std::unique_ptr<detail::BaseComponentHelper>> m_componentHelpers;
 	std::vector<ComponentMask> m_entityComponentMasks;
 	std::vector<uint32_t> m_entityVersions;
 
@@ -252,10 +354,24 @@ private:
 	std::vector<uint32_t> m_availableIndices;
 };
 
+
+template<typename T>
+inline void detail::ComponentHelper<T>::removeComponent(EntityManager* manager, EntityId id)
+{
+	manager->remove<T>(id);
+}
+
+template<typename T>
+inline void detail::ComponentHelper<T>::copyComponentTo(EntityManager* manager, EntityId source, EntityId target)
+{
+	manager->assign<T>(source, std::forward<const T&>(*(manager->getComponent<T>(source).get())));
+}
+
+
 template<typename T>
 inline void ComponentHandle<T>::remove()
 {
-	//TODO: mark as pending remove
+	m_manager->remove<T>(m_entityId);
 }
 
 template<typename T>
