@@ -19,7 +19,14 @@ namespace detail
 	public:
 		virtual ~BaseComponent() {}
 
-	private:
+		void operator delete(void *p) { fail(); }
+		void operator delete[](void *p) { fail(); }
+	protected:
+		static void fail()
+		{
+			throw std::bad_alloc();
+		}
+
 		static size_t m_familyCounter;
 	};
 }
@@ -98,11 +105,11 @@ public:
 private:
 	friend class EntityManager;
 
-	ComponentHandle(const EntityManager* manager, EntityId entityId) :
+	ComponentHandle(EntityManager* manager, EntityId entityId) :
 		m_manager(manager), m_entityId(entityId)
 	{}
 		
-	const EntityManager* m_manager;
+	EntityManager* m_manager;
 	EntityId m_entityId;
 };
 
@@ -127,6 +134,8 @@ class EntityManager
 public:
 	typedef std::bitset<MAX_COMPONENTS> ComponentMask;
 
+	EntityManager();
+
 	bool isValid(EntityId id) const;
 
 	std::shared_ptr<GameObject> create();
@@ -139,13 +148,15 @@ public:
 		size_t family = getComponentFamily<T>();
 		
 		// accomodate component
-		if (m_componentPools.size() <= family) {
-			m_componentPools.resize(family + 1, nullptr);
+		while (m_componentPools.size() <= family) {
+			m_componentPools.emplace_back(nullptr);
 		}
 
-		auto& pool = m_componentPools[family];
+		BasePool* pool = m_componentPools[family].get();
 		if (pool == nullptr) {
-			pool = std::make_unique<Pool<T>>();
+			std::unique_ptr<Pool<T>> newPool = std::make_unique<Pool<T>>();
+			pool = newPool.get();
+			m_componentPools[family] = std::move(newPool);
 			pool->expand(m_currentIndex);
 		}
 		//
@@ -154,8 +165,22 @@ public:
 		
 		m_entityComponentMasks[id.getIndex()].set(family);
 		ComponentHandle<T> component(this, id);
-		// emite component assignment event
+		// emit component assignment event
 		return component;
+	}
+
+	template<typename T>
+	void remove(EntityId id)
+	{
+		size_t family = getComponentFamily<T>();
+		uint32_t index = id.getIndex();
+
+		// create and emit component removement event
+
+		m_entityComponentMasks[index].reset(family);
+
+		BasePool* pool = m_componentPools[family].get();
+		pool->destroy(index);
 	}
 
 	template<typename T>
@@ -167,8 +192,8 @@ public:
 			return false;
 		}
 
-		auto& pool = m_componentPools[family];
-		if (pool == nullptr || !m_entityComponentMasks[id.index()][family]) {
+		BasePool* pool = m_componentPools[family].get();
+		if (pool == nullptr || !m_entityComponentMasks[id.getIndex()][family]) {
 			return false;
 		}
 
@@ -184,8 +209,8 @@ public:
 			return ComponentHandle<T>();
 		}
 
-		auto& pool = m_componentPools[family];
-		if (pool == nullptr || !m_entityComponentMasks[id.index()][family]) {
+		BasePool* pool = m_componentPools[family].get();
+		if (pool == nullptr || !m_entityComponentMasks[id.getIndex()][family]) {
 			return ComponentHandle<T>();
 		}
 
@@ -205,14 +230,14 @@ private:
 	template<typename T>
 	T* getComponentPtr(EntityId id)
 	{
-		auto& pool = m_componentPools[getComponentFamily<T>()];
+		BasePool* pool = m_componentPools[getComponentFamily<T>()].get();
 		return reinterpret_cast<T*>(pool->get(id.getIndex()));
 	}
 
 	template<typename T>
 	const T* getComponentPtr(EntityId id) const
 	{
-		auto& pool = m_componentPools[getComponentFamily<T>()];
+		BasePool* pool = m_componentPools[getComponentFamily<T>()].get();
 		return reinterpret_cast<const T*>(pool->get(id.getIndex()));
 	}
 
@@ -242,7 +267,7 @@ inline std::shared_ptr<GameObject> ComponentHandle<T>::getEntity()
 template<typename T>
 inline bool ComponentHandle<T>::isValid() const
 {
-	return m_manager != nullptr && m_manager->isValid(id) &&
+	return m_manager != nullptr && m_manager->isValid(m_entityId) &&
 		m_manager->hasComponent<T>(m_entityId);
 }
 
@@ -250,7 +275,7 @@ template<typename T>
 inline T * ComponentHandle<T>::operator->()
 {
 	if (isValid()) {
-		return m_manager->getComponentPtr(m_entityId);
+		return m_manager->getComponentPtr<T>(m_entityId);
 	}
 	else {
 		return nullptr;
@@ -261,7 +286,7 @@ template<typename T>
 inline const T * ComponentHandle<T>::operator->() const
 {
 	if (isValid()) {
-		return m_manager->getComponentPtr(m_entityId);
+		return m_manager->getComponentPtr<T>(m_entityId);
 	}
 	else {
 		return nullptr;
@@ -272,7 +297,7 @@ template<typename T>
 inline T * ComponentHandle<T>::get()
 {
 	if (isValid()) {
-		return m_manager->getComponentPtr(m_entityId);
+		return m_manager->getComponentPtr<T>(m_entityId);
 	}
 	else {
 		return nullptr;
@@ -283,7 +308,7 @@ template<typename T>
 inline const T * ComponentHandle<T>::get() const
 {
 	if (isValid()) {
-		return m_manager->getComponentPtr(m_entityId);
+		return m_manager->getComponentPtr<T>(m_entityId);
 	}
 	else {
 		return nullptr;

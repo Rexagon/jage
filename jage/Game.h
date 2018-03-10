@@ -3,11 +3,13 @@
 #include "EntityManager.h"
 #include "SceneManager.h"
 
-#include "FirstPersonCamera.h"
+#include "FirstPersonController.h"
+#include "CameraComponent.h"
 #include "FrameBuffer.h"
 #include "Shader.h"
 #include "Model.h"
 #include "Grid.h"
+#include "Mesh.h"
 
 class Game : public BaseScene
 {
@@ -37,8 +39,11 @@ private:
 	float m_turbidity;
 	float m_rayleigh;
 
-	std::shared_ptr<Grid> m_grid;
-	std::shared_ptr<FirstPersonCamera> m_camera;
+	//std::shared_ptr<Grid> m_grid;
+	object_ptr m_camera;
+	ComponentHandle<CameraComponent> m_cameraData;
+
+	FirstPersonController m_cameraController;
 
 	std::shared_ptr<Mesh> m_quad;
 	std::shared_ptr<Mesh> m_sky;

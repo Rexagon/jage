@@ -12,12 +12,8 @@
 class GameObject : public Transformable
 {
 public:
+	GameObject(EntityManager* manager, EntityId id);
 	virtual ~GameObject();
-
-	virtual void onUpdate(const float dt) {}
-	virtual void onDraw() {}
-	
-	virtual std::shared_ptr<GameObject> duplicate();
 
 	virtual void setActive(bool active);
 	bool isActive() const;
@@ -37,6 +33,8 @@ public:
 	bool isPendingDestroy() const;
 
 	// Tree structure functions
+	std::shared_ptr<GameObject> clone();
+
 	void setParent(GameObject* parent);
 	GameObject* getParent() const;
 	
@@ -54,7 +52,31 @@ public:
 	template<typename T, typename... Args>
 	ComponentHandle<T> assign(Args&&... args)
 	{
+		return m_manager->assign<T>(m_id, std::forward<Args>(args)...);
+	}
 
+	template<typename T>
+	void remove()
+	{
+		m_manager->remove<T>(m_id);
+	}
+
+	template<typename T>
+	ComponentHandle<T> getComponent()
+	{
+		return m_manager->getComponent<T>(m_id);
+	}
+
+	template<typename T>
+	const ComponentHandle<T> getComponent() const
+	{
+		return const_cast<const EntityManager*>(m_manager)->getComponent<const T>(m_id);
+	}
+
+	template<typename T>
+	bool hasComponent() const
+	{
+		return m_manager->hasComponent<T>(m_id);
 	}
 
 	bool operator==(const GameObject& other) const;
@@ -73,11 +95,9 @@ protected:
 private:
 	friend class EntityManager;
 
-	static std::shared_ptr<GameObject> create(const EntityManager* manager, EntityId id);
+	static std::shared_ptr<GameObject> create(EntityManager* manager, EntityId id);
 
-	GameObject(const EntityManager* manager, EntityId id);
-
-	const EntityManager* m_manager;
+	EntityManager* m_manager;
 	EntityId m_id;
 
 	bool m_isPendingDestroy;

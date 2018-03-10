@@ -1,28 +1,27 @@
-#include "FirstPersonCamera.h"
+#include "FirstPersonController.h"
 
 #include "Core.h"
 
-FirstPersonCamera::FirstPersonCamera(const std::string & name) :
-	PerspectiveCamera(name, glm::pi<float>() * 0.38f, 1.0f), 
+FirstPersonController::FirstPersonController() :
 	m_rotations(0.0f, 0.0f), m_speed(10.0f)
 {
 }
 
-void FirstPersonCamera::onUpdate(const float dt)
+void FirstPersonController::update(const float dt, object_ptr gameObject)
 {
 	vec3 direction(0.0f, 0.0f, 0.0f);
 	if (Input::getKey(Key::W)) {
-		direction += getDirectionFront();
+		direction += gameObject->getDirectionFront();
 	}
 	else if (Input::getKey(Key::S)) {
-		direction -= getDirectionFront();
+		direction -= gameObject->getDirectionFront();
 	}
 
 	if (Input::getKey(Key::A)) {
-		direction -= getDirectionRight();
+		direction -= gameObject->getDirectionRight();
 	}
 	else if (Input::getKey(Key::D)) {
-		direction += getDirectionRight();
+		direction += gameObject->getDirectionRight();
 	}
 
 	if (Input::getKey(Key::Space)) {
@@ -37,24 +36,24 @@ void FirstPersonCamera::onUpdate(const float dt)
 		if (Input::getKey(Key::LShift)) {
 			speed *= 2.0f;
 		}
-		move(glm::normalize(direction) * dt * speed);
+		gameObject->move(glm::normalize(direction) * dt * speed);
 	}
 
 	if (Input::getMouse(MouseButton::Right)) {
 		m_rotations.x -= Input::getMouseDeltaPosition().y * dt;
 		m_rotations.y -= Input::getMouseDeltaPosition().x * dt;
 
-		setRotation(m_rotations.x, 0.0f, 0.0f);
-		rotate(0.0f, m_rotations.y, 0.0f);
+		gameObject->setRotation(m_rotations.x, 0.0f, 0.0f);
+		gameObject->rotate(0.0f, m_rotations.y, 0.0f);
 	}
 }
 
-void FirstPersonCamera::setSpeed(float speed)
+void FirstPersonController::setSpeed(float speed)
 {
 	m_speed = speed;
 }
 
-float FirstPersonCamera::getSpeed() const
+float FirstPersonController::getSpeed() const
 {
 	return m_speed;
 }

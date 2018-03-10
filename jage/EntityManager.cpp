@@ -2,6 +2,15 @@
 
 #include "GameObject.h"
 
+#include "Log.h"
+
+size_t detail::BaseComponent::m_familyCounter = 0;
+
+EntityManager::EntityManager() :
+	m_currentIndex(0)
+{
+}
+
 bool EntityManager::isValid(EntityId id) const
 {
 	return id.getIndex() < m_entityVersions.size() && 
@@ -41,6 +50,7 @@ std::shared_ptr<GameObject> EntityManager::create()
 	std::shared_ptr<GameObject> gameObject = GameObject::create(this, EntityId(index, version));
 	m_gameObjects[index] = gameObject;
 	// emit creation event
+
 	return gameObject;
 }
 

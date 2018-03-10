@@ -5,7 +5,7 @@
 #include "Log.h"
 
 
-GameObject::GameObject(const EntityManager * manager, EntityId id) :
+GameObject::GameObject(EntityManager * manager, EntityId id) :
 	m_isActive(true), m_parent(nullptr), 
 	m_manager(manager), m_id(id), m_isPendingDestroy(false)
 {
@@ -14,47 +14,6 @@ GameObject::GameObject(const EntityManager * manager, EntityId id) :
 GameObject::~GameObject()
 {
 	m_children.clear();
-}
-
-std::shared_ptr<GameObject> GameObject::duplicate()
-{	
-	std::shared_ptr<GameObject> result = std::make_shared<GameObject>(m_name);
-	result->m_tag = m_tag;
-	result->m_isActive = m_isActive;
-	result->m_transformation = m_transformation;
-	result->setParent(nullptr);
-
-	std::stack<GameObject*> currentStructure;
-	std::stack<GameObject*> resultStructure;
-
-	currentStructure.push(this);
-	resultStructure.push(result.get());
-
-	while (!resultStructure.empty())
-	{
-		GameObject* resultObject = resultStructure.top();
-		resultStructure.pop();
-
-		GameObject* currentObject = currentStructure.top();
-		currentStructure.pop();
-
-		for (auto it = currentObject->m_children.begin(); it != currentObject->m_children.end(); ++it) {
-			const auto& currentChild = (*it);
-
-			auto resultChild = std::make_shared<GameObject>(currentChild->m_name);
-			resultChild->m_tag = currentChild->m_tag;
-			resultChild->m_isActive = currentChild->m_isActive;
-			resultChild->m_transformation = currentChild->m_transformation;
-			resultChild->setParent(resultObject);
-
-			currentStructure.push(currentChild.get());
-			resultStructure.push(resultChild.get());
-
-			resultObject->addChild(std::move(resultChild));
-		}
-	}
-
-	return std::move(result);
 }
 
 void GameObject::setActive(bool active)
@@ -110,6 +69,12 @@ EntityId GameObject::getId() const
 bool GameObject::isPendingDestroy() const
 {
 	return m_isPendingDestroy;
+}
+
+std::shared_ptr<GameObject> GameObject::clone()
+{
+	//TODO: implement
+	return nullptr;
 }
 
 void GameObject::setParent(GameObject * parent)
@@ -237,7 +202,7 @@ bool GameObject::operator<(const GameObject & other) const
 	return other.m_id < m_id;
 }
 
-std::shared_ptr<GameObject> GameObject::create(const EntityManager * manager, EntityId id)
+std::shared_ptr<GameObject> GameObject::create(EntityManager * manager, EntityId id)
 {
 	return std::make_shared<GameObject>(manager, id);
 }

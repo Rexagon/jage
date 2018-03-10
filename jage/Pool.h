@@ -19,7 +19,7 @@ public:
 	size_t getCapacity() const;
 	size_t getChunkCount() const;
 	
-private:
+protected:
 	std::vector<char*> m_chunks;
 	size_t m_elementSize;
 	size_t m_chunkSize;
@@ -35,6 +35,8 @@ public:
 	Pool() :
 		BasePool(sizeof(T), ChunkSize)
 	{}
+
+	virtual ~Pool() {}
 
 	virtual void destroy(size_t n) override
 	{
