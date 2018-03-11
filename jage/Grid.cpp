@@ -2,17 +2,16 @@
 
 #include "RenderStateManager.h"
 
-Grid::Grid(const std::string & name) :
-	GameObject(name)
+Grid::Grid(unsigned int size) :
+	m_size(static_cast<int>(size))
 {
-	int size = 5;
 	float chunkSize = 20.0f;
 
 	std::vector<vec3> gridVertices;
 	std::vector<ivec2> chunkIds;
 
-	for (int i = -size; i <= size; ++i) {
-		for (int j = -size; j <= size; ++j) {
+	for (int i = -m_size; i <= m_size; ++i) {
+		for (int j = -m_size; j <= m_size; ++j) {
 			chunkIds.push_back(vec2(i, j));
 			gridVertices.push_back(chunkSize * vec3(i, 0.0f, j));
 		}
@@ -48,7 +47,7 @@ Grid::~Grid()
 	glDeleteBuffers(1, &m_VBO);
 }
 
-void Grid::onDraw()
+void Grid::draw()
 {
 	RenderStateManager::setBlendingEnabled(true);
 	RenderStateManager::setBlendingFunction(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

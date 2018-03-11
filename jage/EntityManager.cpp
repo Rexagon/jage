@@ -1,132 +1,103 @@
 #include "EntityManager.h"
 
+#include "GameObject.h"
+
+#include "Log.h"
+
+size_t detail::BaseComponent::m_familyCounter = 0;
+const EntityId EntityId::INVALID;
+
 EntityManager::EntityManager() :
-	m_currentEntityId(0)
+	m_currentIndex(0)
 {
 }
 
-EntityManager::~EntityManager()
+size_t EntityManager::getSize() const
 {
-	for (auto entity : m_entities)
-	{
-		if (!entity->isPendingDestroy())
-		{
-			entity->m_pendingDestroy = true;
-			emit<Events::OnEntityDestroyed>({ entity.get() });
+	return m_entityComponentMasks.size() - m_availableIndices.size();
+}
+
+size_t EntityManager::getCapacity() const
+{
+	return m_entityComponentMasks.size();
+}
+
+EntityId EntityManager::createId(uint32_t index) const
+{
+	return EntityId(index, m_entityVersions[index]);
+}
+
+bool EntityManager::isValid(EntityId id) const
+{
+	return id.getIndex() < m_entityVersions.size() && 
+		m_entityVersions[id.getIndex()] == id.getVersion();
+}
+
+std::shared_ptr<GameObject> EntityManager::create()
+{
+	uint32_t index, version;
+
+	if (m_availableIndices.empty()) {
+		index = m_currentIndex++;
+
+		// accomodate entity
+		if (m_entityComponentMasks.size() <= index) {
+			m_entityComponentMasks.resize(index + 1);
+			m_entityVersions.resize(index + 1);
+
+			m_gameObjects.resize(index + 1);
+
+			for (auto& pool : m_componentPools) {
+				if (pool) {
+					pool->expand(index + 1);
+				}
+			}
+		}
+		//
+
+		version = m_entityVersions[index] = 1;
+	}
+	else {
+		index = m_availableIndices.back();
+		m_availableIndices.pop_back();
+		version = m_entityVersions[index];
+	}
+
+	std::shared_ptr<GameObject> gameObject = GameObject::create(this, EntityId(index, version));
+	m_gameObjects[index] = gameObject;
+	// emit creation event
+
+	return gameObject;
+}
+
+void EntityManager::destroy(EntityId id)
+{
+	uint32_t index = id.getIndex();
+	ComponentMask mask = m_entityComponentMasks[index];
+	for (size_t i = 0; i < m_componentHelpers.size(); ++i) {
+		auto& helper = m_componentHelpers[i];
+		if (helper != nullptr && mask.test(i)) {
+			helper->removeComponent(this, id);
 		}
 	}
 
-	for (auto system : m_systems)
-	{
-		system->unconfigure(this);
-	}
+	//TODO: emit destroyed
+	m_entityComponentMasks[index].reset();
+	m_entityVersions[index]++;
+	m_availableIndices.push_back(index);
 }
 
-void EntityManager::onUpdate(const float dt)
+std::shared_ptr<GameObject> EntityManager::get(EntityId id)
 {
-	cleanup();
-
-	for (auto& system : m_systems) {
-		system->onUpdate(this, dt);
-	}
-}
-
-std::shared_ptr<Entity> EntityManager::create()
-{
-	++m_currentEntityId;
-	std::shared_ptr<Entity> entity = std::make_shared<Entity>(this, m_currentEntityId);
-	m_entities.push_back(entity);
-
-	emit<Events::OnEntityCreated>({ entity.get() });
-
-	return entity;
-}
-
-void EntityManager::destroy(Entity * entity, bool immediate)
-{
-	if (entity == nullptr) return;
-
-	if (!entity->isPendingDestroy()) {
-		entity->m_pendingDestroy = true;
-		emit<Events::OnEntityDestroyed>({ entity });
-	}
-
-	if (immediate) {
-		m_entities.erase(std::remove(m_entities.begin(), m_entities.end(), detail::pointerComparator(entity)), m_entities.end());
-	}
-}
-
-bool EntityManager::cleanup()
-{
-	size_t count = 0;
-	m_entities.erase(std::remove_if(m_entities.begin(), m_entities.end(), [&, this](Entity* entity) {
-		if (entity->isPendingDestroy()) {
-			++count;
-			return true;
-		}
-
-		return false;
-	}), m_entities.end());
-
-	return count > 0;
-}
-
-void EntityManager::reset()
-{
-	for (auto entity : m_entities)
-	{
-		if (!entity->isPendingDestroy())
-		{
-			entity->m_pendingDestroy = true;
-			emit<Events::OnEntityDestroyed>({ entity.get() });
-		}
-	}
-
-	m_entities.clear();
-	m_currentEntityId = 0;
-}
-
-void EntityManager::all(std::function<void(Entity*)> func, bool includePendingDestroy)
-{
-}
-
-size_t EntityManager::getEntityCount() const
-{
-	return m_entities.size();
-}
-
-Entity * EntityManager::getByIndex(size_t index) const
-{
-	if (index < m_entities.size()) {
-		return m_entities[index].get();
+	if (id.getIndex() < m_gameObjects.size()) {
+		return m_gameObjects[id.getIndex()];
 	}
 	else {
 		return nullptr;
 	}
 }
 
-
-
-Entity::Entity(const EntityManager * entityManager, size_t id) :
-	m_manager(entityManager), m_id(id), m_pendingDestroy(false)
+EntityManager::ComponentMask EntityManager::getComponentMask(EntityId id)
 {
-}
-
-Entity::~Entity()
-{
-}
-
-const EntityManager * Entity::getEntityManager() const
-{
-	return m_manager;
-}
-
-size_t Entity::getId() const
-{
-	return m_id;
-}
-
-bool Entity::isPendingDestroy() const
-{
-	return m_pendingDestroy;
+	return m_entityComponentMasks.at(id.getIndex());
 }

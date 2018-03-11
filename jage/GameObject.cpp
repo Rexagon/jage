@@ -4,55 +4,16 @@
 
 #include "Log.h"
 
-GameObject::GameObject(const std::string & name) :
-	m_name(name), m_isActive(true), m_parent(nullptr)
+
+GameObject::GameObject(EntityManager * manager, EntityId id) :
+	m_isActive(true), m_parent(nullptr), 
+	m_manager(manager), m_id(id), m_isPendingDestroy(false)
 {
 }
 
 GameObject::~GameObject()
 {
 	m_children.clear();
-}
-
-std::shared_ptr<GameObject> GameObject::duplicate()
-{	
-	std::shared_ptr<GameObject> result = std::make_shared<GameObject>(m_name);
-	result->m_tag = m_tag;
-	result->m_isActive = m_isActive;
-	result->m_transformation = m_transformation;
-	result->setParent(nullptr);
-
-	std::stack<GameObject*> currentStructure;
-	std::stack<GameObject*> resultStructure;
-
-	currentStructure.push(this);
-	resultStructure.push(result.get());
-
-	while (!resultStructure.empty())
-	{
-		GameObject* resultObject = resultStructure.top();
-		resultStructure.pop();
-
-		GameObject* currentObject = currentStructure.top();
-		currentStructure.pop();
-
-		for (auto it = currentObject->m_children.begin(); it != currentObject->m_children.end(); ++it) {
-			const auto& currentChild = (*it);
-
-			auto resultChild = std::make_shared<GameObject>(currentChild->m_name);
-			resultChild->m_tag = currentChild->m_tag;
-			resultChild->m_isActive = currentChild->m_isActive;
-			resultChild->m_transformation = currentChild->m_transformation;
-			resultChild->setParent(resultObject);
-
-			currentStructure.push(currentChild.get());
-			resultStructure.push(resultChild.get());
-
-			resultObject->addChild(std::move(resultChild));
-		}
-	}
-
-	return std::move(result);
 }
 
 void GameObject::setActive(bool active)
@@ -63,16 +24,6 @@ void GameObject::setActive(bool active)
 bool GameObject::isActive() const
 {
 	return m_isActive;
-}
-
-void GameObject::setVisible(bool visible)
-{
-	m_isVisible = visible;
-}
-
-bool GameObject::isVisible() const
-{
-	return m_isVisible;
 }
 
 void GameObject::setName(const std::string & name)
@@ -103,6 +54,27 @@ mat4 GameObject::getGlobalTransformation() const
 	else {
 		return m_parent->getGlobalTransformation() * getTransformationMatrix();
 	}
+}
+
+const EntityManager * GameObject::getEntityManager() const
+{
+	return m_manager;
+}
+
+EntityId GameObject::getId() const
+{
+	return m_id;
+}
+
+bool GameObject::isPendingDestroy() const
+{
+	return m_isPendingDestroy;
+}
+
+std::shared_ptr<GameObject> GameObject::clone()
+{
+	//TODO: implement
+	return nullptr;
 }
 
 void GameObject::setParent(GameObject * parent)
@@ -213,4 +185,46 @@ std::shared_ptr<GameObject> GameObject::detachChildByName(const std::string & na
 std::vector<std::shared_ptr<GameObject>>& GameObject::getChildren()
 {
 	return m_children;
+}
+
+std::bitset<MAX_COMPONENTS> GameObject::getComponentMask() const
+{
+	return m_manager->getComponentMask(m_id);
+}
+
+void GameObject::destroy()
+{
+	m_manager->destroy(m_id);
+	invalidate();
+}
+
+void GameObject::invalidate()
+{
+	m_id = EntityId::INVALID;
+	m_manager = nullptr;
+}
+
+bool GameObject::isValid() const
+{
+	return m_manager != nullptr && m_manager->isValid(m_id);
+}
+
+bool GameObject::operator==(const GameObject & other) const
+{
+	return m_manager == other.m_manager && m_id == other.m_id;
+}
+
+bool GameObject::operator!=(const GameObject & other) const
+{
+	return m_manager != other.m_manager || m_id != other.m_id;
+}
+
+bool GameObject::operator<(const GameObject & other) const
+{
+	return other.m_id < m_id;
+}
+
+std::shared_ptr<GameObject> GameObject::create(EntityManager * manager, EntityId id)
+{
+	return std::make_shared<GameObject>(manager, id);
 }

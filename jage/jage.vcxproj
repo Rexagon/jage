@@ -188,12 +188,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="CameraComponent.cpp" />
     <ClCompile Include="Core.cpp" />
     <ClCompile Include="CursorManager.cpp" />
     <ClCompile Include="EntityManager.cpp" />
     <ClCompile Include="FileManager.cpp" />
-    <ClCompile Include="FirstPersonCamera.cpp" />
+    <ClCompile Include="FirstPersonController.cpp" />
     <ClCompile Include="FontFactory.cpp" />
     <ClCompile Include="FrameBuffer.cpp" />
     <ClCompile Include="Game.cpp" />
@@ -206,7 +206,7 @@
     <ClCompile Include="Math.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MeshGeometry.cpp" />
-    <ClCompile Include="MeshObject.cpp" />
+    <ClCompile Include="MeshComponent.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelFactory.cpp" />
     <ClCompile Include="MusicFactory.cpp" />
@@ -223,14 +223,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractFactory.h" />
-    <ClInclude Include="Camera.h" />
+    <ClInclude Include="CameraComponent.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="Core.h" />
     <ClInclude Include="CursorManager.h" />
     <ClInclude Include="Delegate.h" />
     <ClInclude Include="EntityManager.h" />
     <ClInclude Include="FileManager.h" />
-    <ClInclude Include="FirstPersonCamera.h" />
+    <ClInclude Include="FirstPersonController.h" />
     <ClInclude Include="FontFactory.h" />
     <ClInclude Include="FrameBuffer.h" />
     <ClInclude Include="Game.h" />
@@ -242,7 +242,7 @@
     <ClInclude Include="Math.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshGeometry.h" />
-    <ClInclude Include="MeshObject.h" />
+    <ClInclude Include="MeshComponent.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModelFactory.h" />
     <ClInclude Include="MusicFactory.h" />

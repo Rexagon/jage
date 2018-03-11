@@ -95,36 +95,33 @@ void * ModelFactory::load()
 		std::stack<aiNode*> modelTree;
 		modelTree.push(scene->mRootNode);
 
-		std::stack<GameObject*> resultTree;
-		model->m_rootObject = std::make_shared<GameObject>(m_assignedName + "_root");
-		resultTree.push(model->m_rootObject.get());
+		std::stack<Model::Node*> nodes;		
+		nodes.push(&model->m_rootNode);
 
 		while (!modelTree.empty()) {
 			aiNode* nodeData = modelTree.top();
 			modelTree.pop();
 
-			GameObject* currentObject = resultTree.top();
-			resultTree.pop();
+			Model::Node* modelNode = nodes.top();
+			nodes.pop();
 
-			currentObject->setName(nodeData->mName.C_Str());
+			modelNode->name = nodeData->mName.C_Str();
+			modelNode->localTransformation = toGLM(nodeData->mTransformation);
 
-			currentObject->setTransformationMatrix(toGLM(nodeData->mTransformation));
-
+			modelNode->children.resize(nodeData->mNumChildren + nodeData->mNumMeshes);
 			for (size_t i = 0; i < nodeData->mNumChildren; ++i) {
-				auto child = std::make_shared<GameObject>(nodeData->mChildren[i]->mName.C_Str());
-
 				modelTree.push(nodeData->mChildren[i]);
-				resultTree.push(child.get());
-
-				currentObject->addChild(std::move(child));
+				nodes.push(&modelNode->children[i]);
 			}
 
 			for (size_t i = 0; i < nodeData->mNumMeshes; ++i) {
-				const Mesh& mesh = model->m_meshes[nodeData->mMeshes[i]];
-				std::shared_ptr<MeshObject> meshObject = std::make_shared<MeshObject>(scene->mMeshes[nodeData->mMeshes[i]]->mName.C_Str(), &mesh);
-				currentObject->addChild(std::move(meshObject));
+				Model::Node* childModelNode = &modelNode->children[nodeData->mNumChildren + i];
+
+				childModelNode->name = scene->mMeshes[nodeData->mMeshes[i]]->mName.C_Str();
+				childModelNode->mesh = &model->m_meshes[nodeData->mMeshes[i]];
 			}
 		}
+
 		
 		m_data = std::move(model);
 	}

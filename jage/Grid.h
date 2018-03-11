@@ -1,22 +1,20 @@
 #pragma once
 
 #include "GameObject.h"
-#include "Camera.h"
 #include "Shader.h"
 
-class Grid : public GameObject
+class Grid
 {
 public:
-	Grid(const std::string& name);
+	Grid(unsigned int size);
 	virtual ~Grid();
 
-	void onDraw() override;
+	void draw();
 
 private:
-	Shader* m_gridShader;
-
 	GLuint m_VAO;
 	GLuint m_VBO;
 
+	int m_size;
 	unsigned int m_vertexCount;
 };
