@@ -1,4 +1,5 @@
 #include "Core.h"
+#include "Icon.h"
 
 #include "Game.h"
 
@@ -10,6 +11,8 @@ int main() {
 		parameters.title = "jage test";
 		parameters.vsync = true;
 		Core::init(parameters);
+
+		Core::getWindow().setIcon(32, 32, icon);
 
 		SceneManager::addScene<Game>();
 

@@ -7,7 +7,7 @@ class FirstPersonController
 public:
 	FirstPersonController();
 
-	void update(const float dt, object_ptr gameObject);
+	void update(const float dt, std::shared_ptr<GameObject> gameObject);
 
 	void setSpeed(float speed);
 	float getSpeed() const;

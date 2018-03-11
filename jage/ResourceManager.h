@@ -5,6 +5,7 @@
 #include <map>
 
 #include "AbstractFactory.h"
+#include "Log.h"
 
 // Allows deffered creating of resources
 class ResourceManager

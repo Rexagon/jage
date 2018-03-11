@@ -7,7 +7,7 @@ FirstPersonController::FirstPersonController() :
 {
 }
 
-void FirstPersonController::update(const float dt, object_ptr gameObject)
+void FirstPersonController::update(const float dt, std::shared_ptr<GameObject> gameObject)
 {
 	vec3 direction(0.0f, 0.0f, 0.0f);
 	if (Input::getKey(Key::W)) {

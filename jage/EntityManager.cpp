@@ -65,13 +65,16 @@ std::shared_ptr<GameObject> EntityManager::create()
 
 	std::shared_ptr<GameObject> gameObject = GameObject::create(this, EntityId(index, version));
 	m_gameObjects[index] = gameObject;
-	// emit creation event
+	
+	emit<Events::OnEntityCreated>({ gameObject });
 
 	return gameObject;
 }
 
 void EntityManager::destroy(EntityId id)
 {
+	emit<Events::OnEntityDestroyed>({ get(id) });
+
 	uint32_t index = id.getIndex();
 	ComponentMask mask = m_entityComponentMasks[index];
 	for (size_t i = 0; i < m_componentHelpers.size(); ++i) {
@@ -81,7 +84,6 @@ void EntityManager::destroy(EntityId id)
 		}
 	}
 
-	//TODO: emit destroyed
 	m_entityComponentMasks[index].reset();
 	m_entityVersions[index]++;
 	m_availableIndices.push_back(index);
@@ -100,4 +102,26 @@ std::shared_ptr<GameObject> EntityManager::get(EntityId id)
 EntityManager::ComponentMask EntityManager::getComponentMask(EntityId id)
 {
 	return m_entityComponentMasks.at(id.getIndex());
+}
+
+void EntityManager::registerSystem(std::shared_ptr<EntitySystem> system)
+{
+	if (system == nullptr) {
+		return;
+	}
+
+	m_systems.push_back(system);
+	system->m_manager = this;
+	system->init();
+}
+
+void EntityManager::unregisterSystem(std::shared_ptr<EntitySystem> system)
+{
+	if (system == nullptr) {
+		return;
+	}
+
+	system->close();
+	system->m_manager = nullptr;
+	m_systems.erase(std::remove(m_systems.begin(), m_systems.end(), system), m_systems.end());
 }

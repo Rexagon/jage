@@ -8,11 +8,11 @@ Model::Model()
 {
 }
 
-object_ptr Model::createGameObject(EntityManager * manager, const std::string & name)
+std::shared_ptr<GameObject> Model::createGameObject(EntityManager * manager, const std::string & name)
 {
 	if (manager == nullptr) { return nullptr; }
 
-	object_ptr modelRoot = manager->create();
+	std::shared_ptr<GameObject> modelRoot = manager->create();
 
 	std::stack<GameObject*> gameObjects;
 	gameObjects.push(modelRoot.get());
@@ -35,7 +35,7 @@ object_ptr Model::createGameObject(EntityManager * manager, const std::string & 
 		}
 
 		for (size_t i = 0; i < modelNode->children.size(); ++i) {
-			object_ptr childObject = manager->create();
+			std::shared_ptr<GameObject> childObject = manager->create();
 			gameObject->addChild(childObject);
 
 			gameObjects.push(childObject.get());

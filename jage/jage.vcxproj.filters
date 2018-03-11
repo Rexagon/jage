@@ -23,18 +23,6 @@
     <ClCompile Include="FontFactory.cpp">
       <Filter>Core\Resources\Font</Filter>
     </ClCompile>
-    <ClCompile Include="Input.cpp">
-      <Filter>Core\Stuff</Filter>
-    </ClCompile>
-    <ClCompile Include="Log.cpp">
-      <Filter>Core\Stuff</Filter>
-    </ClCompile>
-    <ClCompile Include="Math.cpp">
-      <Filter>Core\Stuff</Filter>
-    </ClCompile>
-    <ClCompile Include="Time.cpp">
-      <Filter>Core\Stuff</Filter>
-    </ClCompile>
     <ClCompile Include="Game.cpp">
       <Filter>Game\Scenes</Filter>
     </ClCompile>
@@ -50,9 +38,6 @@
     <ClCompile Include="Shader.cpp">
       <Filter>Core\Resources\Shader</Filter>
     </ClCompile>
-    <ClCompile Include="GameObject.cpp">
-      <Filter>Core\Stuff</Filter>
-    </ClCompile>
     <ClCompile Include="ModelFactory.cpp">
       <Filter>Core\Resources\Model</Filter>
     </ClCompile>
@@ -62,14 +47,8 @@
     <ClCompile Include="Model.cpp">
       <Filter>Core\Resources\Model</Filter>
     </ClCompile>
-    <ClCompile Include="Transformable.cpp">
-      <Filter>Core\Stuff</Filter>
-    </ClCompile>
     <ClCompile Include="EntityManager.cpp">
       <Filter>Core\Managers</Filter>
-    </ClCompile>
-    <ClCompile Include="Pool.cpp">
-      <Filter>Core\Stuff</Filter>
     </ClCompile>
     <ClCompile Include="RenderStateManager.cpp">
       <Filter>Core\Managers</Filter>
@@ -78,22 +57,46 @@
       <Filter>Core\Resources\Model</Filter>
     </ClCompile>
     <ClCompile Include="FrameBuffer.cpp">
-      <Filter>Core\Renderer</Filter>
+      <Filter>Core\Stuff\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="CameraComponent.cpp">
-      <Filter>Game\Components</Filter>
+      <Filter>Core\EntityComponents</Filter>
     </ClCompile>
     <ClCompile Include="MeshComponent.cpp">
-      <Filter>Game\Components</Filter>
+      <Filter>Core\EntityComponents</Filter>
     </ClCompile>
     <ClCompile Include="Grid.cpp">
-      <Filter>Core\Renderer</Filter>
+      <Filter>Core\Stuff\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="Mesh.cpp">
-      <Filter>Core\Renderer</Filter>
+      <Filter>Core\Stuff\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="FirstPersonController.cpp">
-      <Filter>Game\Components</Filter>
+      <Filter>Core\EntityComponents</Filter>
+    </ClCompile>
+    <ClCompile Include="Log.cpp">
+      <Filter>Core\Stuff\Log</Filter>
+    </ClCompile>
+    <ClCompile Include="Time.cpp">
+      <Filter>Core\Stuff\Log</Filter>
+    </ClCompile>
+    <ClCompile Include="Math.cpp">
+      <Filter>Core\Stuff\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="GameObject.cpp">
+      <Filter>Core\Stuff\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="Transformable.cpp">
+      <Filter>Core\Stuff\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="Pool.cpp">
+      <Filter>Core\Stuff\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="Input.cpp">
+      <Filter>Core\Stuff\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderingSystem.cpp">
+      <Filter>Core\EntitySystems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -133,10 +136,28 @@
     <Filter Include="Core\Resources\Model">
       <UniqueIdentifier>{06d15ad9-3cdd-4ab4-b967-dd114a9d0499}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Renderer">
+    <Filter Include="Core\EntitySystems">
+      <UniqueIdentifier>{29075627-7d33-45dc-918d-4de34dd5877a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Stuff\Rendering">
       <UniqueIdentifier>{d96594e8-82a5-4300-9b60-fb34ebae5ebe}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Game\Components">
+    <Filter Include="Core\Stuff\Log">
+      <UniqueIdentifier>{692703dd-f4e4-456c-bfd8-9cd3b07d8547}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Stuff\Math">
+      <UniqueIdentifier>{fb697997-0ccc-4d6a-8feb-8e42305898ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Stuff\ECS">
+      <UniqueIdentifier>{ca16ce2a-fa97-497b-a036-bfb93b8cb480}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Stuff\Core">
+      <UniqueIdentifier>{fa505793-9f85-4413-9815-fd050b279c08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Stuff\Other">
+      <UniqueIdentifier>{1c8e0ccb-4c86-44e9-9428-e9f118564729}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\EntityComponents">
       <UniqueIdentifier>{279ace33-439b-4590-958e-e3b563c18b9e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -162,29 +183,8 @@
     <ClInclude Include="FontFactory.h">
       <Filter>Core\Resources\Font</Filter>
     </ClInclude>
-    <ClInclude Include="Constants.h">
-      <Filter>Core\Stuff</Filter>
-    </ClInclude>
-    <ClInclude Include="Delegate.h">
-      <Filter>Core\Stuff</Filter>
-    </ClInclude>
-    <ClInclude Include="Input.h">
-      <Filter>Core\Stuff</Filter>
-    </ClInclude>
-    <ClInclude Include="Log.h">
-      <Filter>Core\Stuff</Filter>
-    </ClInclude>
-    <ClInclude Include="Math.h">
-      <Filter>Core\Stuff</Filter>
-    </ClInclude>
-    <ClInclude Include="Time.h">
-      <Filter>Core\Stuff</Filter>
-    </ClInclude>
     <ClInclude Include="Game.h">
       <Filter>Game\Scenes</Filter>
-    </ClInclude>
-    <ClInclude Include="AbstractFactory.h">
-      <Filter>Core\Stuff</Filter>
     </ClInclude>
     <ClInclude Include="MusicFactory.h">
       <Filter>Core\Resources\Music</Filter>
@@ -198,9 +198,6 @@
     <ClInclude Include="Shader.h">
       <Filter>Core\Resources\Shader</Filter>
     </ClInclude>
-    <ClInclude Include="GameObject.h">
-      <Filter>Core\Stuff</Filter>
-    </ClInclude>
     <ClInclude Include="ModelFactory.h">
       <Filter>Core\Resources\Model</Filter>
     </ClInclude>
@@ -210,14 +207,8 @@
     <ClInclude Include="Model.h">
       <Filter>Core\Resources\Model</Filter>
     </ClInclude>
-    <ClInclude Include="Transformable.h">
-      <Filter>Core\Stuff</Filter>
-    </ClInclude>
     <ClInclude Include="EntityManager.h">
       <Filter>Core\Managers</Filter>
-    </ClInclude>
-    <ClInclude Include="Pool.h">
-      <Filter>Core\Stuff</Filter>
     </ClInclude>
     <ClInclude Include="RenderStateManager.h">
       <Filter>Core\Managers</Filter>
@@ -226,22 +217,56 @@
       <Filter>Core\Resources\Model</Filter>
     </ClInclude>
     <ClInclude Include="FrameBuffer.h">
-      <Filter>Core\Renderer</Filter>
+      <Filter>Core\Stuff\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="CameraComponent.h">
-      <Filter>Game\Components</Filter>
+      <Filter>Core\EntityComponents</Filter>
     </ClInclude>
     <ClInclude Include="MeshComponent.h">
-      <Filter>Game\Components</Filter>
+      <Filter>Core\EntityComponents</Filter>
     </ClInclude>
     <ClInclude Include="Grid.h">
-      <Filter>Core\Renderer</Filter>
+      <Filter>Core\Stuff\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="Mesh.h">
-      <Filter>Core\Renderer</Filter>
+      <Filter>Core\Stuff\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="FirstPersonController.h">
-      <Filter>Game\Components</Filter>
+      <Filter>Core\EntityComponents</Filter>
     </ClInclude>
+    <ClInclude Include="RenderingSystem.h">
+      <Filter>Core\EntitySystems</Filter>
+    </ClInclude>
+    <ClInclude Include="Log.h">
+      <Filter>Core\Stuff\Log</Filter>
+    </ClInclude>
+    <ClInclude Include="Time.h">
+      <Filter>Core\Stuff\Log</Filter>
+    </ClInclude>
+    <ClInclude Include="Constants.h">
+      <Filter>Core\Stuff\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math.h">
+      <Filter>Core\Stuff\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObject.h">
+      <Filter>Core\Stuff\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="Transformable.h">
+      <Filter>Core\Stuff\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="Pool.h">
+      <Filter>Core\Stuff\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="Input.h">
+      <Filter>Core\Stuff\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="AbstractFactory.h">
+      <Filter>Core\Stuff\Other</Filter>
+    </ClInclude>
+    <ClInclude Include="Delegate.h">
+      <Filter>Core\Stuff\Other</Filter>
+    </ClInclude>
+    <ClInclude Include="Icon.h" />
   </ItemGroup>
 </Project>

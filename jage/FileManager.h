@@ -15,7 +15,7 @@ public:
 	static void init(Args&&... args)
 	{
 		static_assert(std::is_base_of<AbstractFileSystem, T>::value,
-			"Template parameter of FileManager::init must be a child of AbstractFileSystem class");
+			"Template parameter of FileManager::onInit must be a child of AbstractFileSystem class");
 		
 		m_fileSystem = std::make_unique<T>(std::forward(args)...);
 	}

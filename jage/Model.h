@@ -12,7 +12,7 @@ class Model
 public:
 	Model();
 
-	object_ptr createGameObject(EntityManager* manager, const std::string& name);
+	std::shared_ptr<GameObject> createGameObject(EntityManager* manager, const std::string& name);
 	
 private:
 	friend class ModelFactory;

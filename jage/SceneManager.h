@@ -27,9 +27,6 @@ public:
     // Is called every frame before draw function
     virtual void onUpdate(const float dt) {}
 
-    // Is called every frame after update function
-    virtual void onDraw(const float dt) {}
-
 
     // Is called when window is resized
     virtual void onResize(const vec2& windowSize) {}

@@ -88,12 +88,6 @@ void Core::run()
 			currentScene->onUpdate(dt);
 		}
 
-		if (m_isRunning == true && 
-			(currentScene = SceneManager::getCurrentScene()) != nullptr) 
-		{
-			currentScene->onDraw(dt);
-		}
-
 		m_window.display();
 
 		m_isRunning &= SceneManager::getCurrentScene() != nullptr;

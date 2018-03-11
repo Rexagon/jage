@@ -146,5 +146,3 @@ private:
 
 	bool m_isPendingDestroy;
 };
-
-typedef std::shared_ptr<GameObject> object_ptr;
