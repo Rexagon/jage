@@ -12,6 +12,16 @@ EntityManager::EntityManager() :
 {
 }
 
+size_t EntityManager::getSize() const
+{
+	return m_entityComponentMasks.size() - m_availableIndices.size();
+}
+
+size_t EntityManager::getCapacity() const
+{
+	return m_entityComponentMasks.size();
+}
+
 EntityId EntityManager::createId(uint32_t index) const
 {
 	return EntityId(index, m_entityVersions[index]);
@@ -79,7 +89,7 @@ void EntityManager::destroy(EntityId id)
 
 std::shared_ptr<GameObject> EntityManager::get(EntityId id)
 {
-	if (m_gameObjects.size() < id.getIndex()) {
+	if (id.getIndex() < m_gameObjects.size()) {
 		return m_gameObjects[id.getIndex()];
 	}
 	else {

@@ -158,6 +158,226 @@ public:
 
 	EntityManager();
 
+	template<class Delegate, bool All = false>
+	class ViewIterator : public std::iterator<std::input_iterator_tag, EntityId>
+	{
+	public:
+		Delegate & operator++()
+		{
+			++m_index;
+			next();
+			return *static_cast<Delegate*>(this);
+		}
+
+		bool operator==(const Delegate& rhs) const { return m_index == rhs.m_index; }
+		bool operator!=(const Delegate& rhs) const { return m_index != rhs.m_index; }
+		EntityId operator*() { return m_manager->createId(m_index); }
+		const EntityId operator*() const { return m_manager->createId(m_index); }
+
+	protected:
+		ViewIterator(EntityManager* manager, uint32_t index) : 
+			m_manager(manager), m_index(index), m_capacity(m_manager->getCapacity()), m_freeCursor(~0UL) 
+		{
+			if (All) {
+				std::sort(m_manager->m_availableIndices.begin(), m_manager->m_availableIndices.end());
+				m_freeCursor = 0;
+			}
+		}
+
+		ViewIterator(EntityManager* manager, const ComponentMask& mask, uint32_t index) : 
+			m_manager(manager), m_mask(mask), m_index(index), m_capacity(m_manager->getCapacity()), m_freeCursor(~0UL)
+		{
+			if (All) {
+				std::sort(m_manager->m_availableIndices.begin(), m_manager->m_availableIndices.end());
+				m_freeCursor = 0;
+			}
+		}
+
+		void next()
+		{
+			while (m_index < m_capacity && !predicate()) {
+				++m_index;
+			}
+
+			if (m_index < m_capacity) {
+				static_cast<Delegate*>(this)->nextEntity(m_manager->createId(m_index));
+			}
+		}
+
+		inline bool predicate() {
+			return (All && isEntityValid()) || 
+				(m_manager->m_entityComponentMasks[m_index] & m_mask) == m_mask;
+		}
+
+		inline bool isEntityValid() {
+			const std::vector<uint32_t>& availableIndices = m_manager->m_availableIndices;
+			if (m_freeCursor < availableIndices.size() && availableIndices[m_freeCursor] == m_index) {
+				++m_freeCursor;
+				return false;
+			}
+			return true;
+		}
+
+		EntityManager* m_manager;
+		ComponentMask m_mask;
+
+		uint32_t m_index;
+		size_t m_capacity;
+		size_t m_freeCursor;
+	};
+
+	
+	template<bool All>
+	class BaseView
+	{
+	public:
+		class Iterator : public ViewIterator<Iterator, All>
+		{
+		public:
+			Iterator(EntityManager* manager, const ComponentMask& mask, uint32_t index) :
+				ViewIterator<Iterator, All>(manager, mask, index)
+			{
+				ViewIterator<Iterator, All>::next();
+			}
+
+			void nextEntity(EntityId entity) {}
+		};
+
+		Iterator begin() { return Iterator(m_manager, m_mask, 0); }
+		Iterator end() { return Iterator(m_manager, m_mask, uint32_t(m_manager->getCapacity())); }
+		const Iterator begin() const { return Iterator(m_manager, m_mask, 0); }
+		const Iterator end() const { return Iterator(m_manager, m_mask, uint32_t(m_manager->getCapacity())); }
+
+	protected:
+		friend class EntityManager;
+
+		BaseView(EntityManager* manager) : 
+			m_manager(manager) 
+		{ 
+			m_mask.set(); 
+		}
+
+		BaseView(EntityManager* manager, const ComponentMask& mask) :
+			m_manager(manager), m_mask(mask) 
+		{}
+
+		EntityManager* m_manager;
+		ComponentMask m_mask;
+	};
+
+
+	template<bool All, typename... Ts>
+	class TypedView : public BaseView<All>
+	{
+	public:
+		void each(typename std::common_type<std::function<void(EntityId, Ts&...)>>::type func)
+		{
+			for (auto it : *this) {
+				func(it, *(this->m_manager->getComponent<Ts>(it).get())...);
+			}
+		}
+
+	private:
+		friend class EntityManager;
+
+		TypedView(EntityManager* manager) : 
+			BaseView<All>(manager) 
+		{}
+
+		TypedView(EntityManager* manager, const ComponentMask& mask) : 
+			BaseView<All>(manager, mask) 
+		{}
+	};
+
+	template <typename... Ts> 
+	using View = TypedView<false, Ts...>;
+
+	template<typename... Ts>
+	class UnpackingView
+	{
+	public:
+		class Unpacker 
+		{
+			Unpacker(EntityManager* manager, ComponentHandle<Ts>&... handles) :
+				m_handles(std::tuple<ComponentHandle<Ts>&...>(handles))
+			{}
+
+			void unpack(EntityId entity) const 
+			{
+				unpack<0, Ts...>(entity);
+			}
+		private:
+			template<int N, typename T>
+			void unpack(EntityId entity) const 
+			{
+				std::get<N>(m_handles) = m_manager->getComponent<T>(entity);
+			}
+
+			template<int N, typename T1, typename T2, typename... Ts>
+			void unpack(EntityId entity) const 
+			{
+				std::get<N>(m_handles) = m_manager->getComponent<T1>(entity);
+				unpack<N + 1, T2, Ts...>(entity);
+			}
+
+			std::tuple<ComponentHandle<Ts>&...> m_handles;
+			EntityManager* m_manager;
+		};
+
+		class Iterator : ViewIterator<Iterator>
+		{
+		public:
+			Iterator(EntityManager* manager, const ComponentMask& mask, uint32_t index, const Unpacker& unpacker) :
+				ViewIterator<Iterator>(manager, mask, index), m_unpacker(unpacker)
+			{
+				ViewIterator<Iterator>::next();
+			}
+
+			void nextEntity(EntityId entity) 
+			{
+				m_unpacker.unpack(entity);
+			}
+
+		private:
+			const Unpacker& m_unpacker;
+		};
+
+		Iterator begin() 
+		{ 
+			return Iterator(m_manager, m_mask, 0, m_unpacker);
+		}
+
+		Iterator end() 
+		{ 
+			return Iterator(m_manager, m_mask, static_cast<uint32_t>(manager_->capacity()), m_unpacker);
+		}
+
+		const Iterator begin() const 
+		{ 
+			return Iterator(m_manager, m_mask, 0, m_unpacker);
+		}
+
+		const Iterator end() const 
+		{ 
+			return Iterator(m_manager, m_mask, static_cast<uint32_t>(m_manager->getCapacity()), m_unpacker); 
+		}
+
+	private:
+		friend class EntityManager;
+
+		UnpackingView(EntityManager* manager, const ComponentMask& mask, ComponentHandle<Ts>&... handles) :
+			m_manager(manager), m_mask(mask), m_unpacker(m_manager, handles...)
+		{}
+
+		EntityManager* m_manager;
+		ComponentMask m_mask;
+		Unpacker m_unpacker;
+	};
+
+
+	size_t getSize() const;
+	size_t getCapacity() const;
+
 	EntityId createId(uint32_t index) const;
 	bool isValid(EntityId id) const;
 
@@ -322,6 +542,27 @@ public:
 	ComponentMask getComponentMask(const ComponentHandle<T1>& c1, const ComponentHandle<Ts>&... args) 
 	{
 		return getComponentMask<T1, Ts...>();
+	}
+
+	// iteration functions
+	template<typename... Ts>
+	View<Ts...> getEntitiesWithComponents()
+	{
+		ComponentMask mask = getComponentMask<Ts...>();
+		return View<Ts...>(this, mask);
+	}
+
+	template<typename... Ts>
+	void each(typename std::common_type<std::function<void(EntityId, Ts&...)>>::type func)
+	{
+		getEntitiesWithComponents<Ts...>().each(func);
+	}
+
+	template<typename... Ts>
+	UnpackingView<Ts...> getEntitiesWithComponents(ComponentHandle<Ts>&... cs)
+	{
+		ComponentMask mask = getComponentMask<Ts...>();
+		return UnpackingView<Ts...>(this, mask, cs...);
 	}
 
 private:

@@ -172,25 +172,14 @@ void Game::onDraw(const float dt)
 	m_meshShader->setUniform("u_cameraViewProjection", m_cameraData->getViewProjectionMatrix());
 	m_meshShader->setUniform("u_sunDirection", glm::normalize(quat(m_sunDirection) * vec3(0.0f, 0.0f, 1.0f)));
 
-	std::stack<GameObject*> gameObjects;
-	gameObjects.push(m_rootObject.get());
+	m_entityManager.each<MeshComponent>([&](EntityId id, MeshComponent& component) {
+		object_ptr object = m_entityManager.get(id);
 
-	while (!gameObjects.empty()) {
-		GameObject* gameObject = gameObjects.top();
-		gameObjects.pop();
-
-		if (gameObject->hasComponent<MeshComponent>()) {
-			m_meshShader->setUniform("u_transformation", gameObject->getGlobalTransformation());
-			auto handle = gameObject->getComponent<MeshComponent>();
-			if (handle && handle->getMesh() != nullptr) {
-				handle->getMesh()->draw();
-			}
+		m_meshShader->setUniform("u_transformation", object->getGlobalTransformation());
+		if (component.getMesh() != nullptr) {
+			component.getMesh()->draw();
 		}
-
-		for (auto it = gameObject->getChildren().rbegin(); it != gameObject->getChildren().rend(); ++it) {
-			gameObjects.push(it->get());
-		}
-	}
+	});
 
 	/*
 	RenderStateManager::setCurrentShader(m_gridShader);
