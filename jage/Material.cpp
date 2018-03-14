@@ -1,43 +1,149 @@
 #include "Material.h"
 
-#include <GL/glew.h>
+#include "RenderStateManager.h"
 
-Material::Material(sf::Texture * diffuseTexture, sf::Texture * normalTexture, 
-	sf::Texture * specularTexture) :
-	m_diffuseTexture(diffuseTexture), m_normalTexture(normalTexture), 
-	m_specularTexture(specularTexture)
+
+Material::Material(Shader * shader) :
+	m_shader(m_shader), m_color(1.0f),
+	m_depthTestEnabled(false), m_depthWriteEnabled(true), m_depthTestFunction(GL_GEQUAL),
+	m_faceCullingEnabled(true), m_faceCullingSide(GL_BACK),
+	m_blendingEnabled(false), m_blendingFunctionSrc(GL_SRC_ALPHA), m_blendingFunctionDst(GL_ONE_MINUS_SRC_ALPHA),
+	m_shadowCastingEnabled(false), m_shadowReceivingEnabled(false)
 {
 }
 
-void Material::bind(size_t id)
+Shader * Material::getShader() const
 {
-	if (m_diffuseTexture != nullptr) {
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_diffuseTexture->getNativeHandle());
-	}
-
-	if (m_normalTexture != nullptr) {
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, m_normalTexture->getNativeHandle());
-	}
-
-	if (m_specularTexture != nullptr) {
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, m_specularTexture->getNativeHandle());
-	}
+	return m_shader;
 }
 
-void Material::setDiffuseTexture(sf::Texture * diffuseTexture)
+void Material::setType(Type type)
 {
-	m_diffuseTexture = diffuseTexture;
+	m_type = type;
 }
 
-void Material::setNormalTexture(sf::Texture * normalTexture)
+Material::Type Material::getType() const
 {
-	m_normalTexture = normalTexture;
+	return m_type;
 }
 
-void Material::setSpecularTexture(sf::Texture * specularTexture)
+void Material::setColor(const vec4 & color)
 {
-	m_specularTexture = specularTexture;
+	m_color = color;
+}
+
+void Material::setColor(const vec3 & color)
+{
+	m_color = vec4(color, 1.0f);
+}
+
+void Material::setColor(float r, float g, float b, float a)
+{
+	m_color = vec4(r, g, b, a);
+}
+
+vec4 Material::getColor() const
+{
+	return m_color;
+}
+
+std::vector<sf::Texture*>& Material::getTextures()
+{
+	return m_textures;
+}
+
+void Material::setDepthTestEnabled(bool enabled)
+{
+	m_depthTestEnabled = enabled;
+}
+
+bool Material::isDepthTestEnabled() const
+{
+	return m_depthTestEnabled;
+}
+
+void Material::setDepthWriteEnabled(bool enabled)
+{
+	m_depthWriteEnabled = enabled;
+}
+
+bool Material::isDepthWriteEnabled() const
+{
+	return m_depthWriteEnabled;
+}
+
+void Material::setDepthTestFunction(GLenum depthTestFunction)
+{
+	m_depthTestFunction = depthTestFunction;
+}
+
+GLenum Material::getDepthTestFunction() const
+{
+	return m_depthTestFunction;
+}
+
+void Material::setFaceCullingEnabled(bool enabled)
+{
+	m_faceCullingEnabled = enabled;
+}
+
+bool Material::isFaceCullingEnabled() const
+{
+	return m_faceCullingEnabled;
+}
+
+void Material::setFaceCullingSide(GLenum side)
+{
+	m_faceCullingSide = side;
+}
+
+GLenum Material::getFaceCullingSide() const
+{
+	return m_faceCullingSide;
+}
+
+void Material::setBlendingEnabled(bool enabled)
+{
+	m_blendingEnabled = enabled;
+}
+
+bool Material::isBlendingEnabled() const
+{
+	return m_blendingEnabled;
+}
+
+void Material::setBlendingFunction(GLenum src, GLenum dst)
+{
+	m_blendingFunctionSrc = src;
+	m_blendingFunctionDst = dst;
+}
+
+GLenum Material::getBlendingFunctionSrc() const
+{
+	return m_blendingFunctionSrc;
+}
+
+GLenum Material::getBlendingFunctionDst() const
+{
+	return m_blendingFunctionDst;
+}
+
+void Material::setShadowCastingEnabled(bool enabled)
+{
+	m_shadowCastingEnabled = enabled;
+}
+
+bool Material::isShadowCastingEnabled() const
+{
+	return m_shadowCastingEnabled;
+}
+
+void Material::setShadowReceivingEnabled(bool enabled)
+{
+	m_shadowReceivingEnabled = enabled;
+}
+
+bool Material::isShadowReceivingEnabled() const
+{
+	return m_shadowReceivingEnabled;
 }

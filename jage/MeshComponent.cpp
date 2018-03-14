@@ -2,27 +2,27 @@
 
 #include "Log.h"
 
-MeshComponent::MeshComponent(const Mesh * mesh, const Material & material) :
+MeshComponent::MeshComponent(Mesh * mesh, Material * material) :
 	m_mesh(mesh), m_material(material)
 {
 }
 
-void MeshComponent::setMesh(const Mesh * mesh)
+void MeshComponent::setMesh(Mesh * mesh)
 {
 	m_mesh = mesh;
 }
 
-const Mesh * MeshComponent::getMesh() const
+Mesh * MeshComponent::getMesh() const
 {
 	return m_mesh;
 }
 
-void MeshComponent::setMaterial(const Material & material)
+void MeshComponent::setMaterial(Material * material)
 {
 	m_material = material;
 }
 
-Material MeshComponent::getMaterial() const
+Material* MeshComponent::getMaterial() const
 {
-	return Material();
+	return m_material;
 }

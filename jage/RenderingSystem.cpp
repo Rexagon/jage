@@ -154,8 +154,9 @@ void RenderingSystem::updateCamera()
 void RenderingSystem::drawSky()
 {
 	RenderStateManager::setCurrentShader(m_skyShader);
-	glDepthMask(GL_FALSE);
+	RenderStateManager::setDepthWriteEnabled(false);
 	RenderStateManager::setFaceCullingEnabled(false);
+
 	m_skyShader->setUniform("u_cameraViewProjection", m_mainCameraData->getProjectionMatrix() * 
 		glm::inverse(m_mainCameraData.getEntity()->getRotationMatrix()));
 
@@ -166,7 +167,8 @@ void RenderingSystem::drawSky()
 	m_skyShader->setUniform("u_mieDirectionalG", 0.8f);
 	m_skyShader->setUniform("u_luminance", 1.0f);
 	m_sky->draw();
-	glDepthMask(GL_TRUE);
+	
+	RenderStateManager::setDepthWriteEnabled(true);
 	RenderStateManager::setFaceCullingEnabled(true);
 }
 

@@ -41,9 +41,6 @@
     <ClCompile Include="ModelFactory.cpp">
       <Filter>Core\Resources\Model</Filter>
     </ClCompile>
-    <ClCompile Include="Material.cpp">
-      <Filter>Core\Resources\Model</Filter>
-    </ClCompile>
     <ClCompile Include="Model.cpp">
       <Filter>Core\Resources\Model</Filter>
     </ClCompile>
@@ -97,6 +94,12 @@
     </ClCompile>
     <ClCompile Include="RenderingSystem.cpp">
       <Filter>Core\EntitySystems</Filter>
+    </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>Core\Stuff\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCommandBuffer.cpp">
+      <Filter>Core\Stuff\Rendering</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -201,9 +204,6 @@
     <ClInclude Include="ModelFactory.h">
       <Filter>Core\Resources\Model</Filter>
     </ClInclude>
-    <ClInclude Include="Material.h">
-      <Filter>Core\Resources\Model</Filter>
-    </ClInclude>
     <ClInclude Include="Model.h">
       <Filter>Core\Resources\Model</Filter>
     </ClInclude>
@@ -267,6 +267,11 @@
     <ClInclude Include="Delegate.h">
       <Filter>Core\Stuff\Other</Filter>
     </ClInclude>
-    <ClInclude Include="Icon.h" />
+    <ClInclude Include="Material.h">
+      <Filter>Core\Stuff\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCommandBuffer.h">
+      <Filter>Core\Stuff\Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

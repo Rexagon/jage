@@ -20,7 +20,7 @@ private:
 	struct Node
 	{
 		Node() : 
-			localTransformation(1.0f), mesh(nullptr) 
+			localTransformation(1.0f), mesh(nullptr), material(nullptr)
 		{}
 
 		std::string name;
@@ -29,6 +29,7 @@ private:
 
 		mat4 localTransformation;
 		Mesh* mesh;
+		Material* material;
 	};
 
 	Node m_rootNode;

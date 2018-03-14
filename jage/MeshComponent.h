@@ -8,16 +8,15 @@
 class MeshComponent
 {
 public:
-	MeshComponent(const Mesh* mesh = nullptr, 
-		const Material& material = Material());
+	MeshComponent(Mesh* mesh, Material* material);
 
-	void setMesh(const Mesh* mesh);
-	const Mesh* getMesh() const;
+	void setMesh(Mesh* mesh);
+	Mesh* getMesh() const;
 
-	void setMaterial(const Material& material);
-	Material getMaterial() const;
+	void setMaterial(Material* material);
+	Material* getMaterial() const;
 
 private:
-	const Mesh* m_mesh;
-	Material m_material;
+	Mesh* m_mesh;
+	Material* m_material;
 };

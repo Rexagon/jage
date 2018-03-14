@@ -223,6 +223,7 @@
     <ClCompile Include="ModelFactory.cpp" />
     <ClCompile Include="MusicFactory.cpp" />
     <ClCompile Include="Pool.cpp" />
+    <ClCompile Include="RenderCommandBuffer.cpp" />
     <ClCompile Include="RenderingSystem.cpp" />
     <ClCompile Include="RenderStateManager.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
@@ -249,7 +250,6 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="Grid.h" />
-    <ClInclude Include="Icon.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="Material.h" />
@@ -261,6 +261,7 @@
     <ClInclude Include="ModelFactory.h" />
     <ClInclude Include="MusicFactory.h" />
     <ClInclude Include="Pool.h" />
+    <ClInclude Include="RenderCommandBuffer.h" />
     <ClInclude Include="RenderingSystem.h" />
     <ClInclude Include="RenderStateManager.h" />
     <ClInclude Include="ResourceManager.h" />

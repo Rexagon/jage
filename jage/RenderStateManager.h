@@ -22,6 +22,9 @@ public:
 	static void setDepthTestEnabled(bool enabled);
 	static bool isDepthTestEnabled();
 
+	static void setDepthWriteEnabled(bool enabled);
+	static bool isDepthWriteEnabled();
+
 	static void setDepthTestFunction(GLenum depthTestFunction);
 	static GLenum getDepthTestFunction();
 
@@ -40,7 +43,7 @@ public:
 	static bool isFaceCullingEnabled();
 
 	static void setFaceCullingSide(GLenum side);
-	static GLenum getFaceCullingSize();
+	static GLenum getFaceCullingSide();
 
 	static void setPolygonMode(GLenum mode);
 	static GLenum getPolygonMode();
@@ -54,6 +57,7 @@ private:
 	static GLclampf m_clearColor[4];
 
 	static bool m_depthTestEnabled;
+	static bool m_depthWriteEnabled;
 	static GLenum m_depthTestFunction;
 
 	static GLenum m_clipControlOrigin;

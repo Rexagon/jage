@@ -5,6 +5,7 @@ GLint RenderStateManager::m_viewport[4] = {};
 GLclampf RenderStateManager::m_clearColor[4] = {};
 
 bool RenderStateManager::m_depthTestEnabled = false;
+bool RenderStateManager::m_depthWriteEnabled = true;
 GLenum RenderStateManager::m_depthTestFunction = GL_LESS;
 
 GLenum RenderStateManager::m_clipControlOrigin = GL_LOWER_LEFT;
@@ -28,6 +29,7 @@ void RenderStateManager::init()
 	glGetFloatv(GL_COLOR_CLEAR_VALUE, m_clearColor);
 
 	m_depthTestEnabled = glIsEnabled(GL_DEPTH_TEST);
+	m_depthWriteEnabled = glIsEnabled(GL_DEPTH_WRITEMASK);
 	glGetIntegerv(GL_DEPTH_FUNC, reinterpret_cast<GLint*>(&m_depthTestFunction));
 
 	m_clipControlOrigin = GL_LOWER_LEFT;
@@ -62,6 +64,16 @@ void RenderStateManager::forceApply()
 	else {
 		glDisable(GL_DEPTH_TEST);
 	}
+
+	// depth write
+	if (m_depthWriteEnabled) {
+		glDepthMask(GL_TRUE);
+	}
+	else {
+		glDepthMask(GL_FALSE);
+	}
+
+	// depth function
 	glDepthFunc(m_depthTestFunction);
 
 	// clip control
@@ -201,6 +213,24 @@ bool RenderStateManager::isDepthTestEnabled()
 	return m_depthTestEnabled;
 }
 
+void RenderStateManager::setDepthWriteEnabled(bool enabled)
+{
+	if (m_depthWriteEnabled != enabled) {
+		m_depthWriteEnabled = enabled;
+		if (enabled) {
+			glDepthMask(GL_TRUE);
+		}
+		else {
+			glDepthMask(GL_FALSE);
+		}
+	}
+}
+
+bool RenderStateManager::isDepthWriteEnabled()
+{
+	return m_depthWriteEnabled;
+}
+
 void RenderStateManager::setDepthTestFunction(GLenum depthTestFunction)
 {
 	if (m_depthTestFunction != depthTestFunction) {
@@ -296,7 +326,7 @@ void RenderStateManager::setFaceCullingSide(GLenum side)
 	}
 }
 
-GLenum RenderStateManager::getFaceCullingSize()
+GLenum RenderStateManager::getFaceCullingSide()
 {
 	return m_faceCullingSide;
 }

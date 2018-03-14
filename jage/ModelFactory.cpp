@@ -45,6 +45,12 @@ void * ModelFactory::load()
 		}
 
 		// Loading textures
+		model->m_materials.resize(scene->mNumMaterials, Material(nullptr));
+		for (size_t i = 0; i < scene->mNumMaterials; ++i) {
+			const aiMaterial* materialData = scene->mMaterials[i];
+			
+			//TODO: load material
+		}
 
 		// Loading meshes
 		model->m_meshes.resize(scene->mNumMeshes);
@@ -117,8 +123,11 @@ void * ModelFactory::load()
 			for (size_t i = 0; i < nodeData->mNumMeshes; ++i) {
 				Model::Node* childModelNode = &modelNode->children[nodeData->mNumChildren + i];
 
-				childModelNode->name = scene->mMeshes[nodeData->mMeshes[i]]->mName.C_Str();
+				const aiMesh* meshData = scene->mMeshes[nodeData->mMeshes[i]];
+
+				childModelNode->name = meshData->mName.C_Str();
 				childModelNode->mesh = &model->m_meshes[nodeData->mMeshes[i]];
+				childModelNode->material = &model->m_materials[meshData->mMaterialIndex];
 			}
 		}
 

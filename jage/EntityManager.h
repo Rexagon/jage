@@ -507,7 +507,7 @@ public:
 		void each(typename std::common_type<std::function<void(EntityId, Ts&...)>>::type func)
 		{
 			for (auto it : *this) {
-				func(it, *(this->m_manager->getComponent<Ts>(it).get())...);
+				func(it, *(BaseView<All>::m_manager->template getComponent<Ts>(it).get())...);
 			}
 		}
 
