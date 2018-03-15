@@ -101,6 +101,12 @@
     <ClCompile Include="RenderCommandBuffer.cpp">
       <Filter>Core\Stuff\Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="SunComponent.cpp">
+      <Filter>Core\EntityComponents</Filter>
+    </ClCompile>
+    <ClCompile Include="SkySystem.cpp">
+      <Filter>Core\EntitySystems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">
@@ -272,6 +278,12 @@
     </ClInclude>
     <ClInclude Include="RenderCommandBuffer.h">
       <Filter>Core\Stuff\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="SkySystem.h">
+      <Filter>Core\EntitySystems</Filter>
+    </ClInclude>
+    <ClInclude Include="SunComponent.h">
+      <Filter>Core\EntityComponents</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

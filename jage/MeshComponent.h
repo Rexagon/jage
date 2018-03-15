@@ -1,8 +1,6 @@
 #pragma once
 
-#include "GameObject.h"
 #include "Material.h"
-#include "Shader.h"
 #include "Mesh.h"
 
 class MeshComponent

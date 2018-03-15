@@ -230,7 +230,9 @@
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShaderFactory.cpp" />
+    <ClCompile Include="SkySystem.cpp" />
     <ClCompile Include="SoundBufferFactory.cpp" />
+    <ClCompile Include="SunComponent.cpp" />
     <ClCompile Include="TextureFactory.cpp" />
     <ClCompile Include="Time.cpp" />
     <ClCompile Include="Transformable.cpp" />
@@ -268,7 +270,9 @@
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShaderFactory.h" />
+    <ClInclude Include="SkySystem.h" />
     <ClInclude Include="SoundBufferFactory.h" />
+    <ClInclude Include="SunComponent.h" />
     <ClInclude Include="TextureFactory.h" />
     <ClInclude Include="Time.h" />
     <ClInclude Include="Transformable.h" />
