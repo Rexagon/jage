@@ -107,6 +107,9 @@
     <ClCompile Include="SkySystem.cpp">
       <Filter>Core\EntitySystems</Filter>
     </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>Core\Resources\Texture</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">
@@ -284,6 +287,9 @@
     </ClInclude>
     <ClInclude Include="SunComponent.h">
       <Filter>Core\EntityComponents</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>Core\Resources\Texture</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

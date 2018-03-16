@@ -4,6 +4,7 @@
 #include "ResourceManager.h"
 #include "ShaderFactory.h"
 #include "MeshComponent.h"
+#include "Core.h"
 
 void RenderingSystem::init()
 {
@@ -14,15 +15,8 @@ void RenderingSystem::init()
 	m_quad = std::make_shared<Mesh>();
 	m_quad->init(MeshGeometry::createQuad());
 
-	m_sky = std::make_shared<Mesh>();
-	m_sky->init(MeshGeometry::createCube());
-
-	m_sunDirection = vec3(-1.0f, 0.0f, 0.0f);
-	m_turbidity = 10.0f;
-	m_rayleigh = 2.0f;
-
-	RenderStateManager::setFaceCullingEnabled(true);
-	RenderStateManager::setFaceCullingSide(GL_BACK);
+	uvec2 windowSize = toGLM(Core::getWindow().getSize());
+	m_geometryBuffer = std::make_unique<FrameBuffer>(windowSize.x, windowSize.y, GL_HALF_FLOAT, 4, true);
 }
 
 void RenderingSystem::close()
@@ -32,11 +26,26 @@ void RenderingSystem::close()
 
 void RenderingSystem::update(const float dt)
 {	
-	if (!m_mainCameraData.isValid()) {
+	if (!m_mainCameraData.isValid() || m_geometryBuffer == nullptr) {
 		return;
 	}
 
 	updateCamera();
+
+	m_commandBuffer->sort();
+
+	// reset gl state
+	RenderStateManager::setBlendingEnabled(false);
+	RenderStateManager::setFaceCullingEnabled(true);
+	RenderStateManager::setFaceCullingSide(GL_BACK);
+	RenderStateManager::setDepthTestEnabled(true);
+	RenderStateManager::setDepthTestFunction(GL_GEQUAL);
+
+	// render to geometry buffer
+	std::vector<RenderCommand> deferredRenderCommands = m_commandBuffer->getDeferredRenderCommands(true);
+	
+
+	///////
 
 	m_framebuffer->bind();
 
@@ -45,8 +54,7 @@ void RenderingSystem::update(const float dt)
 	glClearDepth(0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-	drawSky();
-	drawScene();
+
 
 	m_framebuffer->unbind();
 
@@ -81,7 +89,7 @@ void RenderingSystem::onReceive(EntityManager * manager, const Events::OnWindowR
 
 	m_mainCameraData->setAspect(event.windowSize.x / event.windowSize.y);
 
-	m_framebuffer = std::make_unique<FrameBuffer>(
+	m_geometryBuffer = std::make_unique<FrameBuffer>(
 		static_cast<unsigned int>(event.windowSize.x),
 		static_cast<unsigned int>(event.windowSize.y),
 		true);
@@ -92,19 +100,19 @@ void RenderingSystem::onReceive(EntityManager * manager, const Events::OnWindowR
 		false);
 
 
-	RenderStateManager::setCurrentShader(m_fxaaShader);
+	/*RenderStateManager::setCurrentShader(m_fxaaShader);
 	m_fxaaShader->setUniform("u_colorTexture", 0);
 	m_fxaaShader->setUniform("u_inversedResolution", vec2(1.0f / event.windowSize.x, 1.0f / event.windowSize.y));
 
 	RenderStateManager::setCurrentShader(m_abberationShader);
-	m_abberationShader->setUniform("u_colorTexture", 0);
+	m_abberationShader->setUniform("u_colorTexture", 0);*/
 }
 
 void RenderingSystem::loadShaders()
 {
 	ShaderFactory::FromFile quadVertexSource("shaders/quad.vert");
 
-	ShaderFactory::FromFile fxaaFragmentSource("shaders/fxaa.frag");
+	/*ShaderFactory::FromFile fxaaFragmentSource("shaders/fxaa.frag");
 	ResourceManager::bind<ShaderFactory>("fxaa_shader", quadVertexSource, fxaaFragmentSource);
 	m_fxaaShader = ResourceManager::get<Shader>("fxaa_shader");
 	m_fxaaShader->setAttribute(0, "position");
@@ -136,7 +144,7 @@ void RenderingSystem::loadShaders()
 	ShaderFactory::FromFile skyFragmentSource("shaders/sky.frag");
 	ResourceManager::bind<ShaderFactory>("sky_shader", skyVertexSource, skyFragmentSource);
 	m_skyShader = ResourceManager::get<Shader>("sky_shader");
-	m_skyShader->setAttribute(0, "position");
+	m_skyShader->setAttribute(0, "position");*/
 }
 
 void RenderingSystem::updateCamera()
@@ -147,46 +155,6 @@ void RenderingSystem::updateCamera()
 		if (camera != nullptr) {
 			component.updateView(camera->getGlobalTransformation());
 			component.updateProjection();
-		}
-	});
-}
-
-void RenderingSystem::drawSky()
-{
-	RenderStateManager::setCurrentShader(m_skyShader);
-	RenderStateManager::setDepthWriteEnabled(false);
-	RenderStateManager::setFaceCullingEnabled(false);
-
-	m_skyShader->setUniform("u_cameraViewProjection", m_mainCameraData->getProjectionMatrix() * 
-		glm::inverse(m_mainCameraData.getEntity()->getRotationMatrix()));
-
-	m_skyShader->setUniform("u_sunDirection", glm::normalize(quat(m_sunDirection) * vec3(0.0f, 0.0f, 1.0f)));
-	m_skyShader->setUniform("u_rayleigh", m_rayleigh);
-	m_skyShader->setUniform("u_turbidity", m_turbidity);
-	m_skyShader->setUniform("u_mieCoefficient", 0.005f);
-	m_skyShader->setUniform("u_mieDirectionalG", 0.8f);
-	m_skyShader->setUniform("u_luminance", 1.0f);
-	m_sky->draw();
-	
-	RenderStateManager::setDepthWriteEnabled(true);
-	RenderStateManager::setFaceCullingEnabled(true);
-}
-
-void RenderingSystem::drawScene()
-{
-	RenderStateManager::setDepthTestEnabled(true);
-	RenderStateManager::setDepthTestFunction(GL_GEQUAL);
-
-	RenderStateManager::setCurrentShader(m_meshShader);
-	m_meshShader->setUniform("u_cameraViewProjection", m_mainCameraData->getViewProjectionMatrix());
-	m_meshShader->setUniform("u_sunDirection", glm::normalize(quat(m_sunDirection) * vec3(0.0f, 0.0f, 1.0f)));
-
-	m_manager->each<MeshComponent>([this](EntityId id, MeshComponent& component) {
-		std::shared_ptr<GameObject> object = m_manager->get(id);
-
-		m_meshShader->setUniform("u_transformation", object->getGlobalTransformation());
-		if (component.getMesh() != nullptr) {
-			component.getMesh()->draw();
 		}
 	});
 }

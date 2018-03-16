@@ -233,6 +233,7 @@
     <ClCompile Include="SkySystem.cpp" />
     <ClCompile Include="SoundBufferFactory.cpp" />
     <ClCompile Include="SunComponent.cpp" />
+    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="TextureFactory.cpp" />
     <ClCompile Include="Time.cpp" />
     <ClCompile Include="Transformable.cpp" />
@@ -273,6 +274,7 @@
     <ClInclude Include="SkySystem.h" />
     <ClInclude Include="SoundBufferFactory.h" />
     <ClInclude Include="SunComponent.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="TextureFactory.h" />
     <ClInclude Include="Time.h" />
     <ClInclude Include="Transformable.h" />

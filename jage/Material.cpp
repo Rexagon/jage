@@ -2,7 +2,6 @@
 
 #include "RenderStateManager.h"
 
-
 Material::Material(Shader * shader) :
 	m_shader(m_shader), m_color(1.0f),
 	m_depthTestEnabled(false), m_depthWriteEnabled(true), m_depthTestFunction(GL_GEQUAL),
@@ -47,7 +46,7 @@ vec4 Material::getColor() const
 	return m_color;
 }
 
-std::vector<sf::Texture*>& Material::getTextures()
+std::vector<Texture*>& Material::getTextures()
 {
 	return m_textures;
 }

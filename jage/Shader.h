@@ -41,7 +41,7 @@ public:
 
 	unsigned int getUniformLocation(const std::string& name);
 
-	GLuint getHandle() const { return m_program; }
+	GLuint getHandle() const;
 
 private:
 	GLuint m_program;

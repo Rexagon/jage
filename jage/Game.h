@@ -16,7 +16,7 @@ public:
 
 	void onUpdate(const float dt) override;
 
-	void onResize(const vec2& windowSize) override;
+	void onResize(const ivec2& windowSize) override;
 
 private:
 	std::shared_ptr<EntityManager> m_entityManager;

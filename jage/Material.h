@@ -27,7 +27,7 @@ public:
 	void setColor(float r, float g, float b, float a = 1.0f);
 	vec4 getColor() const;
 
-	std::vector<sf::Texture*>& getTextures();
+	std::vector<Texture*>& getTextures();
 
 	void setDepthTestEnabled(bool enabled);
 	bool isDepthTestEnabled() const;
@@ -64,7 +64,7 @@ private:
 
 	vec4 m_color;
 
-	std::vector<sf::Texture*> m_textures;
+	std::vector<Texture*> m_textures;
 
 	bool m_depthTestEnabled;
 	bool m_depthWriteEnabled;

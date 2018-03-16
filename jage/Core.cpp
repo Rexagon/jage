@@ -122,9 +122,9 @@ void Core::handleEvents()
 
 		case sf::Event::Resized:
 			if (SceneManager::hasScenes()) {
-				SceneManager::getCurrentScene()->onResize(vec2(
-					static_cast<float>(e.size.width),
-					static_cast<float>(e.size.height)
+				SceneManager::getCurrentScene()->onResize(ivec2(
+					static_cast<int>(e.size.width),
+					static_cast<int>(e.size.height)
 				));
 			}
 			break;

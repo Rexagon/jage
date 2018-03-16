@@ -66,7 +66,7 @@ void Game::onUpdate(const float dt)
 	m_skySystem->update(dt);
 }
 
-void Game::onResize(const vec2& windowSize)
+void Game::onResize(const ivec2& windowSize)
 {
-	m_entityManager->emit<Events::OnWindowResized>({ windowSize });
+	m_entityManager->emit<Events::OnWindowResized>({ ivec2(windowSize) });
 }
