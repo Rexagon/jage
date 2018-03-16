@@ -5,6 +5,7 @@
 
 #include "FirstPersonController.h"
 #include "RenderingSystem.h"
+#include "SkySystem.h"
 
 class Game : public BaseScene
 {
@@ -18,8 +19,9 @@ public:
 	void onResize(const vec2& windowSize) override;
 
 private:
-	EntityManager m_entityManager;
+	std::shared_ptr<EntityManager> m_entityManager;
 	std::shared_ptr<RenderingSystem> m_renderingSystem;
+	std::shared_ptr<SkySystem> m_skySystem;
 
 	std::shared_ptr<GameObject> m_camera;
 	FirstPersonController m_cameraController;

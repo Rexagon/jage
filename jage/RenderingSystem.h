@@ -1,5 +1,6 @@
 #pragma once
 
+#include "RenderCommandBuffer.h"
 #include "CameraComponent.h"
 #include "EntityManager.h"
 #include "FrameBuffer.h"
@@ -56,4 +57,7 @@ private:
 
 	// camera
 	ComponentHandle<CameraComponent> m_mainCameraData;
+
+	// command buffer
+	std::shared_ptr<RenderCommandBuffer> m_commandBuffer;
 };
