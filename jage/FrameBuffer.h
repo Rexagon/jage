@@ -14,7 +14,8 @@ public:
 	void bind();
 	void unbind();
 
-	void resize(unsigned int width, unsigned int height);
+	void resize(const uvec2& size);
+	uvec2 getSize() const;
 
 	Texture* getColorTexture(unsigned int index = 0);
 	Texture* getDepthStencilTexture();

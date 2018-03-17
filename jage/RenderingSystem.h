@@ -1,12 +1,13 @@
 #pragma once
 
 #include "RenderCommandBuffer.h"
-#include "CameraComponent.h"
 #include "EntityManager.h"
 #include "FrameBuffer.h"
 #include "GameObject.h"
-#include "Shader.h"
-#include "Mesh.h"
+
+#include "CameraComponent.h"
+#include "LightComponent.h"
+#include "MeshComponent.h"
 
 namespace Events
 {
@@ -29,17 +30,16 @@ public:
 	void onReceive(EntityManager* manager, const Events::OnWindowResized& event) override;
 
 private:
-	void loadShaders();
-	void updateCamera();
+	void draw(RenderCommand* command, ComponentHandle<CameraComponent> cameraData, bool affectRenderState = true);
 
 	vec2 m_renderSize;
 
-	// post effects
+	ComponentHandle<CameraComponent> m_mainCameraData;
+
 	std::shared_ptr<Mesh> m_quad;
 	std::unique_ptr<FrameBuffer> m_geometryBuffer;
-
-	// camera
-	ComponentHandle<CameraComponent> m_mainCameraData;
+	std::unique_ptr<FrameBuffer> m_lightBuffer;
 	
-	std::shared_ptr<RenderCommandBuffer> m_commandBuffer;
+	std::unique_ptr<RenderCommandBuffer> m_commandBuffer;
+
 };

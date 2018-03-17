@@ -1,9 +1,9 @@
 #pragma once
 
 #include <GL/glew.h>
-#include <SFML/Graphics/Texture.hpp>
 
 #include "Shader.h"
+#include "Texture.h"
 
 class Material
 {

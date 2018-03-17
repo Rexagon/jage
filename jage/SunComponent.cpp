@@ -1,21 +1,11 @@
 #include "SunComponent.h"
 
 SunComponent::SunComponent() :
-	m_direction(1.0f, 1.0f, 1.0f),
 	m_turbidity(10.0f), m_rayleigh(2.0f), 
 	m_mieCoefficient(0.005f), m_mieDirectionalG(0.8f)
 {
 }
 
-void SunComponent::setDirection(const vec3 & direction)
-{
-	m_direction = direction;
-}
-
-vec3 SunComponent::getDirection() const
-{
-	return m_direction;
-}
 
 void SunComponent::setTurbidity(float turbidity)
 {

@@ -10,13 +10,13 @@ void RenderingSystem::init()
 {
 	m_manager->subscribe<Events::OnWindowResized>(this);
 
-	loadShaders();
-
 	m_quad = std::make_shared<Mesh>();
 	m_quad->init(MeshGeometry::createQuad());
 
-	uvec2 windowSize = toGLM(Core::getWindow().getSize());
-	m_geometryBuffer = std::make_unique<FrameBuffer>(windowSize.x, windowSize.y, GL_HALF_FLOAT, 4, true);
+	m_geometryBuffer = std::make_unique<FrameBuffer>(1, 1, GL_HALF_FLOAT, 4, true);
+	m_lightBuffer = std::make_unique<FrameBuffer>(1, 1, GL_UNSIGNED_BYTE, 1, false);
+
+	m_commandBuffer = std::make_unique<RenderCommandBuffer>(this);
 }
 
 void RenderingSystem::close()
@@ -30,50 +30,76 @@ void RenderingSystem::update(const float dt)
 		return;
 	}
 
-	updateCamera();
+	m_manager->each<CameraComponent>([this](EntityId id, CameraComponent& component) {
+		std::shared_ptr<GameObject> object = m_manager->get(id);
+
+		if (object != nullptr) {
+			component.updateView(object->getGlobalTransformation());
+			component.updateProjection();
+		}
+	});
+
+	m_manager->each<MeshComponent>([this](EntityId id, MeshComponent& component) {
+		std::shared_ptr<GameObject> object = m_manager->get(id);
+
+		if (object != nullptr) {
+			m_commandBuffer->push(component.getMesh(), object->getGlobalTransformation(), component.getMaterial());
+		}
+	});
 
 	m_commandBuffer->sort();
 
 	// reset gl state
 	RenderStateManager::setBlendingEnabled(false);
+
 	RenderStateManager::setFaceCullingEnabled(true);
 	RenderStateManager::setFaceCullingSide(GL_BACK);
+
+	RenderStateManager::setClearDepth(0.0f);
+	RenderStateManager::setClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+
 	RenderStateManager::setDepthTestEnabled(true);
 	RenderStateManager::setDepthTestFunction(GL_GEQUAL);
 
+	RenderStateManager::setClearColor(0.0f, 0.0f, 0.0f);
+
 	// render to geometry buffer
+	unsigned int attachments[4] = { 
+		GL_COLOR_ATTACHMENT0, 
+		GL_COLOR_ATTACHMENT1, 
+		GL_COLOR_ATTACHMENT2, 
+		GL_COLOR_ATTACHMENT3 
+	};
+	glDrawBuffers(4, attachments);
+
 	std::vector<RenderCommand> deferredRenderCommands = m_commandBuffer->getDeferredRenderCommands(true);
 	
+	m_geometryBuffer->bind();
+	RenderStateManager::setViewport(m_renderSize);
 
-	///////
-
-	m_framebuffer->bind();
-
-	RenderStateManager::setClearColor(0.2f, 0.2f, 0.2f);
-
-	glClearDepth(0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	for (size_t i = 0; i < deferredRenderCommands.size(); ++i) {
+		draw(&deferredRenderCommands[i], m_mainCameraData, false);
+	}
+
+	// render all shadow casters
+	attachments[1] = GL_NONE;
+	attachments[2] = GL_NONE;
+	attachments[3] = GL_NONE;
+	glDrawBuffers(4, attachments);
+
+	std::vector<RenderCommand> shadowRenderCommands = m_commandBuffer->getShadowCastRenderCommands();
+	m_manager->each<LightComponent>([this, &shadowRenderCommands](EntityId id, LightComponent& component) {
+		std::shared_ptr<GameObject> object = m_manager->get(id);
+
+		if (object != nullptr && component.isShadowCastingEnabled()) {
+			component.getShadowBuffer()->bind();
+			RenderStateManager::setViewport(component.getShadowBufferSize());
+			glClear(GL_DEPTH_BUFFER_BIT);
 
 
-
-	m_framebuffer->unbind();
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_framebuffer->getColorTexture().getNativeHandle());
-
-	RenderStateManager::setDepthTestEnabled(false);
-
-	m_postEffectFramebuffer->bind();
-	RenderStateManager::setCurrentShader(m_fxaaShader);
-	m_quad->draw();
-	m_postEffectFramebuffer->unbind();
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_postEffectFramebuffer->getColorTexture().getNativeHandle());
-
-	RenderStateManager::setCurrentShader(m_abberationShader);
-	m_abberationShader->setUniform("u_chromaticAberration", 0.001f);
-	m_quad->draw();
+		}
+	});
 }
 
 void RenderingSystem::setMainCamera(std::shared_ptr<GameObject> camera)
@@ -85,20 +111,12 @@ void RenderingSystem::setMainCamera(std::shared_ptr<GameObject> camera)
 
 void RenderingSystem::onReceive(EntityManager * manager, const Events::OnWindowResized & event)
 {
-	RenderStateManager::setViewport(ivec2(event.windowSize));
+	m_renderSize = event.windowSize;
 
-	m_mainCameraData->setAspect(event.windowSize.x / event.windowSize.y);
+	m_mainCameraData->setAspect(m_renderSize.x / m_renderSize.y);
 
-	m_geometryBuffer = std::make_unique<FrameBuffer>(
-		static_cast<unsigned int>(event.windowSize.x),
-		static_cast<unsigned int>(event.windowSize.y),
-		true);
-
-	m_postEffectFramebuffer = std::make_unique<FrameBuffer>(
-		static_cast<unsigned int>(event.windowSize.x),
-		static_cast<unsigned int>(event.windowSize.y),
-		false);
-
+	m_geometryBuffer->resize(m_renderSize);
+	m_lightBuffer->resize(m_renderSize);
 
 	/*RenderStateManager::setCurrentShader(m_fxaaShader);
 	m_fxaaShader->setUniform("u_colorTexture", 0);
@@ -108,11 +126,16 @@ void RenderingSystem::onReceive(EntityManager * manager, const Events::OnWindowR
 	m_abberationShader->setUniform("u_colorTexture", 0);*/
 }
 
+void RenderingSystem::draw(RenderCommand * command, ComponentHandle<CameraComponent> cameraData, bool affectRenderState)
+{
+}
+
+/*
 void RenderingSystem::loadShaders()
 {
 	ShaderFactory::FromFile quadVertexSource("shaders/quad.vert");
 
-	/*ShaderFactory::FromFile fxaaFragmentSource("shaders/fxaa.frag");
+	ShaderFactory::FromFile fxaaFragmentSource("shaders/fxaa.frag");
 	ResourceManager::bind<ShaderFactory>("fxaa_shader", quadVertexSource, fxaaFragmentSource);
 	m_fxaaShader = ResourceManager::get<Shader>("fxaa_shader");
 	m_fxaaShader->setAttribute(0, "position");
@@ -144,17 +167,6 @@ void RenderingSystem::loadShaders()
 	ShaderFactory::FromFile skyFragmentSource("shaders/sky.frag");
 	ResourceManager::bind<ShaderFactory>("sky_shader", skyVertexSource, skyFragmentSource);
 	m_skyShader = ResourceManager::get<Shader>("sky_shader");
-	m_skyShader->setAttribute(0, "position");*/
+	m_skyShader->setAttribute(0, "position");
 }
-
-void RenderingSystem::updateCamera()
-{
-	m_manager->each<CameraComponent>([this](EntityId id, CameraComponent& component) {
-		std::shared_ptr<GameObject> camera = m_manager->get(id);
-
-		if (camera != nullptr) {
-			component.updateView(camera->getGlobalTransformation());
-			component.updateProjection();
-		}
-	});
-}
+*/

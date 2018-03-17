@@ -110,6 +110,9 @@
     <ClCompile Include="Texture.cpp">
       <Filter>Core\Resources\Texture</Filter>
     </ClCompile>
+    <ClCompile Include="LightComponent.cpp">
+      <Filter>Core\EntityComponents</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">
@@ -290,6 +293,9 @@
     </ClInclude>
     <ClInclude Include="Texture.h">
       <Filter>Core\Resources\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="LightComponent.h">
+      <Filter>Core\EntityComponents</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

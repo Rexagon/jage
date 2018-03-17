@@ -9,8 +9,8 @@ FrameBuffer::FrameBuffer(unsigned int width, unsigned int height, GLenum type, u
 	glBindFramebuffer(GL_FRAMEBUFFER, m_id);
 
 	m_colorAttachments.resize(colorAttachmentCount);
-	for (size_t i = 0; i < colorAttachmentCount; ++i) {
-		Texture& texture = m_colorAttachments[i];
+	for (unsigned int i = 0; i < colorAttachmentCount; ++i) {
+		Texture& texture = m_colorAttachments[static_cast<size_t>(i)];
 		texture.setFilters(GL_NEAREST, GL_NEAREST, false);
 		texture.setWrapMode(GL_CLAMP_TO_EDGE);
 
@@ -63,17 +63,22 @@ void FrameBuffer::unbind()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void FrameBuffer::resize(unsigned int width, unsigned int height)
+void FrameBuffer::resize(const uvec2& size)
 {
-	m_size = uvec2(width, height);
+	m_size = size;
 
 	for (size_t i = 0; i < m_colorAttachments.size(); ++i) {
-		m_colorAttachments[i].resize(width, height);
+		m_colorAttachments[i].resize(size.x, size.y);
 	}
 
 	if (m_hasDepthStencil) {
-		m_depthStencilAttachment.resize(width, height);
+		m_depthStencilAttachment.resize(size.x, size.y);
 	}
+}
+
+uvec2 FrameBuffer::getSize() const
+{
+	return m_size;
 }
 
 Texture * FrameBuffer::getColorTexture(unsigned int index)
