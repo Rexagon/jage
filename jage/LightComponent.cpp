@@ -1,8 +1,17 @@
 #include "LightComponent.h"
 
 LightComponent::LightComponent(const vec3 & color, Type type) :
-	m_color(color), m_type(type), m_shadowBuffer(nullptr)
+	m_color(color), m_type(type), 
+	m_shadowBufferSize(2048.0f, 2048.0f), m_shadowBuffer(nullptr)
 {
+}
+
+LightComponent::LightComponent(const LightComponent & other)
+{
+	m_color = other.m_color;
+	m_type = other.m_type;
+	m_shadowBufferSize = other.m_shadowBufferSize;
+	m_shadowBuffer.reset(new FrameBuffer(*other.m_shadowBuffer));
 }
 
 void LightComponent::setColor(const vec3 & color)
@@ -24,8 +33,8 @@ void LightComponent::setType(Type type)
 	{
 	case DIRECTIONAL:
 		setProjectionType(ISOMETRIC);
-		setDimensions(20.0f, 20.0f);
-		setDepthRange(vec2(-15.0f, 15.0f));
+		setDimensions(50.0f, 50.0f);
+		setDepthRange(vec2(-100.0f, 40.0f));
 		break;
 
 	case POINT:

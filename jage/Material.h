@@ -10,7 +10,7 @@ class Material
 public:
 	enum Type
 	{
-		DEFAULT,
+		DEFERRED,
 		CUSTOM,
 		POST_PROCESS
 	};

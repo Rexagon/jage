@@ -35,8 +35,10 @@ FrameBuffer::FrameBuffer(unsigned int width, unsigned int height, GLenum type, u
 
 	if (hasDepthStencil) {
 		m_depthStencilAttachment.setFilters(GL_NEAREST, GL_NEAREST, false);
-		m_depthStencilAttachment.setWrapMode(GL_CLAMP_TO_EDGE, false);
+		m_depthStencilAttachment.setWrapMode(GL_CLAMP_TO_BORDER, false);
 		m_depthStencilAttachment.init(width, height, GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+		float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_depthStencilAttachment.getHandle(), 0);
 	}

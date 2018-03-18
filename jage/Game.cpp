@@ -29,19 +29,25 @@ void Game::onInit()
 	auto terrain = ResourceManager::get<Model>("terrain")->createGameObject(m_entityManager.get(), "terrain");
 	terrain->setScale(100.0f, 30.0f, 100.0f);
 	rootObject->addChild(terrain);
+
+	auto sun = m_entityManager->create();
+	sun->assign<SunComponent>();
+	sun->setPosition(10.0f, 5.0f, 10.0f);
+	sun->setRotation(glm::pi<float>() * 0.25f, glm::pi<float>() * 0.4f, 0.0f);
+	auto directionalLight = sun->assign<LightComponent>();
+	directionalLight->setType(LightComponent::DIRECTIONAL);
+	directionalLight->setShadowCastingEnabled(true);
 	
 	m_camera = m_entityManager->create();
 	m_camera->setName("main_camera");
-	m_camera->assign<CameraComponent>();
-	m_camera->setPosition(0.0f, 1.0f, 10.0f);
-	
+	m_camera->setPosition(0.0f, 5.0f, 10.0f);
+	auto cameraComponent = m_camera->assign<CameraComponent>();
+
 	// Initializing systems
 	m_renderingSystem = std::make_shared<RenderingSystem>();
 	m_renderingSystem->setMainCamera(m_camera);
 	m_entityManager->registerSystem(m_renderingSystem);
 
-	auto sun = m_entityManager->create();
-	sun->assign<SunComponent>();
 	m_skySystem = std::make_shared<SkySystem>();
 	m_skySystem->setSun(sun);
 	m_entityManager->registerSystem(m_skySystem);

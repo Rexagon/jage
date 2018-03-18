@@ -33,11 +33,6 @@ private:
 	void renderCustomCommand(RenderCommand* command, CameraComponent* cameraData, bool affectRenderState = true);
 	void renderShadowCastCommand(RenderCommand* command, LightComponent* lightData);
 
-	void renderDeferredAmbient();
-	void renderDeferredDirectional(LightComponent* component);
-	void renderDeferredPoint(LightComponent* command);
-	void renderDeferredSpot(LightComponent* spot);
-
 	ivec2 m_renderSize;
 
 	ComponentHandle<CameraComponent> m_mainCameraData;
@@ -48,6 +43,4 @@ private:
 	std::unique_ptr<FrameBuffer> m_mainBuffer;
 
 	std::unique_ptr<RenderCommandBuffer> m_commandBuffer;
-
-	Shader* m_mainShader;
 };

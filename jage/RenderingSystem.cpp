@@ -13,33 +13,11 @@ void RenderingSystem::init()
 	m_quad = std::make_shared<Mesh>();
 	m_quad->init(MeshGeometry::createQuad());
 
-	m_geometryBuffer = std::make_unique<FrameBuffer>(1024, 768, GL_UNSIGNED_BYTE, 4, true);
+	m_geometryBuffer = std::make_unique<FrameBuffer>(1024, 768, GL_UNSIGNED_BYTE, 3, true);
 	m_lightBuffer = std::make_unique<FrameBuffer>(1024, 768, GL_UNSIGNED_BYTE, 1, false);
 	m_mainBuffer = std::make_unique<FrameBuffer>(1024, 768, GL_UNSIGNED_BYTE, 1, true);
 
 	m_commandBuffer = std::make_unique<RenderCommandBuffer>(this);
-
-	ShaderFactory::FromString vertexShaderSource(
-		"#version 330\n"
-		"layout(location = 0) in vec3 position;\n"
-		"layout(location = 1) in vec2 texCoord;\n"
-		"out vec2 v_texCoord;\n"
-		"void main() {\n"
-		"	gl_Position = vec4(position.x, position.y, position.z, 1.0);\n"
-		"	v_texCoord = texCoord;\n"
-		"}"
-	);
-	ShaderFactory::FromString fragmentShaderSource(
-		"#version 330\n"
-		"uniform sampler2D diffuseTexture;\n"
-		"in vec2 v_texCoord;\n"
-		"void main() { gl_FragColor = texture(diffuseTexture, v_texCoord); }"
-	);
-	ResourceManager::bind<ShaderFactory>("main_shader", vertexShaderSource, fragmentShaderSource);
-	m_mainShader = ResourceManager::get<Shader>("main_shader");
-	m_mainShader->setAttribute(0, "position");
-	m_mainShader->setAttribute(1, "texCoord");
-	m_mainShader->setUniform("diffuseTexture", 0);
 }
 
 void RenderingSystem::close()
@@ -89,19 +67,18 @@ void RenderingSystem::update(const float dt)
 	RenderStateManager::setClearColor(0.0f, 0.0f, 0.0f);
 
 	// render to geometry buffer
-	unsigned int attachments[4] = { 
+	unsigned int attachments[3] = { 
 		GL_COLOR_ATTACHMENT0, 
 		GL_COLOR_ATTACHMENT1, 
-		GL_COLOR_ATTACHMENT2, 
-		GL_COLOR_ATTACHMENT3 
+		GL_COLOR_ATTACHMENT2
 	};
-	glDrawBuffers(4, attachments);
+	glDrawBuffers(3, attachments);
 
 	std::vector<RenderCommand> deferredRenderCommands = m_commandBuffer->getDeferredRenderCommands(true);
 	
 	RenderStateManager::setViewport(m_renderSize);
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	for (size_t i = 0; i < deferredRenderCommands.size(); ++i) {
 		renderCustomCommand(&deferredRenderCommands[i], m_mainCameraData.get(), false);
 	}
@@ -109,8 +86,7 @@ void RenderingSystem::update(const float dt)
 	// render all shadow casters
 	attachments[1] = GL_NONE;
 	attachments[2] = GL_NONE;
-	attachments[3] = GL_NONE;
-	glDrawBuffers(4, attachments);
+	glDrawBuffers(3, attachments);
 
 	RenderStateManager::setFaceCullingSide(GL_FRONT);
 	std::vector<RenderCommand> shadowRenderCommands = m_commandBuffer->getShadowCastRenderCommands();
@@ -123,7 +99,7 @@ void RenderingSystem::update(const float dt)
 
 			component.getShadowBuffer()->bind();
 			RenderStateManager::setViewport(component.getShadowBufferSize());
-			glClear(GL_DEPTH_BUFFER_BIT);
+			glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 			
 			for (size_t i = 0; i < shadowRenderCommands.size(); ++i) {
 				renderShadowCastCommand(&shadowRenderCommands[i], &component);
@@ -136,31 +112,36 @@ void RenderingSystem::update(const float dt)
 	//TODO: make preprocessing
 
 	// render lights
+	m_lightBuffer->bind();
+	RenderStateManager::setViewport(m_renderSize);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
 	RenderStateManager::setDepthTestEnabled(false);
 	RenderStateManager::setBlendingEnabled(true);
 	RenderStateManager::setBlendingFunction(GL_ONE, GL_ONE);
 
-	for (unsigned int i = 0; i < 4; ++i) {
+	for (unsigned int i = 0; i < 3; ++i) {
 		m_geometryBuffer->getColorTexture(i)->bind(i);
 	}
+	m_geometryBuffer->getDepthStencilTexture()->bind(3);
+
+	RenderStateManager::setCurrentShader(MaterialManager::getLightShader());
+	MaterialManager::getLightShader()->setUniform("u_inversedViewProjection", glm::inverse(m_mainCameraData->getViewProjectionMatrix()));
 
 	m_manager->each<LightComponent>([this](EntityId id, LightComponent& component) {
-		switch (component.getType())
-		{
-		case LightComponent::DIRECTIONAL:
-			renderDeferredDirectional(&component);
-			break;
+		std::shared_ptr<GameObject> object = m_manager->get(id);
 
-		case LightComponent::POINT:
-			renderDeferredPoint(&component);
-			break;
+		Shader* shader = MaterialManager::getLightShader();
+		shader->setUniform("u_isShadowsEnabled", static_cast<int>(component.isShadowCastingEnabled()));
+		shader->setUniform("u_direction", object->getDirectionFront());
+		shader->setUniform("u_color", component.getColor());
+		shader->setUniform("u_lightViewProjection", component.getViewProjectionMatrix());
 
-		case LightComponent::SPOT:
-			renderDeferredSpot(&component);
-
-		default:
-			break;
+		if (component.isShadowCastingEnabled()) {
+			component.getShadowBuffer()->getDepthStencilTexture()->bind(4);
 		}
+
+		m_quad->draw();
 	});
 
 	// render in forward mode
@@ -194,13 +175,15 @@ void RenderingSystem::update(const float dt)
 	}
 
 	// show to screen
+	m_lightBuffer->bind();
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // default FBO
+
+	glBlitFramebuffer(
+		0, 0, m_renderSize.x, m_renderSize.y,
+		0, 0, m_renderSize.x, m_renderSize.y,
+		GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	RenderStateManager::setDepthTestEnabled(false);
-	m_geometryBuffer->getColorTexture(0)->bind(0);
-
-	RenderStateManager::setCurrentShader(m_mainShader);
-	m_quad->draw();
 
 	// finals
 	m_commandBuffer->clear();
@@ -228,6 +211,7 @@ void RenderingSystem::renderCustomCommand(RenderCommand * command, CameraCompone
 {
 	Mesh* mesh = command->mesh;
 	Material* material = command->material;
+	Shader* shader = material->getShader();
 
 	if (affectRenderState) {
 		RenderStateManager::setBlendingEnabled(material->isBlendingEnabled());
@@ -241,29 +225,25 @@ void RenderingSystem::renderCustomCommand(RenderCommand * command, CameraCompone
 		RenderStateManager::setFaceCullingSide(material->getFaceCullingSide());
 	}
 
-	RenderStateManager::setCurrentShader(material->getShader());
-	material->getShader()->setUniform("u_transformation", command->transform);
-	material->getShader()->setUniform("u_cameraViewProjection", cameraData->getViewProjectionMatrix());
-	material->getShader()->setUniform("u_sunDirection", vec3(1.0f, 1.0f, 1.0f));
+	RenderStateManager::setCurrentShader(shader);
+	shader->setUniform("u_transformation", command->transform);
+	shader->setUniform("u_cameraViewProjection", cameraData->getViewProjectionMatrix());
+
+	auto& textures = material->getTextures();
+	for (size_t i = 0; i < 2; ++i) {
+		textures[i]->bind(i);
+	}
+
 	mesh->draw();
 }
 
 void RenderingSystem::renderShadowCastCommand(RenderCommand * command, LightComponent* lightData)
 {
-}
+	Shader* shader = MaterialManager::getShadowShader();
 
-void RenderingSystem::renderDeferredAmbient()
-{
-}
+	RenderStateManager::setCurrentShader(shader);
+	shader->setUniform("u_transformation", command->transform);
+	shader->setUniform("u_cameraViewProjection", lightData->getViewProjectionMatrix());
 
-void RenderingSystem::renderDeferredDirectional(LightComponent * component)
-{
-}
-
-void RenderingSystem::renderDeferredPoint(LightComponent * command)
-{
-}
-
-void RenderingSystem::renderDeferredSpot(LightComponent * spot)
-{
+	command->mesh->draw();
 }

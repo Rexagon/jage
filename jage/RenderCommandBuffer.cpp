@@ -23,7 +23,7 @@ void RenderCommandBuffer::push(Mesh * mesh, const mat4 & transform, Material * m
 	else {
 		switch (material->getType())
 		{
-		case Material::DEFAULT:
+		case Material::DEFERRED:
 			m_deferredRenderCommands.push_back(command);
 			break;
 

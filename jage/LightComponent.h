@@ -17,6 +17,7 @@ public:
 	};
 
 	LightComponent(const vec3& color = vec3(1.0f, 1.0f, 1.0f), Type type = POINT);
+	LightComponent(const LightComponent& other);
 
 	void setColor(const vec3& color);
 	vec3 getColor() const;

@@ -93,7 +93,7 @@ void * ModelFactory::load()
 				normalsTexture = ResourceManager::get<Texture>("default_normals");
 			}
 
-			model->m_materials[i] = MaterialManager::createDefaultMaterial(albedoTexture, normalsTexture);
+			model->m_materials[i] = MaterialManager::createMeshMaterial(albedoTexture, normalsTexture);
 		}
 
 		// Loading meshes

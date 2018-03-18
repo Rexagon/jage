@@ -3,7 +3,7 @@
 #include "RenderStateManager.h"
 
 Material::Material(Shader * shader) :
-	m_shader(shader), m_type(DEFAULT), m_color(1.0f, 1.0f, 1.0f, 1.0f),
+	m_shader(shader), m_type(DEFERRED), m_color(1.0f, 1.0f, 1.0f, 1.0f),
 	m_depthTestEnabled(true), m_depthWriteEnabled(true), m_depthTestFunction(GL_GEQUAL),
 	m_faceCullingEnabled(true), m_faceCullingSide(GL_BACK),
 	m_blendingEnabled(false), m_blendingFunctionSrc(GL_SRC_ALPHA), m_blendingFunctionDst(GL_ONE_MINUS_SRC_ALPHA),
