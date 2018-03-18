@@ -29,6 +29,8 @@ public:
 
 	void generateMipmap();
 
+	void bind(unsigned int unit);
+
 	GLuint getHandle() const;
 
 private:

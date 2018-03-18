@@ -34,6 +34,7 @@ void Core::init(const Parameters& parameters)
 	ResourceManager::init();
 	CursorManager::init(m_window.getSystemHandle());
 	FileManager::init<DefaultFileSystem>();
+	MaterialManager::init();
 	
 	m_isInitialized = true;
 }

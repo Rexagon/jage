@@ -4,8 +4,9 @@
 
 #include "Math.h"
 #include "FrameBuffer.h"
+#include "CameraComponent.h"
 
-class LightComponent
+class LightComponent : private CameraComponent
 {
 public:
 	enum Type
@@ -28,20 +29,21 @@ public:
 
 	FrameBuffer* getShadowBuffer() const;
 
-	mat4 getProjectionMatrix() const;
-
 	void setShadowBufferSize(const uvec2& shadowBufferSize);
 	uvec2 getShadowBufferSize() const;
 
-private:
+	void updateView(const mat4& globalTransformation);
 	void updateProjection();
 
+	mat4 getViewProjectionMatrix() const;
+
+	mat4 getViewMatrix() const;
+	mat4 getProjectionMatrix() const;
+
+private:
 	vec3 m_color;
 	Type m_type;
 
 	uvec2 m_shadowBufferSize;
 	std::unique_ptr<FrameBuffer> m_shadowBuffer;
-
-	mutable bool m_projectionChanged;
-	mutable mat4 m_projection;
 };

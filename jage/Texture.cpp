@@ -81,7 +81,7 @@ bool Texture::init(unsigned int width, unsigned int height, unsigned int depth, 
 	m_type = type;
 
 	glBindTexture(m_target, m_id);
-	glTexImage2D(m_target, 0, internalFormat, width, height, 0, format, type, data);
+	glTexImage3D(m_target, 0, internalFormat, width, height, depth, 0, format, type, data);
 	glTexParameteri(m_target, GL_TEXTURE_MIN_FILTER, m_minFilter);
 	glTexParameteri(m_target, GL_TEXTURE_MAG_FILTER, m_maxFilter);
 	glTexParameteri(m_target, GL_TEXTURE_WRAP_S, m_wrapS);
@@ -167,6 +167,12 @@ void Texture::generateMipmap()
 
 	glBindTexture(m_target, m_id);
 	glGenerateMipmap(m_target);
+}
+
+void Texture::bind(unsigned int unit)
+{
+	glActiveTexture(GL_TEXTURE0 + unit);
+	glBindTexture(m_target, m_id);
 }
 
 GLuint Texture::getHandle() const

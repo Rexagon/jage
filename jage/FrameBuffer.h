@@ -23,8 +23,6 @@ public:
 	GLuint getHandle() const { return m_id; }
 
 private:
-	void init(unsigned int width, unsigned int height, bool depthEnabled);
-
 	GLuint m_id;
 
 	std::vector<Texture> m_colorAttachments;

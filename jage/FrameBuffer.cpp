@@ -12,7 +12,7 @@ FrameBuffer::FrameBuffer(unsigned int width, unsigned int height, GLenum type, u
 	for (unsigned int i = 0; i < colorAttachmentCount; ++i) {
 		Texture& texture = m_colorAttachments[static_cast<size_t>(i)];
 		texture.setFilters(GL_NEAREST, GL_NEAREST, false);
-		texture.setWrapMode(GL_CLAMP_TO_EDGE);
+		texture.setWrapMode(GL_CLAMP_TO_EDGE, false);
 
 		GLenum internalFormat;
 		switch (type) {
@@ -35,10 +35,10 @@ FrameBuffer::FrameBuffer(unsigned int width, unsigned int height, GLenum type, u
 
 	if (hasDepthStencil) {
 		m_depthStencilAttachment.setFilters(GL_NEAREST, GL_NEAREST, false);
-		m_depthStencilAttachment.setWrapMode(GL_CLAMP_TO_EDGE);
-		m_depthStencilAttachment.init(width, height, GL_DEPTH_STENCIL, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr);
+		m_depthStencilAttachment.setWrapMode(GL_CLAMP_TO_EDGE, false);
+		m_depthStencilAttachment.init(width, height, GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_depthStencilAttachment.getHandle(), 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_depthStencilAttachment.getHandle(), 0);
 	}
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {

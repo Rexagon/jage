@@ -50,9 +50,6 @@
     <ClCompile Include="RenderStateManager.cpp">
       <Filter>Core\Managers</Filter>
     </ClCompile>
-    <ClCompile Include="MeshGeometry.cpp">
-      <Filter>Core\Resources\Model</Filter>
-    </ClCompile>
     <ClCompile Include="FrameBuffer.cpp">
       <Filter>Core\Stuff\Rendering</Filter>
     </ClCompile>
@@ -112,6 +109,12 @@
     </ClCompile>
     <ClCompile Include="LightComponent.cpp">
       <Filter>Core\EntityComponents</Filter>
+    </ClCompile>
+    <ClCompile Include="MaterialManager.cpp">
+      <Filter>Core\Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshGeometry.cpp">
+      <Filter>Core\Stuff\Rendering</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -225,9 +228,6 @@
     <ClInclude Include="RenderStateManager.h">
       <Filter>Core\Managers</Filter>
     </ClInclude>
-    <ClInclude Include="MeshGeometry.h">
-      <Filter>Core\Resources\Model</Filter>
-    </ClInclude>
     <ClInclude Include="FrameBuffer.h">
       <Filter>Core\Stuff\Rendering</Filter>
     </ClInclude>
@@ -296,6 +296,12 @@
     </ClInclude>
     <ClInclude Include="LightComponent.h">
       <Filter>Core\EntityComponents</Filter>
+    </ClInclude>
+    <ClInclude Include="MaterialManager.h">
+      <Filter>Core\Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshGeometry.h">
+      <Filter>Core\Stuff\Rendering</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

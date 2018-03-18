@@ -202,11 +202,15 @@ vec4 RenderStateManager::getClearColor()
 
 void RenderStateManager::setClearDepth(float depth)
 {
+	if (m_clearDepth != depth) {
+		m_clearDepth = depth;
+		glClearDepth(depth);
+	}
 }
 
 float RenderStateManager::getClearDepth()
 {
-	return 0.0f;
+	return m_clearDepth;
 }
 
 void RenderStateManager::setDepthTestEnabled(bool enabled)

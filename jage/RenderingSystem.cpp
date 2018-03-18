@@ -13,10 +13,33 @@ void RenderingSystem::init()
 	m_quad = std::make_shared<Mesh>();
 	m_quad->init(MeshGeometry::createQuad());
 
-	m_geometryBuffer = std::make_unique<FrameBuffer>(1, 1, GL_HALF_FLOAT, 4, true);
-	m_lightBuffer = std::make_unique<FrameBuffer>(1, 1, GL_UNSIGNED_BYTE, 1, false);
+	m_geometryBuffer = std::make_unique<FrameBuffer>(1024, 768, GL_UNSIGNED_BYTE, 4, true);
+	m_lightBuffer = std::make_unique<FrameBuffer>(1024, 768, GL_UNSIGNED_BYTE, 1, false);
+	m_mainBuffer = std::make_unique<FrameBuffer>(1024, 768, GL_UNSIGNED_BYTE, 1, true);
 
 	m_commandBuffer = std::make_unique<RenderCommandBuffer>(this);
+
+	ShaderFactory::FromString vertexShaderSource(
+		"#version 330\n"
+		"layout(location = 0) in vec3 position;\n"
+		"layout(location = 1) in vec2 texCoord;\n"
+		"out vec2 v_texCoord;\n"
+		"void main() {\n"
+		"	gl_Position = vec4(position.x, position.y, position.z, 1.0);\n"
+		"	v_texCoord = texCoord;\n"
+		"}"
+	);
+	ShaderFactory::FromString fragmentShaderSource(
+		"#version 330\n"
+		"uniform sampler2D diffuseTexture;\n"
+		"in vec2 v_texCoord;\n"
+		"void main() { gl_FragColor = texture(diffuseTexture, v_texCoord); }"
+	);
+	ResourceManager::bind<ShaderFactory>("main_shader", vertexShaderSource, fragmentShaderSource);
+	m_mainShader = ResourceManager::get<Shader>("main_shader");
+	m_mainShader->setAttribute(0, "position");
+	m_mainShader->setAttribute(1, "texCoord");
+	m_mainShader->setUniform("diffuseTexture", 0);
 }
 
 void RenderingSystem::close()
@@ -43,13 +66,15 @@ void RenderingSystem::update(const float dt)
 		std::shared_ptr<GameObject> object = m_manager->get(id);
 
 		if (object != nullptr) {
-			m_commandBuffer->push(component.getMesh(), object->getGlobalTransformation(), component.getMaterial());
+			m_commandBuffer->push(component.getMesh(), object->getGlobalTransformation(), &component.getMaterial());
 		}
 	});
 
 	m_commandBuffer->sort();
 
 	// reset gl state
+	m_geometryBuffer->bind();
+
 	RenderStateManager::setBlendingEnabled(false);
 
 	RenderStateManager::setFaceCullingEnabled(true);
@@ -74,12 +99,11 @@ void RenderingSystem::update(const float dt)
 
 	std::vector<RenderCommand> deferredRenderCommands = m_commandBuffer->getDeferredRenderCommands(true);
 	
-	m_geometryBuffer->bind();
 	RenderStateManager::setViewport(m_renderSize);
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	for (size_t i = 0; i < deferredRenderCommands.size(); ++i) {
-		draw(&deferredRenderCommands[i], m_mainCameraData, false);
+		renderCustomCommand(&deferredRenderCommands[i], m_mainCameraData.get(), false);
 	}
 
 	// render all shadow casters
@@ -88,18 +112,98 @@ void RenderingSystem::update(const float dt)
 	attachments[3] = GL_NONE;
 	glDrawBuffers(4, attachments);
 
+	RenderStateManager::setFaceCullingSide(GL_FRONT);
 	std::vector<RenderCommand> shadowRenderCommands = m_commandBuffer->getShadowCastRenderCommands();
 	m_manager->each<LightComponent>([this, &shadowRenderCommands](EntityId id, LightComponent& component) {
 		std::shared_ptr<GameObject> object = m_manager->get(id);
 
 		if (object != nullptr && component.isShadowCastingEnabled()) {
+			component.updateView(object->getGlobalTransformation());
+			component.updateProjection();
+
 			component.getShadowBuffer()->bind();
 			RenderStateManager::setViewport(component.getShadowBufferSize());
 			glClear(GL_DEPTH_BUFFER_BIT);
-
-
+			
+			for (size_t i = 0; i < shadowRenderCommands.size(); ++i) {
+				renderShadowCastCommand(&shadowRenderCommands[i], &component);
+			}
 		}
 	});
+	RenderStateManager::setFaceCullingSide(GL_BACK);
+
+	// do post processing before lighting pass
+	//TODO: make preprocessing
+
+	// render lights
+	RenderStateManager::setDepthTestEnabled(false);
+	RenderStateManager::setBlendingEnabled(true);
+	RenderStateManager::setBlendingFunction(GL_ONE, GL_ONE);
+
+	for (unsigned int i = 0; i < 4; ++i) {
+		m_geometryBuffer->getColorTexture(i)->bind(i);
+	}
+
+	m_manager->each<LightComponent>([this](EntityId id, LightComponent& component) {
+		switch (component.getType())
+		{
+		case LightComponent::DIRECTIONAL:
+			renderDeferredDirectional(&component);
+			break;
+
+		case LightComponent::POINT:
+			renderDeferredPoint(&component);
+			break;
+
+		case LightComponent::SPOT:
+			renderDeferredSpot(&component);
+
+		default:
+			break;
+		}
+	});
+
+	// render in forward mode
+	RenderStateManager::setDepthTestEnabled(true);
+	RenderStateManager::setBlendingEnabled(false);
+	RenderStateManager::setBlendingFunction(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_geometryBuffer->getHandle());
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_mainBuffer->getHandle());
+	glBlitFramebuffer(
+		0, 0, m_geometryBuffer->getSize().x, m_geometryBuffer->getSize().y,
+		0, 0, m_renderSize.x, m_renderSize.y,
+		GL_DEPTH_BUFFER_BIT, GL_NEAREST
+	);
+
+	std::vector<RenderCommand> customRenderCommands = m_commandBuffer->getCustomRenderCommands(nullptr, true);
+
+	m_mainBuffer->bind();
+	RenderStateManager::setViewport(m_renderSize);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	for (size_t i = 0; i < customRenderCommands.size(); ++i) {
+		renderCustomCommand(&customRenderCommands[i], m_mainCameraData.get(), true);
+	}
+
+	// render meshes with alpha materials
+	std::vector<RenderCommand> alphaRenderCommands = m_commandBuffer->getAlphaRenderCommands(true);
+
+	for (size_t i = 0; i < alphaRenderCommands.size(); ++i) {
+		renderCustomCommand(&alphaRenderCommands[i], m_mainCameraData.get(), true);
+	}
+
+	// show to screen
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	RenderStateManager::setDepthTestEnabled(false);
+	m_geometryBuffer->getColorTexture(0)->bind(0);
+
+	RenderStateManager::setCurrentShader(m_mainShader);
+	m_quad->draw();
+
+	// finals
+	m_commandBuffer->clear();
 }
 
 void RenderingSystem::setMainCamera(std::shared_ptr<GameObject> camera)
@@ -113,60 +217,53 @@ void RenderingSystem::onReceive(EntityManager * manager, const Events::OnWindowR
 {
 	m_renderSize = event.windowSize;
 
-	m_mainCameraData->setAspect(m_renderSize.x / m_renderSize.y);
+	m_mainCameraData->setAspect(static_cast<float>(m_renderSize.x) / static_cast<float>(m_renderSize.y));
 
 	m_geometryBuffer->resize(m_renderSize);
 	m_lightBuffer->resize(m_renderSize);
-
-	/*RenderStateManager::setCurrentShader(m_fxaaShader);
-	m_fxaaShader->setUniform("u_colorTexture", 0);
-	m_fxaaShader->setUniform("u_inversedResolution", vec2(1.0f / event.windowSize.x, 1.0f / event.windowSize.y));
-
-	RenderStateManager::setCurrentShader(m_abberationShader);
-	m_abberationShader->setUniform("u_colorTexture", 0);*/
+	m_mainBuffer->resize(m_renderSize);
 }
 
-void RenderingSystem::draw(RenderCommand * command, ComponentHandle<CameraComponent> cameraData, bool affectRenderState)
+void RenderingSystem::renderCustomCommand(RenderCommand * command, CameraComponent* cameraData, bool affectRenderState)
+{
+	Mesh* mesh = command->mesh;
+	Material* material = command->material;
+
+	if (affectRenderState) {
+		RenderStateManager::setBlendingEnabled(material->isBlendingEnabled());
+		RenderStateManager::setBlendingFunction(
+			material->getBlendingFunctionSrc(),
+			material->getBlendingFunctionDst()
+		);
+		RenderStateManager::setDepthTestEnabled(material->isDepthTestEnabled());
+		RenderStateManager::setDepthTestFunction(material->getDepthTestFunction());
+		RenderStateManager::setFaceCullingEnabled(material->isFaceCullingEnabled());
+		RenderStateManager::setFaceCullingSide(material->getFaceCullingSide());
+	}
+
+	RenderStateManager::setCurrentShader(material->getShader());
+	material->getShader()->setUniform("u_transformation", command->transform);
+	material->getShader()->setUniform("u_cameraViewProjection", cameraData->getViewProjectionMatrix());
+	material->getShader()->setUniform("u_sunDirection", vec3(1.0f, 1.0f, 1.0f));
+	mesh->draw();
+}
+
+void RenderingSystem::renderShadowCastCommand(RenderCommand * command, LightComponent* lightData)
 {
 }
 
-/*
-void RenderingSystem::loadShaders()
+void RenderingSystem::renderDeferredAmbient()
 {
-	ShaderFactory::FromFile quadVertexSource("shaders/quad.vert");
-
-	ShaderFactory::FromFile fxaaFragmentSource("shaders/fxaa.frag");
-	ResourceManager::bind<ShaderFactory>("fxaa_shader", quadVertexSource, fxaaFragmentSource);
-	m_fxaaShader = ResourceManager::get<Shader>("fxaa_shader");
-	m_fxaaShader->setAttribute(0, "position");
-	m_fxaaShader->setAttribute(1, "texCoord");
-
-	ShaderFactory::FromFile abberationFragmentSource("shaders/abberation.frag");
-	ResourceManager::bind<ShaderFactory>("abberation_shader", quadVertexSource, abberationFragmentSource);
-	m_abberationShader = ResourceManager::get<Shader>("abberation_shader");
-	m_abberationShader->setAttribute(0, "position");
-	m_abberationShader->setAttribute(1, "texCoord");
-
-	ShaderFactory::FromFile meshVertexSource("shaders/mesh.vert");
-	ShaderFactory::FromFile meshFragmentSource("shaders/mesh.frag");
-	ResourceManager::bind<ShaderFactory>("mesh_shader", meshVertexSource, meshFragmentSource);
-	m_meshShader = ResourceManager::get<Shader>("mesh_shader");
-	m_meshShader->setAttribute(0, "position");
-	m_meshShader->setAttribute(1, "texCoord");
-	m_meshShader->setAttribute(2, "normal");
-
-	ShaderFactory::FromFile gridVertexSource("shaders/grid.vert");
-	ShaderFactory::FromFile gridGeometrySource("shaders/grid.geom");
-	ShaderFactory::FromFile gridFragmentSource("shaders/grid.frag");
-	ResourceManager::bind<ShaderFactory>("grid_shader", gridVertexSource, gridGeometrySource, gridFragmentSource);
-	m_gridShader = ResourceManager::get<Shader>("grid_shader");
-	m_gridShader->setAttribute(0, "position");
-	m_gridShader->setAttribute(1, "chunkId");
-
-	ShaderFactory::FromFile skyVertexSource("shaders/sky.vert");
-	ShaderFactory::FromFile skyFragmentSource("shaders/sky.frag");
-	ResourceManager::bind<ShaderFactory>("sky_shader", skyVertexSource, skyFragmentSource);
-	m_skyShader = ResourceManager::get<Shader>("sky_shader");
-	m_skyShader->setAttribute(0, "position");
 }
-*/
+
+void RenderingSystem::renderDeferredDirectional(LightComponent * component)
+{
+}
+
+void RenderingSystem::renderDeferredPoint(LightComponent * command)
+{
+}
+
+void RenderingSystem::renderDeferredSpot(LightComponent * spot)
+{
+}

@@ -5,9 +5,35 @@ LightComponent::LightComponent(const vec3 & color, Type type) :
 {
 }
 
+void LightComponent::setColor(const vec3 & color)
+{
+	m_color = color;
+}
+
+vec3 LightComponent::getColor() const
+{
+	return m_color;
+}
+
 void LightComponent::setType(Type type)
 {
+	if (m_type == type) return;
 	m_type = type;
+
+	switch (m_type)
+	{
+	case DIRECTIONAL:
+		setProjectionType(ISOMETRIC);
+		setDimensions(20.0f, 20.0f);
+		setDepthRange(vec2(-15.0f, 15.0f));
+		break;
+
+	case POINT:
+		break;
+
+	case SPOT:
+		break;
+	}
 }
 
 LightComponent::Type LightComponent::getType() const
@@ -35,11 +61,6 @@ FrameBuffer * LightComponent::getShadowBuffer() const
 	return m_shadowBuffer.get();
 }
 
-mat4 LightComponent::getProjectionMatrix() const
-{
-	
-}
-
 void LightComponent::setShadowBufferSize(const uvec2 & shadowBufferSize)
 {
 	if (m_shadowBufferSize != shadowBufferSize) {
@@ -62,12 +83,27 @@ uvec2 LightComponent::getShadowBufferSize() const
 	}
 }
 
-void LightComponent::setColor(const vec3 & color)
+void LightComponent::updateView(const mat4 & globalTransformation)
 {
-	m_color = color;
+	CameraComponent::updateView(globalTransformation);
 }
 
-vec3 LightComponent::getColor() const
+void LightComponent::updateProjection()
 {
-	return m_color;
+	CameraComponent::updateProjection();
+}
+
+mat4 LightComponent::getViewProjectionMatrix() const
+{
+	return CameraComponent::getViewProjectionMatrix();
+}
+
+mat4 LightComponent::getViewMatrix() const
+{
+	return CameraComponent::getViewMatrix();
+}
+
+mat4 LightComponent::getProjectionMatrix() const
+{
+	return CameraComponent::getProjectionMatrix();
 }

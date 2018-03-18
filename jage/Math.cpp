@@ -5,6 +5,8 @@
 
 #include <zlib.h>
 
+#include "Log.h"
+
 vec2 toGLM(const sf::Vector2f & v)
 {
 	return vec2(v.x, v.y);
@@ -224,6 +226,19 @@ std::vector<char> math::decodeBase64(const std::string & encodedString)
 	return result;
 }
 
+struct Chunk
+{
+	Chunk(unsigned int size) {
+		data = new char[size];
+	}
+
+	~Chunk() {
+		delete[] data;
+		Log::write("chunk deleted");
+	}
+
+	char* data;
+};
 std::vector<char> math::decompress(const std::vector<char>& buffer)
 {
 	z_stream zs;
@@ -237,11 +252,11 @@ std::vector<char> math::decompress(const std::vector<char>& buffer)
 	zs.avail_in = static_cast<uInt>(buffer.size());
 
 	int resultCode;
-	char chunk[32768];
+	static Chunk chunk(32768);
 	std::vector<char> result;
 
 	do {
-		zs.next_out = reinterpret_cast<Bytef*>(chunk);
+		zs.next_out = reinterpret_cast<Bytef*>(chunk.data);
 		zs.avail_out = sizeof(chunk);
 
 		resultCode = inflate(&zs, 0);
@@ -249,7 +264,7 @@ std::vector<char> math::decompress(const std::vector<char>& buffer)
 		if (result.size() < zs.total_out) {
 			size_t insertionSize = zs.total_out - result.size();
 
-			result.insert(result.end(), std::begin(chunk), std::begin(chunk) + insertionSize);
+			result.insert(result.end(), chunk.data, chunk.data + insertionSize);
 		}
 
 	} while (resultCode == Z_OK);
