@@ -9,17 +9,16 @@ class MaterialManager
 public:
 	static void init();
 
-	static Shader* getMeshShader();
 	static Material createMeshMaterial(Texture* albedo, Texture* normal);
+	static Material* getFxaaMaterial();
 
 	static Shader* getShadowShader();
-
 	static Shader* getLightShader();
 
 private:
-	// mesh materials
-	static Shader* m_meshShader;
+	// materials
 	static std::unique_ptr<Material> m_defaultMaterial;
+	static std::unique_ptr<Material> m_fxaaMaterial;
 
 	// light shaders
 	static Shader* m_shadowShader;

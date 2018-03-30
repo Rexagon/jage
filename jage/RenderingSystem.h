@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 #include "RenderCommandBuffer.h"
 #include "EntityManager.h"
 #include "FrameBuffer.h"
@@ -8,6 +10,16 @@
 #include "CameraComponent.h"
 #include "LightComponent.h"
 #include "MeshComponent.h"
+
+namespace detail
+{
+	struct PostProcessCommandsPredicate
+	{
+		bool operator()(const PostProcessCommand& a, const PostProcessCommand& b) {
+			return a.order < b.order;
+		}
+	};
+}
 
 namespace Events
 {
@@ -29,9 +41,12 @@ public:
 
 	void onReceive(EntityManager* manager, const Events::OnWindowResized& event) override;
 
+	void addPostProcess(size_t order, Material* material);
+
 private:
-	void renderCustomCommand(RenderCommand* command, CameraComponent* cameraData, bool affectRenderState = true);
-	void renderShadowCastCommand(RenderCommand* command, LightComponent* lightData);
+	void renderCustomCommand(const RenderCommand* command, CameraComponent* cameraData, bool affectRenderState = true);
+	void renderShadowCastCommand(const RenderCommand* command, LightComponent* lightData);
+	void renderPostProcessingCommand(const PostProcessCommand* command);
 
 	ivec2 m_renderSize;
 
@@ -42,5 +57,9 @@ private:
 	std::unique_ptr<FrameBuffer> m_lightBuffer;
 	std::unique_ptr<FrameBuffer> m_mainBuffer;
 
+	std::array<std::unique_ptr<FrameBuffer>, 2> m_postProcessBuffers;
+
 	std::unique_ptr<RenderCommandBuffer> m_commandBuffer;
+	std::multiset<PostProcessCommand, 
+		detail::PostProcessCommandsPredicate> m_postProcessCommands;
 };

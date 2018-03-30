@@ -51,6 +51,11 @@ std::vector<Texture*>& Material::getTextures()
 	return m_textures;
 }
 
+const std::vector<Texture*>& Material::getTextures() const
+{
+	return m_textures;
+}
+
 void Material::setDepthTestEnabled(bool enabled)
 {
 	m_depthTestEnabled = enabled;

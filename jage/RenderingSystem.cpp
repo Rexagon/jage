@@ -11,11 +11,15 @@ void RenderingSystem::init()
 	m_manager->subscribe<Events::OnWindowResized>(this);
 
 	m_quad = std::make_shared<Mesh>();
-	m_quad->init(MeshGeometry::createQuad());
+	m_quad->init(MeshGeometry::createQuad(vec2(1.0f), MeshGeometry::TEXTURED_VERTEX));
 
 	m_geometryBuffer = std::make_unique<FrameBuffer>(1024, 768, GL_UNSIGNED_BYTE, 3, true);
 	m_lightBuffer = std::make_unique<FrameBuffer>(1024, 768, GL_UNSIGNED_BYTE, 1, false);
 	m_mainBuffer = std::make_unique<FrameBuffer>(1024, 768, GL_UNSIGNED_BYTE, 1, true);
+
+	for (size_t i = 0; i < m_postProcessBuffers.size(); ++i) {
+		m_postProcessBuffers[i] = std::make_unique<FrameBuffer>(1024, 768, GL_UNSIGNED_BYTE, 1, false);
+	}
 
 	m_commandBuffer = std::make_unique<RenderCommandBuffer>(this);
 }
@@ -23,6 +27,16 @@ void RenderingSystem::init()
 void RenderingSystem::close()
 {
 	m_manager->unsubscribe<Events::OnWindowResized>(this);
+
+	m_quad.reset();
+	m_geometryBuffer.reset();
+	m_lightBuffer.reset();
+	m_mainBuffer.reset();
+	for (size_t i = 0; i < m_postProcessBuffers.size(); ++i) {
+		m_postProcessBuffers[i].reset();
+	}
+
+	m_postProcessCommands.clear();
 }
 
 void RenderingSystem::update(const float dt)
@@ -174,16 +188,35 @@ void RenderingSystem::update(const float dt)
 		renderCustomCommand(&alphaRenderCommands[i], m_mainCameraData.get(), true);
 	}
 
-	// show to screen
+	// post processing
 	m_lightBuffer->bind();
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // default FBO
-
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_postProcessBuffers[1]->getHandle());
 	glBlitFramebuffer(
 		0, 0, m_renderSize.x, m_renderSize.y,
 		0, 0, m_renderSize.x, m_renderSize.y,
 		GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	bool oddCommand = false;
+	auto postProcessCommands = m_postProcessCommands;
+	for (auto& command : postProcessCommands) {
+		auto targetBuffer = m_postProcessBuffers[static_cast<size_t>(oddCommand)].get();
+		auto screenBuffer = m_postProcessBuffers[static_cast<size_t>(!oddCommand)].get();
+
+		screenBuffer->getColorTexture(0)->bind(0);
+
+		targetBuffer->bind();
+		RenderStateManager::setViewport(m_renderSize);
+		glClear(GL_COLOR_BUFFER_BIT);
+		renderPostProcessingCommand(&command);
+
+		oddCommand = !oddCommand;
+	}
+
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glBlitFramebuffer(
+		0, 0, m_renderSize.x, m_renderSize.y,
+		0, 0, m_renderSize.x, m_renderSize.y,
+		GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
 	// finals
 	m_commandBuffer->clear();
@@ -205,13 +238,29 @@ void RenderingSystem::onReceive(EntityManager * manager, const Events::OnWindowR
 	m_geometryBuffer->resize(m_renderSize);
 	m_lightBuffer->resize(m_renderSize);
 	m_mainBuffer->resize(m_renderSize);
+
+	for (auto& postProcessBuffer : m_postProcessBuffers) {
+		postProcessBuffer->resize(m_renderSize);
+	}
 }
 
-void RenderingSystem::renderCustomCommand(RenderCommand * command, CameraComponent* cameraData, bool affectRenderState)
+void RenderingSystem::addPostProcess(size_t order, Material * material)
 {
-	Mesh* mesh = command->mesh;
-	Material* material = command->material;
-	Shader* shader = material->getShader();
+	m_postProcessCommands.emplace(order, material);
+}
+
+void RenderingSystem::renderCustomCommand(const RenderCommand * command, CameraComponent* cameraData, bool affectRenderState)
+{
+	const Mesh* mesh;
+	const Material* material;
+	Shader* shader;
+
+	if ((mesh = command->mesh) == nullptr ||
+		(material = command->material) == nullptr ||
+		(shader = material->getShader()) == nullptr)
+	{
+		return;
+	}
 
 	if (affectRenderState) {
 		RenderStateManager::setBlendingEnabled(material->isBlendingEnabled());
@@ -228,22 +277,48 @@ void RenderingSystem::renderCustomCommand(RenderCommand * command, CameraCompone
 	RenderStateManager::setCurrentShader(shader);
 	shader->setUniform("u_transformation", command->transform);
 	shader->setUniform("u_cameraViewProjection", cameraData->getViewProjectionMatrix());
+	shader->setUniform("u_cameraProjection", cameraData->getProjectionMatrix());
 
-	auto& textures = material->getTextures();
-	for (size_t i = 0; i < 2; ++i) {
-		textures[i]->bind(i);
+	const auto& textures = material->getTextures();
+	for (size_t i = 0; i < textures.size(); ++i) {
+		textures[i]->bind(static_cast<unsigned int>(i));
 	}
 
 	mesh->draw();
 }
 
-void RenderingSystem::renderShadowCastCommand(RenderCommand * command, LightComponent* lightData)
+void RenderingSystem::renderShadowCastCommand(const RenderCommand * command, LightComponent* lightData)
 {
-	Shader* shader = MaterialManager::getShadowShader();
+	Shader* shader;
+
+	if ((shader = MaterialManager::getShadowShader()) == nullptr) {
+		return;
+	}
 
 	RenderStateManager::setCurrentShader(shader);
 	shader->setUniform("u_transformation", command->transform);
 	shader->setUniform("u_cameraViewProjection", lightData->getViewProjectionMatrix());
 
 	command->mesh->draw();
+}
+
+void RenderingSystem::renderPostProcessingCommand(const PostProcessCommand * command)
+{
+	Material* material;
+	Shader* shader;
+
+	if ((material = command->material) == nullptr ||
+		(shader = material->getShader()) == nullptr)
+	{
+		return;
+	}
+
+	RenderStateManager::setDepthTestEnabled(false);
+
+	RenderStateManager::setCurrentShader(shader);
+	shader->setUniform("u_screenSize", m_renderSize);
+	shader->setUniform("u_screenSizeInverted", vec2(1.0f / m_renderSize.x, 1.0f / m_renderSize.y));
+	shader->setUniform("u_screenTexture", 0);
+
+	m_quad->draw();
 }

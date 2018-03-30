@@ -28,6 +28,7 @@ public:
 	vec4 getColor() const;
 
 	std::vector<Texture*>& getTextures();
+	const std::vector<Texture*>& getTextures() const;
 
 	void setDepthTestEnabled(bool enabled);
 	bool isDepthTestEnabled() const;

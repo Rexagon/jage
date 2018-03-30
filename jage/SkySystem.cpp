@@ -1,5 +1,30 @@
 #include "SkySystem.h"
 
+#include "ShaderFactory.h"
+#include "MeshComponent.h"
+#include "LightComponent.h"
+#include "ResourceManager.h"
+
+SkySystem::SkySystem()
+{
+	m_cube = std::make_unique<Mesh>();
+	m_cube->init(MeshGeometry::createCube());
+
+	ShaderFactory::FromFile skyVertexSource("shaders/sky.vert");
+	ShaderFactory::FromFile skyFragmentSource("shaders/sky.frag");
+	ResourceManager::bind<ShaderFactory>("sky_shader", skyVertexSource, skyFragmentSource);
+	Shader* skyShader = ResourceManager::get<Shader>("sky_shader");
+	skyShader->setAttribute(0, "position");
+	skyShader->setAttribute(1, "texCoords");
+
+	m_skyMaterial = std::make_unique<Material>(skyShader);
+	m_skyMaterial->setType(Material::CUSTOM);
+	m_skyMaterial->setShadowCastingEnabled(false);
+	m_skyMaterial->setShadowReceivingEnabled(false);
+	m_skyMaterial->setDepthWriteEnabled(false);
+	m_skyMaterial->setFaceCullingEnabled(false);
+}
+
 void SkySystem::update(const float dt)
 {
 	updateSun();
@@ -18,6 +43,19 @@ void SkySystem::setSun(std::shared_ptr<GameObject> sun)
 {
 	m_sunComponent = sun->getComponent<SunComponent>();
 	m_direcitonChanged = true;
+}
+
+std::shared_ptr<GameObject> SkySystem::createSun()
+{
+	auto sun = m_manager->create();
+	sun->assign<SunComponent>();
+	sun->assign<MeshComponent>(m_cube.get(), *m_skyMaterial.get());
+
+	auto directionalLight = sun->assign<LightComponent>();
+	directionalLight->setType(LightComponent::DIRECTIONAL);
+	directionalLight->setShadowCastingEnabled(true);
+
+	return std::move(sun);
 }
 
 void SkySystem::setTime(unsigned int hours, unsigned int minutes)

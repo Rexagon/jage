@@ -5,6 +5,13 @@ void Game::onInit()
 {
 	m_entityManager = std::make_shared<EntityManager>();
 
+	// Creating systems
+	m_renderingSystem = std::make_shared<RenderingSystem>();
+	m_entityManager->registerSystem(m_renderingSystem);
+
+	m_skySystem = std::make_shared<SkySystem>();
+	m_entityManager->registerSystem(m_skySystem);
+
 	// Loading models
 	auto rootObject = m_entityManager->create();
 	rootObject->setName("root");
@@ -30,13 +37,10 @@ void Game::onInit()
 	terrain->setScale(100.0f, 30.0f, 100.0f);
 	rootObject->addChild(terrain);
 
-	auto sun = m_entityManager->create();
-	sun->assign<SunComponent>();
+	auto sun = m_skySystem->createSun();
 	sun->setPosition(10.0f, 5.0f, 10.0f);
 	sun->setRotation(glm::pi<float>() * 0.25f, glm::pi<float>() * 0.4f, 0.0f);
-	auto directionalLight = sun->assign<LightComponent>();
-	directionalLight->setType(LightComponent::DIRECTIONAL);
-	directionalLight->setShadowCastingEnabled(true);
+	rootObject->addChild(sun);
 	
 	m_camera = m_entityManager->create();
 	m_camera->setName("main_camera");
@@ -44,13 +48,10 @@ void Game::onInit()
 	auto cameraComponent = m_camera->assign<CameraComponent>();
 
 	// Initializing systems
-	m_renderingSystem = std::make_shared<RenderingSystem>();
 	m_renderingSystem->setMainCamera(m_camera);
-	m_entityManager->registerSystem(m_renderingSystem);
+	m_renderingSystem->addPostProcess(0, MaterialManager::getFxaaMaterial());
 
-	m_skySystem = std::make_shared<SkySystem>();
 	m_skySystem->setSun(sun);
-	m_entityManager->registerSystem(m_skySystem);
 
 	onResize(toGLM((Core::getWindow().getSize())));
 }
