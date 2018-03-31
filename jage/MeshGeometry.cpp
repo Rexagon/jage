@@ -14,10 +14,10 @@ MeshGeometry MeshGeometry::createQuad(const vec2 & halfSize, ComponentsMask vert
 
 	if (vertexComponents & TEX_COORDS) {
 		result.texCoords = {
-			vec2(0.0f, 0.0f),
-			vec2(1.0f, 0.0f),
+			vec2(0.0f, 1.0f),
 			vec2(1.0f, 1.0f),
-			vec2(0.0f, 1.0f)
+			vec2(1.0f, 0.0f),
+			vec2(0.0f, 0.0f)
 		};
 	}
 

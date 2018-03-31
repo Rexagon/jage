@@ -1,21 +1,18 @@
 #version 330
 
+uniform sampler2D u_albedoTexture;
+uniform sampler2D u_normalsTexture;
+
 in vec2 v_texCoord;
 in vec3 v_normal;
 
-uniform vec3 u_sunDirection;
-
-out vec4 fragColor;
+layout(location = 0) out vec4 f_albedo;
+layout(location = 1) out vec4 f_normals;
+layout(location = 2) out vec4 f_position;
 
 void main()
 {
-    vec3 diffuse = vec3(1.0);
-
-    vec3 ambient = vec3(0.1);
-    vec3 light = clamp(dot(normalize(v_normal), u_sunDirection), 0.0, 1.0) * vec3(1.0, 1.0, 1.0);
-
-    vec3 color = (ambient + light) * diffuse;
-
-    fragColor = vec4(color, 1.0);
-    //fragColor = vec4((vec3(1.0f) + normalize(v_normal)) * 0.5f, 0.0);
+    f_albedo = texture(u_albedoTexture, v_texCoord);
+    f_normals = vec4((vec3(1.0f) + normalize(v_normal)) * 0.5f, 0.0);
+    f_position = vec4(0.0f, 0.0, 0.0f, 0.0f);
 }

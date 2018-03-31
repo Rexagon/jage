@@ -6,6 +6,9 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 
+#include "ResourceManager.h"
+#include "MaterialManager.h"
+#include "TextureFactory.h"
 #include "FileManager.h"
 #include "Log.h"
 
@@ -45,11 +48,52 @@ void * ModelFactory::load()
 		}
 
 		// Loading textures
+		ResourceManager::bind<TextureFactory>("default_diffuse", "textures/default_diffuse.png");
+		ResourceManager::bind<TextureFactory>("default_normals", "textures/default_normals.png");
+
 		model->m_materials.resize(scene->mNumMaterials, Material(nullptr));
 		for (size_t i = 0; i < scene->mNumMaterials; ++i) {
 			const aiMaterial* materialData = scene->mMaterials[i];
+
+			Texture* albedoTexture = nullptr;
+			if (materialData->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
+				aiString file;
+				materialData->GetTexture(aiTextureType_DIFFUSE, 0, &file);
+
+				ResourceManager::bind<TextureFactory>(file.C_Str(), file.C_Str());
+
+				try {
+					albedoTexture = ResourceManager::get<Texture>(file.C_Str());
+				}
+				catch (const std::exception& e) {
+					Log::write("ERROR:", e.what());
+				}
+			}
+			if (albedoTexture == nullptr) {
+				Log::write("WARNING: \"" + m_assignedName + "\" doesn't have a diffuse texture. Default is assigned.");
+				albedoTexture = ResourceManager::get<Texture>("default_diffuse");
+			}
 			
-			//TODO: load material
+			Texture* normalsTexture = nullptr;
+			if (materialData->GetTextureCount(aiTextureType_NORMALS) > 0) {
+				aiString file;
+				materialData->GetTexture(aiTextureType_NORMALS, 0, &file);
+
+				ResourceManager::bind<TextureFactory>(file.C_Str(), file.C_Str());
+
+				try {
+					normalsTexture = ResourceManager::get<Texture>(file.C_Str());
+				}
+				catch (const std::exception& e) {
+					Log::write("ERROR:", e.what());
+				}
+			}
+			if (normalsTexture == nullptr) {
+				Log::write("WARNING: \"" + m_assignedName + "\" doesn't have a normals texture. Default is assigned.");
+				normalsTexture = ResourceManager::get<Texture>("default_normals");
+			}
+
+			model->m_materials[i] = MaterialManager::createMeshMaterial(albedoTexture, normalsTexture);
 		}
 
 		// Loading meshes

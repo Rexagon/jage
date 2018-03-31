@@ -174,3 +174,8 @@ unsigned int Shader::getUniformLocation(const std::string & name)
 		return it->second;
 	}
 }
+
+GLuint Shader::getHandle() const
+{
+	return m_program;
+}

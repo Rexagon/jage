@@ -2,13 +2,12 @@
 
 #include "RenderStateManager.h"
 
-
 Material::Material(Shader * shader) :
-	m_shader(m_shader), m_color(1.0f),
-	m_depthTestEnabled(false), m_depthWriteEnabled(true), m_depthTestFunction(GL_GEQUAL),
+	m_shader(shader), m_type(DEFERRED), m_color(1.0f, 1.0f, 1.0f, 1.0f),
+	m_depthTestEnabled(true), m_depthWriteEnabled(true), m_depthTestFunction(GL_GEQUAL),
 	m_faceCullingEnabled(true), m_faceCullingSide(GL_BACK),
 	m_blendingEnabled(false), m_blendingFunctionSrc(GL_SRC_ALPHA), m_blendingFunctionDst(GL_ONE_MINUS_SRC_ALPHA),
-	m_shadowCastingEnabled(false), m_shadowReceivingEnabled(false)
+	m_shadowCastingEnabled(true), m_shadowReceivingEnabled(true)
 {
 }
 
@@ -47,7 +46,12 @@ vec4 Material::getColor() const
 	return m_color;
 }
 
-std::vector<sf::Texture*>& Material::getTextures()
+std::vector<Texture*>& Material::getTextures()
+{
+	return m_textures;
+}
+
+const std::vector<Texture*>& Material::getTextures() const
 {
 	return m_textures;
 }

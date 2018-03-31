@@ -15,8 +15,8 @@ public:
 	CameraComponent(float minDepth, float maxDepth);
 	CameraComponent(const vec2& zRange);
 
-	void updateView(const mat4& globalTransformation) const;
-	void updateProjection() const;
+	void updateView(const mat4& globalTransformation);
+	void updateProjection();
 
 	void setProjectionType(ProjectionType type);
 	ProjectionType getProjectionType() const;
@@ -66,12 +66,13 @@ protected:
 	float m_bottom;
 	float m_top;
 
-	mutable mat4 m_viewMatrix;
-	mutable mat4 m_globalTransformation;
+	mat4 m_viewMatrix;
+	mat4 m_globalTransformation;
+
+	mat4 m_projectionMatrix;
+	bool m_projectionChanged;
 
 	mutable mat4 m_viewProjectionMatrix;
 	mutable bool m_viewProjectionChanged;
 
-	mutable mat4 m_projectionMatrix;
-	mutable bool m_projectionChanged;
 };

@@ -5,6 +5,13 @@ void Game::onInit()
 {
 	m_entityManager = std::make_shared<EntityManager>();
 
+	// Creating systems
+	m_renderingSystem = std::make_shared<RenderingSystem>();
+	m_entityManager->registerSystem(m_renderingSystem);
+
+	m_skySystem = std::make_shared<SkySystem>();
+	m_entityManager->registerSystem(m_skySystem);
+
 	// Loading models
 	auto rootObject = m_entityManager->create();
 	rootObject->setName("root");
@@ -29,22 +36,22 @@ void Game::onInit()
 	auto terrain = ResourceManager::get<Model>("terrain")->createGameObject(m_entityManager.get(), "terrain");
 	terrain->setScale(100.0f, 30.0f, 100.0f);
 	rootObject->addChild(terrain);
+
+	auto sun = m_skySystem->createSun();
+	sun->setPosition(10.0f, 5.0f, 10.0f);
+	sun->setRotation(glm::pi<float>() * 0.25f, glm::pi<float>() * 0.4f, 0.0f);
+	rootObject->addChild(sun);
 	
 	m_camera = m_entityManager->create();
 	m_camera->setName("main_camera");
-	m_camera->assign<CameraComponent>();
-	m_camera->setPosition(0.0f, 1.0f, 10.0f);
-	
-	// Initializing systems
-	m_renderingSystem = std::make_shared<RenderingSystem>();
-	m_renderingSystem->setMainCamera(m_camera);
-	m_entityManager->registerSystem(m_renderingSystem);
+	m_camera->setPosition(0.0f, 5.0f, 10.0f);
+	auto cameraComponent = m_camera->assign<CameraComponent>();
 
-	auto sun = m_entityManager->create();
-	sun->assign<SunComponent>();
-	m_skySystem = std::make_shared<SkySystem>();
+	// Initializing systems
+	m_renderingSystem->setMainCamera(m_camera);
+	m_renderingSystem->addPostProcess(0, MaterialManager::getFxaaMaterial());
+
 	m_skySystem->setSun(sun);
-	m_entityManager->registerSystem(m_skySystem);
 
 	onResize(toGLM((Core::getWindow().getSize())));
 }
@@ -66,7 +73,7 @@ void Game::onUpdate(const float dt)
 	m_skySystem->update(dt);
 }
 
-void Game::onResize(const vec2& windowSize)
+void Game::onResize(const ivec2& windowSize)
 {
-	m_entityManager->emit<Events::OnWindowResized>({ windowSize });
+	m_entityManager->emit<Events::OnWindowResized>({ ivec2(windowSize) });
 }

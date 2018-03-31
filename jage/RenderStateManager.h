@@ -19,6 +19,9 @@ public:
 	static void setClearColor(float r, float g, float b, float a = 1.0f);
 	static vec4 getClearColor();
 
+	static void setClearDepth(float depth);
+	static float getClearDepth();
+
 	static void setDepthTestEnabled(bool enabled);
 	static bool isDepthTestEnabled();
 
@@ -55,6 +58,8 @@ private:
 	static GLint m_viewport[4];
 
 	static GLclampf m_clearColor[4];
+
+	static float m_clearDepth;
 
 	static bool m_depthTestEnabled;
 	static bool m_depthWriteEnabled;

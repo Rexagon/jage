@@ -4,6 +4,8 @@ GLint RenderStateManager::m_viewport[4] = {};
 
 GLclampf RenderStateManager::m_clearColor[4] = {};
 
+float RenderStateManager::m_clearDepth = 1.0f;
+
 bool RenderStateManager::m_depthTestEnabled = false;
 bool RenderStateManager::m_depthWriteEnabled = true;
 GLenum RenderStateManager::m_depthTestFunction = GL_LESS;
@@ -27,14 +29,14 @@ void RenderStateManager::init()
 	glGetIntegerv(GL_VIEWPORT, m_viewport);
 
 	glGetFloatv(GL_COLOR_CLEAR_VALUE, m_clearColor);
+	glGetFloatv(GL_DEPTH_CLEAR_VALUE, &m_clearDepth);
 
 	m_depthTestEnabled = glIsEnabled(GL_DEPTH_TEST);
 	m_depthWriteEnabled = glIsEnabled(GL_DEPTH_WRITEMASK);
 	glGetIntegerv(GL_DEPTH_FUNC, reinterpret_cast<GLint*>(&m_depthTestFunction));
 
 	m_clipControlOrigin = GL_LOWER_LEFT;
-	m_clipControlDepth = GL_ZERO_TO_ONE;
-	glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+	m_clipControlDepth = GL_NEGATIVE_ONE_TO_ONE;
 
 	m_blendingEnabled = glIsEnabled(GL_BLEND);
 	glGetIntegerv(GL_BLEND_SRC_ALPHA, reinterpret_cast<GLint*>(&m_blendingFunctionSrc));
@@ -56,6 +58,9 @@ void RenderStateManager::forceApply()
 
 	// clear color
 	glClearColor(m_clearColor[0], m_clearColor[1], m_clearColor[2], m_clearColor[3]);
+
+	// clear depth
+	glClearDepth(m_clearDepth);
 
 	// depth test
 	if (m_depthTestEnabled) {
@@ -193,6 +198,19 @@ void RenderStateManager::setClearColor(float r, float g, float b, float a)
 vec4 RenderStateManager::getClearColor()
 {
 	return vec4(m_clearColor[0], m_clearColor[1], m_clearColor[2], m_clearColor[3]);
+}
+
+void RenderStateManager::setClearDepth(float depth)
+{
+	if (m_clearDepth != depth) {
+		m_clearDepth = depth;
+		glClearDepth(depth);
+	}
+}
+
+float RenderStateManager::getClearDepth()
+{
+	return m_clearDepth;
 }
 
 void RenderStateManager::setDepthTestEnabled(bool enabled)

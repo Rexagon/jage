@@ -29,7 +29,7 @@ public:
 
 
     // Is called when window is resized
-    virtual void onResize(const vec2& windowSize) {}
+    virtual void onResize(const ivec2& windowSize) {}
 
     // Is called when window loses focus
     virtual void onFocusLost() {}

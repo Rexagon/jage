@@ -14,21 +14,22 @@ void RenderCommandBuffer::push(Mesh * mesh, const mat4 & transform, Material * m
 {
 	if (mesh == nullptr || material == nullptr) return;
 
-	RenderCommand command{ mesh, transform, material };
 
 	if (material->isBlendingEnabled()) {
 		material->setType(Material::CUSTOM);
-		m_alphaRenderCommands.push_back(command);
+		m_alphaRenderCommands.emplace_back(mesh, transform, material);
 	}
 	else {
 		switch (material->getType())
 		{
-		case Material::DEFAULT:
-			m_deferredRenderCommands.push_back(command);
+		case Material::DEFERRED:
+			m_deferredRenderCommands.emplace_back(mesh, transform, material);
 			break;
 
 		case Material::CUSTOM:
 		{
+			RenderCommand command(mesh, transform, material);
+
 			auto it = m_customRenderCommands.find(target);
 			if (it != m_customRenderCommands.end()) {
 				it->second.push_back(command);
@@ -40,7 +41,6 @@ void RenderCommandBuffer::push(Mesh * mesh, const mat4 & transform, Material * m
 		}
 
 		case Material::POST_PROCESS:
-			m_postProcessingRenderCommands.push_back(command);
 			break;
 		}
 	}
@@ -50,7 +50,6 @@ void RenderCommandBuffer::clear()
 {
 	m_deferredRenderCommands.clear();
 	m_alphaRenderCommands.clear();
-	m_postProcessingRenderCommands.clear();
 	m_customRenderCommands.clear();
 }
 
@@ -78,11 +77,6 @@ std::vector<RenderCommand> RenderCommandBuffer::getCustomRenderCommands(FrameBuf
 {
 	//TODO: make frustrum culling
 	return m_customRenderCommands[target];
-}
-
-std::vector<RenderCommand> RenderCommandBuffer::getPostProcessingRenderCommands()
-{
-	return m_postProcessingRenderCommands;
 }
 
 std::vector<RenderCommand> RenderCommandBuffer::getShadowCastRenderCommands()

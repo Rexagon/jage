@@ -34,6 +34,7 @@ void Core::init(const Parameters& parameters)
 	ResourceManager::init();
 	CursorManager::init(m_window.getSystemHandle());
 	FileManager::init<DefaultFileSystem>();
+	MaterialManager::init();
 	
 	m_isInitialized = true;
 }
@@ -122,9 +123,9 @@ void Core::handleEvents()
 
 		case sf::Event::Resized:
 			if (SceneManager::hasScenes()) {
-				SceneManager::getCurrentScene()->onResize(vec2(
-					static_cast<float>(e.size.width),
-					static_cast<float>(e.size.height)
+				SceneManager::getCurrentScene()->onResize(ivec2(
+					static_cast<int>(e.size.width),
+					static_cast<int>(e.size.height)
 				));
 			}
 			break;

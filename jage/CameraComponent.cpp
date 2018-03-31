@@ -71,7 +71,7 @@ vec2 CameraComponent::getDepthRange()
 	return m_depthRange;
 }
 
-void CameraComponent::updateView(const mat4& globalTransformation) const
+void CameraComponent::updateView(const mat4& globalTransformation)
 {
 	if (globalTransformation != m_globalTransformation) {
 		m_viewMatrix = glm::inverse(globalTransformation);
@@ -81,7 +81,7 @@ void CameraComponent::updateView(const mat4& globalTransformation) const
 	}
 }
 
-void CameraComponent::updateProjection() const
+void CameraComponent::updateProjection()
 {
 	if (m_projectionChanged) {
 		switch (m_projectionType) {
@@ -95,8 +95,7 @@ void CameraComponent::updateProjection() const
 					0.0f, 0.0f, 0.0f, -1.0f,
 					0.0f, 0.0f, m_depthRange.x, 0.0f);
 
-				m_projectionChanged = false;
-				m_viewProjectionChanged = true;
+				//m_projectionMatrix = glm::perspective(m_fov, m_aspect, m_depthRange.x, m_depthRange.y);
 				break;
 			}
 
@@ -104,12 +103,12 @@ void CameraComponent::updateProjection() const
 			{
 				m_projectionMatrix = glm::ortho(m_left, m_right, 
 					m_bottom, m_top, m_depthRange.x, m_depthRange.y);
-
-				m_projectionChanged = false;
-				m_viewProjectionChanged = true;
 				break;
 			}
 		}
+
+		m_projectionChanged = false;
+		m_viewProjectionChanged = true;
 	}
 }
 

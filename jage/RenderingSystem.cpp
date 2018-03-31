@@ -4,189 +4,323 @@
 #include "ResourceManager.h"
 #include "ShaderFactory.h"
 #include "MeshComponent.h"
+#include "Core.h"
 
 void RenderingSystem::init()
 {
 	m_manager->subscribe<Events::OnWindowResized>(this);
 
-	loadShaders();
-
 	m_quad = std::make_shared<Mesh>();
-	m_quad->init(MeshGeometry::createQuad());
+	m_quad->init(MeshGeometry::createQuad(vec2(1.0f), MeshGeometry::TEXTURED_VERTEX));
 
-	m_sky = std::make_shared<Mesh>();
-	m_sky->init(MeshGeometry::createCube());
+	m_geometryBuffer = std::make_unique<FrameBuffer>(1024, 768, GL_UNSIGNED_BYTE, 3, true);
+	m_lightBuffer = std::make_unique<FrameBuffer>(1024, 768, GL_UNSIGNED_BYTE, 1, false);
+	m_mainBuffer = std::make_unique<FrameBuffer>(1024, 768, GL_UNSIGNED_BYTE, 1, true);
 
-	m_sunDirection = vec3(-1.0f, 0.0f, 0.0f);
-	m_turbidity = 10.0f;
-	m_rayleigh = 2.0f;
+	for (size_t i = 0; i < m_postProcessBuffers.size(); ++i) {
+		m_postProcessBuffers[i] = std::make_unique<FrameBuffer>(1024, 768, GL_UNSIGNED_BYTE, 1, false);
+	}
 
-	RenderStateManager::setFaceCullingEnabled(true);
-	RenderStateManager::setFaceCullingSide(GL_BACK);
+	m_commandBuffer = std::make_unique<RenderCommandBuffer>(this);
 }
 
 void RenderingSystem::close()
 {
 	m_manager->unsubscribe<Events::OnWindowResized>(this);
+
+	m_quad.reset();
+	m_geometryBuffer.reset();
+	m_lightBuffer.reset();
+	m_mainBuffer.reset();
+	for (size_t i = 0; i < m_postProcessBuffers.size(); ++i) {
+		m_postProcessBuffers[i].reset();
+	}
+
+	m_postProcessCommands.clear();
 }
 
 void RenderingSystem::update(const float dt)
 {	
-	if (!m_mainCameraData.isValid()) {
+	if (!m_mainCameraData.isValid() || m_geometryBuffer == nullptr) {
 		return;
 	}
 
-	updateCamera();
+	m_manager->each<CameraComponent>([this](EntityId id, CameraComponent& component) {
+		std::shared_ptr<GameObject> object = m_manager->get(id);
 
-	m_framebuffer->bind();
+		if (object != nullptr) {
+			component.updateView(object->getGlobalTransformation());
+			component.updateProjection();
+		}
+	});
 
-	RenderStateManager::setClearColor(0.2f, 0.2f, 0.2f);
+	m_manager->each<MeshComponent>([this](EntityId id, MeshComponent& component) {
+		std::shared_ptr<GameObject> object = m_manager->get(id);
 
-	glClearDepth(0.0f);
+		if (object != nullptr) {
+			m_commandBuffer->push(component.getMesh(), object->getGlobalTransformation(), &component.getMaterial());
+		}
+	});
+
+	m_commandBuffer->sort();
+
+	// reset gl state
+	m_geometryBuffer->bind();
+
+	RenderStateManager::setBlendingEnabled(false);
+
+	RenderStateManager::setFaceCullingEnabled(true);
+	RenderStateManager::setFaceCullingSide(GL_BACK);
+
+	RenderStateManager::setClearDepth(0.0f);
+	RenderStateManager::setClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+
+	RenderStateManager::setDepthTestEnabled(true);
+	RenderStateManager::setDepthTestFunction(GL_GEQUAL);
+
+	RenderStateManager::setClearColor(0.0f, 0.0f, 0.0f);
+
+	// render to geometry buffer
+	unsigned int attachments[3] = { 
+		GL_COLOR_ATTACHMENT0, 
+		GL_COLOR_ATTACHMENT1, 
+		GL_COLOR_ATTACHMENT2
+	};
+	glDrawBuffers(3, attachments);
+
+	std::vector<RenderCommand> deferredRenderCommands = m_commandBuffer->getDeferredRenderCommands(true);
+	
+	RenderStateManager::setViewport(m_renderSize);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	for (size_t i = 0; i < deferredRenderCommands.size(); ++i) {
+		renderCustomCommand(&deferredRenderCommands[i], false);
+	}
+
+	// render all shadow casters
+	attachments[1] = GL_NONE;
+	attachments[2] = GL_NONE;
+	glDrawBuffers(3, attachments);
+
+	RenderStateManager::setFaceCullingSide(GL_FRONT);
+	std::vector<RenderCommand> shadowRenderCommands = m_commandBuffer->getShadowCastRenderCommands();
+	m_manager->each<LightComponent>([this, &shadowRenderCommands](EntityId id, LightComponent& component) {
+		std::shared_ptr<GameObject> object = m_manager->get(id);
+
+		if (object != nullptr && component.isShadowCastingEnabled()) {
+			component.updateView(object->getGlobalTransformation());
+			component.updateProjection();
+
+			component.getShadowBuffer()->bind();
+			RenderStateManager::setViewport(component.getShadowBufferSize());
+			glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+			
+			for (size_t i = 0; i < shadowRenderCommands.size(); ++i) {
+				renderShadowCastCommand(&shadowRenderCommands[i], &component);
+			}
+		}
+	});
+	RenderStateManager::setFaceCullingSide(GL_BACK);
+
+	// do post processing before lighting pass
+	//TODO: make preprocessing
+
+	// render lights
+	m_lightBuffer->bind();
+	RenderStateManager::setViewport(m_renderSize);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-	drawSky();
-	drawScene();
-
-	m_framebuffer->unbind();
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_framebuffer->getColorTexture().getNativeHandle());
-
 	RenderStateManager::setDepthTestEnabled(false);
+	RenderStateManager::setBlendingEnabled(true);
+	RenderStateManager::setBlendingFunction(GL_ONE, GL_ONE);
 
-	m_postEffectFramebuffer->bind();
-	RenderStateManager::setCurrentShader(m_fxaaShader);
-	m_quad->draw();
-	m_postEffectFramebuffer->unbind();
+	for (unsigned int i = 0; i < 3; ++i) {
+		m_geometryBuffer->getColorTexture(i)->bind(i);
+	}
+	m_geometryBuffer->getDepthStencilTexture()->bind(3);
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_postEffectFramebuffer->getColorTexture().getNativeHandle());
+	RenderStateManager::setCurrentShader(MaterialManager::getLightShader());
+	MaterialManager::getLightShader()->setUniform("u_inversedViewProjection", glm::inverse(m_mainCameraData->getViewProjectionMatrix()));
 
-	RenderStateManager::setCurrentShader(m_abberationShader);
-	m_abberationShader->setUniform("u_chromaticAberration", 0.001f);
-	m_quad->draw();
+	m_manager->each<LightComponent>([this](EntityId id, LightComponent& component) {
+		std::shared_ptr<GameObject> object = m_manager->get(id);
+
+		Shader* shader = MaterialManager::getLightShader();
+		shader->setUniform("u_isShadowsEnabled", static_cast<int>(component.isShadowCastingEnabled()));
+		shader->setUniform("u_direction", object->getDirectionFront());
+		shader->setUniform("u_color", component.getColor());
+		shader->setUniform("u_lightViewProjection", component.getViewProjectionMatrix());
+
+		if (component.isShadowCastingEnabled()) {
+			component.getShadowBuffer()->getDepthStencilTexture()->bind(4);
+		}
+
+		m_quad->draw();
+	});
+
+	// render in forward mode
+	RenderStateManager::setDepthTestEnabled(true);
+	RenderStateManager::setBlendingEnabled(false);
+	RenderStateManager::setBlendingFunction(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_geometryBuffer->getHandle());
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_mainBuffer->getHandle());
+	glBlitFramebuffer(
+		0, 0, m_geometryBuffer->getSize().x, m_geometryBuffer->getSize().y,
+		0, 0, m_renderSize.x, m_renderSize.y,
+		GL_DEPTH_BUFFER_BIT, GL_NEAREST
+	);
+
+	std::vector<RenderCommand> customRenderCommands = m_commandBuffer->getCustomRenderCommands(nullptr, true);
+
+	m_mainBuffer->bind();
+	RenderStateManager::setViewport(m_renderSize);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	for (size_t i = 0; i < customRenderCommands.size(); ++i) {
+		renderCustomCommand(&customRenderCommands[i], true);
+	}
+
+	// render meshes with alpha materials
+	std::vector<RenderCommand> alphaRenderCommands = m_commandBuffer->getAlphaRenderCommands(true);
+
+	for (size_t i = 0; i < alphaRenderCommands.size(); ++i) {
+		renderCustomCommand(&alphaRenderCommands[i], true);
+	}
+
+	// post processing
+	m_lightBuffer->bind();
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_postProcessBuffers[1]->getHandle());
+	glBlitFramebuffer(
+		0, 0, m_renderSize.x, m_renderSize.y,
+		0, 0, m_renderSize.x, m_renderSize.y,
+		GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+	bool oddCommand = false;
+	auto postProcessCommands = m_postProcessCommands;
+	for (auto& command : postProcessCommands) {
+		auto targetBuffer = m_postProcessBuffers[static_cast<size_t>(oddCommand)].get();
+		auto screenBuffer = m_postProcessBuffers[static_cast<size_t>(!oddCommand)].get();
+
+		screenBuffer->getColorTexture(0)->bind(0);
+
+		targetBuffer->bind();
+		RenderStateManager::setViewport(m_renderSize);
+		glClear(GL_COLOR_BUFFER_BIT);
+		renderPostProcessingCommand(&command);
+
+		oddCommand = !oddCommand;
+	}
+
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glBlitFramebuffer(
+		0, 0, m_renderSize.x, m_renderSize.y,
+		0, 0, m_renderSize.x, m_renderSize.y,
+		GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+	// finals
+	m_commandBuffer->clear();
 }
 
 void RenderingSystem::setMainCamera(std::shared_ptr<GameObject> camera)
 {
 	if (camera != nullptr) {
+		m_mainCamera = camera;
 		m_mainCameraData = camera->getComponent<CameraComponent>();
 	}
 }
 
 void RenderingSystem::onReceive(EntityManager * manager, const Events::OnWindowResized & event)
 {
-	RenderStateManager::setViewport(ivec2(event.windowSize));
+	m_renderSize = event.windowSize;
 
-	m_mainCameraData->setAspect(event.windowSize.x / event.windowSize.y);
+	m_mainCameraData->setAspect(static_cast<float>(m_renderSize.x) / static_cast<float>(m_renderSize.y));
 
-	m_framebuffer = std::make_unique<FrameBuffer>(
-		static_cast<unsigned int>(event.windowSize.x),
-		static_cast<unsigned int>(event.windowSize.y),
-		true);
+	m_geometryBuffer->resize(m_renderSize);
+	m_lightBuffer->resize(m_renderSize);
+	m_mainBuffer->resize(m_renderSize);
 
-	m_postEffectFramebuffer = std::make_unique<FrameBuffer>(
-		static_cast<unsigned int>(event.windowSize.x),
-		static_cast<unsigned int>(event.windowSize.y),
-		false);
-
-
-	RenderStateManager::setCurrentShader(m_fxaaShader);
-	m_fxaaShader->setUniform("u_colorTexture", 0);
-	m_fxaaShader->setUniform("u_inversedResolution", vec2(1.0f / event.windowSize.x, 1.0f / event.windowSize.y));
-
-	RenderStateManager::setCurrentShader(m_abberationShader);
-	m_abberationShader->setUniform("u_colorTexture", 0);
+	for (auto& postProcessBuffer : m_postProcessBuffers) {
+		postProcessBuffer->resize(m_renderSize);
+	}
 }
 
-void RenderingSystem::loadShaders()
+void RenderingSystem::addPostProcess(size_t order, Material * material)
 {
-	ShaderFactory::FromFile quadVertexSource("shaders/quad.vert");
-
-	ShaderFactory::FromFile fxaaFragmentSource("shaders/fxaa.frag");
-	ResourceManager::bind<ShaderFactory>("fxaa_shader", quadVertexSource, fxaaFragmentSource);
-	m_fxaaShader = ResourceManager::get<Shader>("fxaa_shader");
-	m_fxaaShader->setAttribute(0, "position");
-	m_fxaaShader->setAttribute(1, "texCoord");
-
-	ShaderFactory::FromFile abberationFragmentSource("shaders/abberation.frag");
-	ResourceManager::bind<ShaderFactory>("abberation_shader", quadVertexSource, abberationFragmentSource);
-	m_abberationShader = ResourceManager::get<Shader>("abberation_shader");
-	m_abberationShader->setAttribute(0, "position");
-	m_abberationShader->setAttribute(1, "texCoord");
-
-	ShaderFactory::FromFile meshVertexSource("shaders/mesh.vert");
-	ShaderFactory::FromFile meshFragmentSource("shaders/mesh.frag");
-	ResourceManager::bind<ShaderFactory>("mesh_shader", meshVertexSource, meshFragmentSource);
-	m_meshShader = ResourceManager::get<Shader>("mesh_shader");
-	m_meshShader->setAttribute(0, "position");
-	m_meshShader->setAttribute(1, "texCoord");
-	m_meshShader->setAttribute(2, "normal");
-
-	ShaderFactory::FromFile gridVertexSource("shaders/grid.vert");
-	ShaderFactory::FromFile gridGeometrySource("shaders/grid.geom");
-	ShaderFactory::FromFile gridFragmentSource("shaders/grid.frag");
-	ResourceManager::bind<ShaderFactory>("grid_shader", gridVertexSource, gridGeometrySource, gridFragmentSource);
-	m_gridShader = ResourceManager::get<Shader>("grid_shader");
-	m_gridShader->setAttribute(0, "position");
-	m_gridShader->setAttribute(1, "chunkId");
-
-	ShaderFactory::FromFile skyVertexSource("shaders/sky.vert");
-	ShaderFactory::FromFile skyFragmentSource("shaders/sky.frag");
-	ResourceManager::bind<ShaderFactory>("sky_shader", skyVertexSource, skyFragmentSource);
-	m_skyShader = ResourceManager::get<Shader>("sky_shader");
-	m_skyShader->setAttribute(0, "position");
+	m_postProcessCommands.emplace(order, material);
 }
 
-void RenderingSystem::updateCamera()
+void RenderingSystem::renderCustomCommand(const RenderCommand * command, bool affectRenderState)
 {
-	m_manager->each<CameraComponent>([this](EntityId id, CameraComponent& component) {
-		std::shared_ptr<GameObject> camera = m_manager->get(id);
+	const Mesh* mesh;
+	const Material* material;
+	Shader* shader;
 
-		if (camera != nullptr) {
-			component.updateView(camera->getGlobalTransformation());
-			component.updateProjection();
-		}
-	});
+	if ((mesh = command->mesh) == nullptr ||
+		(material = command->material) == nullptr ||
+		(shader = material->getShader()) == nullptr)
+	{
+		return;
+	}
+
+	if (affectRenderState) {
+		RenderStateManager::setBlendingEnabled(material->isBlendingEnabled());
+		RenderStateManager::setBlendingFunction(
+			material->getBlendingFunctionSrc(),
+			material->getBlendingFunctionDst()
+		);
+		RenderStateManager::setDepthTestEnabled(material->isDepthTestEnabled());
+		RenderStateManager::setDepthTestFunction(material->getDepthTestFunction());
+		RenderStateManager::setFaceCullingEnabled(material->isFaceCullingEnabled());
+		RenderStateManager::setFaceCullingSide(material->getFaceCullingSide());
+	}
+
+	RenderStateManager::setCurrentShader(shader);
+	shader->setUniform("u_transformation", command->transform);
+	shader->setUniform("u_cameraViewProjection", m_mainCameraData->getViewProjectionMatrix());
+	shader->setUniform("u_cameraProjection", m_mainCameraData->getProjectionMatrix());
+	shader->setUniform("u_cameraViewRotation", m_mainCamera->getRotationMatrix());
+
+	const auto& textures = material->getTextures();
+	for (size_t i = 0; i < textures.size(); ++i) {
+		textures[i]->bind(static_cast<unsigned int>(i));
+	}
+
+	mesh->draw();
 }
 
-void RenderingSystem::drawSky()
+void RenderingSystem::renderShadowCastCommand(const RenderCommand * command, LightComponent* lightData)
 {
-	RenderStateManager::setCurrentShader(m_skyShader);
-	RenderStateManager::setDepthWriteEnabled(false);
-	RenderStateManager::setFaceCullingEnabled(false);
+	Shader* shader;
 
-	m_skyShader->setUniform("u_cameraViewProjection", m_mainCameraData->getProjectionMatrix() * 
-		glm::inverse(m_mainCameraData.getEntity()->getRotationMatrix()));
+	if ((shader = MaterialManager::getShadowShader()) == nullptr) {
+		return;
+	}
 
-	m_skyShader->setUniform("u_sunDirection", glm::normalize(quat(m_sunDirection) * vec3(0.0f, 0.0f, 1.0f)));
-	m_skyShader->setUniform("u_rayleigh", m_rayleigh);
-	m_skyShader->setUniform("u_turbidity", m_turbidity);
-	m_skyShader->setUniform("u_mieCoefficient", 0.005f);
-	m_skyShader->setUniform("u_mieDirectionalG", 0.8f);
-	m_skyShader->setUniform("u_luminance", 1.0f);
-	m_sky->draw();
-	
-	RenderStateManager::setDepthWriteEnabled(true);
-	RenderStateManager::setFaceCullingEnabled(true);
+	RenderStateManager::setCurrentShader(shader);
+	shader->setUniform("u_transformation", command->transform);
+	shader->setUniform("u_cameraViewProjection", lightData->getViewProjectionMatrix());
+
+	command->mesh->draw();
 }
 
-void RenderingSystem::drawScene()
+void RenderingSystem::renderPostProcessingCommand(const PostProcessCommand * command)
 {
-	RenderStateManager::setDepthTestEnabled(true);
-	RenderStateManager::setDepthTestFunction(GL_GEQUAL);
+	Material* material;
+	Shader* shader;
 
-	RenderStateManager::setCurrentShader(m_meshShader);
-	m_meshShader->setUniform("u_cameraViewProjection", m_mainCameraData->getViewProjectionMatrix());
-	m_meshShader->setUniform("u_sunDirection", glm::normalize(quat(m_sunDirection) * vec3(0.0f, 0.0f, 1.0f)));
+	if ((material = command->material) == nullptr ||
+		(shader = material->getShader()) == nullptr)
+	{
+		return;
+	}
 
-	m_manager->each<MeshComponent>([this](EntityId id, MeshComponent& component) {
-		std::shared_ptr<GameObject> object = m_manager->get(id);
+	RenderStateManager::setDepthTestEnabled(false);
 
-		m_meshShader->setUniform("u_transformation", object->getGlobalTransformation());
-		if (component.getMesh() != nullptr) {
-			component.getMesh()->draw();
-		}
-	});
+	RenderStateManager::setCurrentShader(shader);
+	shader->setUniform("u_screenSize", m_renderSize);
+	shader->setUniform("u_screenSizeInverted", vec2(1.0f / m_renderSize.x, 1.0f / m_renderSize.y));
+	shader->setUniform("u_screenTexture", 0);
+
+	m_quad->draw();
 }

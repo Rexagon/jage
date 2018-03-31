@@ -4,6 +4,7 @@
 #include <SFML/Graphics.hpp>
 
 #include "RenderStateManager.h"
+#include "MaterialManager.h"
 #include "ResourceManager.h"
 #include "CursorManager.h"
 #include "SceneManager.h"

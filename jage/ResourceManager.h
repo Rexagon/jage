@@ -39,9 +39,6 @@ public:
 			factory->m_assignedName = name;
 			m_factories[key] = std::move(factory);
 		}
-		else {
-			Log::write("Same resource was already binded: \"" + name + "\", \"" + key.second.name() + "\"");
-		}
 	}
 
 	// Detaches resource factory from specified name
@@ -54,9 +51,6 @@ public:
 		auto it = m_factories.find(key);
 		if (it != m_factories.end()) {
 			m_factories.erase(it);
-		}
-		else {
-			Log::write("There wasn't any resource to unbind with name: \"" + name + "\", \"" + key.second.name() + "\"");
 		}
 	}
 

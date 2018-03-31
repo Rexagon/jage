@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include <SFML/Graphics/Texture.hpp>
+#include "Texture.h"
 
 #include "AbstractFactory.h"
 
@@ -17,5 +17,5 @@ public:
 private:
 	std::string m_filename;
 
-	std::unique_ptr<sf::Texture> m_data;
+	std::unique_ptr<Texture> m_data;
 };
