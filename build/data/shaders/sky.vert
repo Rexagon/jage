@@ -2,7 +2,8 @@
 
 layout (location = 0) in vec3 position;
 
-uniform mat4 u_cameraViewProjection;
+uniform mat4 u_cameraProjection;
+uniform mat4 u_cameraViewRotation;
 
 uniform vec3 u_sunDirection;
 uniform float u_rayleigh;
@@ -54,7 +55,8 @@ void main() {
 
     v_position = position;
 
-    gl_Position = u_cameraViewProjection * vec4(position, 1.0f);
+    gl_Position = u_cameraProjection * u_cameraViewRotation * vec4(position, 1.0f);
+    gl_Position.z = 0.0f;
 
     v_sunE = sunIntensity(dot(u_sunDirection, up));
 

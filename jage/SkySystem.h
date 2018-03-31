@@ -4,6 +4,7 @@
 #include "Material.h"
 #include "GameObject.h"
 #include "SunComponent.h"
+#include "MeshComponent.h"
 #include "EntityManager.h"
 
 namespace Events
@@ -32,12 +33,15 @@ private:
 
 	float m_delay;
 	unsigned int m_currentTime;
-	ComponentHandle<SunComponent> m_sunComponent;
+
+	std::shared_ptr<GameObject> m_sun;
+	ComponentHandle<SunComponent> m_sunData;
+	ComponentHandle<MeshComponent> m_sunRenderingData;
 
 	float m_azimuth;
 	float m_inclination;
 	vec3 m_direction;
-	bool m_direcitonChanged;
+	bool m_sunChanged;
 
 	std::unique_ptr<Mesh> m_cube;
 	std::unique_ptr<Material> m_skyMaterial;

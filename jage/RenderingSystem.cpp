@@ -14,7 +14,6 @@ void RenderingSystem::init()
 	m_quad->init(MeshGeometry::createQuad(vec2(1.0f), MeshGeometry::TEXTURED_VERTEX));
 
 	m_geometryBuffer = std::make_unique<FrameBuffer>(1024, 768, GL_UNSIGNED_BYTE, 3, true);
-	m_lightBuffer = std::make_unique<FrameBuffer>(1024, 768, GL_UNSIGNED_BYTE, 1, false);
 	m_mainBuffer = std::make_unique<FrameBuffer>(1024, 768, GL_UNSIGNED_BYTE, 1, true);
 
 	for (size_t i = 0; i < m_postProcessBuffers.size(); ++i) {
@@ -30,7 +29,6 @@ void RenderingSystem::close()
 
 	m_quad.reset();
 	m_geometryBuffer.reset();
-	m_lightBuffer.reset();
 	m_mainBuffer.reset();
 	for (size_t i = 0; i < m_postProcessBuffers.size(); ++i) {
 		m_postProcessBuffers[i].reset();
@@ -126,7 +124,7 @@ void RenderingSystem::update(const float dt)
 	//TODO: make preprocessing
 
 	// render lights
-	m_lightBuffer->bind();
+	m_mainBuffer->bind();
 	RenderStateManager::setViewport(m_renderSize);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -161,7 +159,6 @@ void RenderingSystem::update(const float dt)
 	// render in forward mode
 	RenderStateManager::setDepthTestEnabled(true);
 	RenderStateManager::setBlendingEnabled(false);
-	RenderStateManager::setBlendingFunction(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_geometryBuffer->getHandle());
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_mainBuffer->getHandle());
@@ -170,26 +167,27 @@ void RenderingSystem::update(const float dt)
 		0, 0, m_renderSize.x, m_renderSize.y,
 		GL_DEPTH_BUFFER_BIT, GL_NEAREST
 	);
+	
+	m_mainBuffer->bind();
 
 	std::vector<RenderCommand> customRenderCommands = m_commandBuffer->getCustomRenderCommands(nullptr, true);
-
-	m_mainBuffer->bind();
-	RenderStateManager::setViewport(m_renderSize);
-
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	for (size_t i = 0; i < customRenderCommands.size(); ++i) {
 		renderCustomCommand(&customRenderCommands[i], true);
 	}
 
 	// render meshes with alpha materials
+	RenderStateManager::setBlendingEnabled(true);
+	RenderStateManager::setBlendingFunction(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 	std::vector<RenderCommand> alphaRenderCommands = m_commandBuffer->getAlphaRenderCommands(true);
-
 	for (size_t i = 0; i < alphaRenderCommands.size(); ++i) {
 		renderCustomCommand(&alphaRenderCommands[i], true);
 	}
 
+	
 	// post processing
-	m_lightBuffer->bind();
+	RenderStateManager::setFaceCullingEnabled(false);
+
+	m_mainBuffer->bind();
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_postProcessBuffers[1]->getHandle());
 	glBlitFramebuffer(
 		0, 0, m_renderSize.x, m_renderSize.y,
@@ -237,7 +235,6 @@ void RenderingSystem::onReceive(EntityManager * manager, const Events::OnWindowR
 	m_mainCameraData->setAspect(static_cast<float>(m_renderSize.x) / static_cast<float>(m_renderSize.y));
 
 	m_geometryBuffer->resize(m_renderSize);
-	m_lightBuffer->resize(m_renderSize);
 	m_mainBuffer->resize(m_renderSize);
 
 	for (auto& postProcessBuffer : m_postProcessBuffers) {
@@ -277,9 +274,9 @@ void RenderingSystem::renderCustomCommand(const RenderCommand * command, bool af
 
 	RenderStateManager::setCurrentShader(shader);
 	shader->setUniform("u_transformation", command->transform);
-	shader->setUniform("u_cameraViewProjection", m_mainCameraData->getViewProjectionMatrix());
 	shader->setUniform("u_cameraProjection", m_mainCameraData->getProjectionMatrix());
-	shader->setUniform("u_cameraViewRotation", m_mainCamera->getRotationMatrix());
+	shader->setUniform("u_cameraViewProjection", m_mainCameraData->getViewProjectionMatrix());
+	shader->setUniform("u_cameraViewRotation", m_mainCamera->getRotationMatrixInversed());
 
 	const auto& textures = material->getTextures();
 	for (size_t i = 0; i < textures.size(); ++i) {

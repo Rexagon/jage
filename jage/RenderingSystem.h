@@ -55,7 +55,6 @@ private:
 
 	std::shared_ptr<Mesh> m_quad;
 	std::unique_ptr<FrameBuffer> m_geometryBuffer;
-	std::unique_ptr<FrameBuffer> m_lightBuffer;
 	std::unique_ptr<FrameBuffer> m_mainBuffer;
 
 	std::array<std::unique_ptr<FrameBuffer>, 2> m_postProcessBuffers;
