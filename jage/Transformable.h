@@ -12,8 +12,13 @@ public:
 	mat4 getTransformationMatrix() const;
 
 	mat4 getPositionMatrix() const;
+	mat4 getPositionMatrixInversed() const;
+
 	mat4 getRotationMatrix() const;
+	mat4 getRotationMatrixInversed() const;
+
 	mat4 getScaleMatrix() const;
+	mat4 getScaleMatrixInversed() const;
 
 	void move(float x, float y, float z);
 	void move(const vec3& vector);
@@ -47,11 +52,20 @@ protected:
 	quat m_rotation;
 	vec3 m_scale;
 
+	mutable vec3 m_directionFront;
+	mutable vec3 m_directionRight;
+	mutable vec3 m_directionUp;
+
 	mutable mat4 m_transformation;
 
 	mutable mat4 m_positionMatrix;
+	mutable mat4 m_positionMatrixInversed;
+
 	mutable mat4 m_rotationMatrix;
+	mutable mat4 m_rotationMatrixInversed;
+
 	mutable mat4 m_scaleMatrix;
+	mutable mat4 m_scaleMatrixInversed;
 
 private:
 	void updatePosition() const;
@@ -61,5 +75,6 @@ private:
 	mutable bool m_positionChanged;
 	mutable bool m_rotationChanged;
 	mutable bool m_scaleChanged;
+
 	mutable bool m_transformationChanged;
 };

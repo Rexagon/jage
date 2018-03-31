@@ -44,13 +44,14 @@ public:
 	void addPostProcess(size_t order, Material* material);
 
 private:
-	void renderCustomCommand(const RenderCommand* command, CameraComponent* cameraData, bool affectRenderState = true);
+	void renderCustomCommand(const RenderCommand* command, bool affectRenderState = true);
 	void renderShadowCastCommand(const RenderCommand* command, LightComponent* lightData);
 	void renderPostProcessingCommand(const PostProcessCommand* command);
 
 	ivec2 m_renderSize;
 
 	ComponentHandle<CameraComponent> m_mainCameraData;
+	std::shared_ptr<GameObject> m_mainCamera;
 
 	std::shared_ptr<Mesh> m_quad;
 	std::unique_ptr<FrameBuffer> m_geometryBuffer;

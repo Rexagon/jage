@@ -9,8 +9,12 @@
 #include "Log.h"
 
 Transformable::Transformable(Transformable* parent) :
-	m_transformation(1.0f),
 	m_position(0.0f, 0.0f, 0.0f), m_rotation(1.0f, 0.0f, 0.0f, 0.0f), m_scale(1.0f, 1.0f, 1.0f),
+	m_directionFront(0.0f, 0.0f, -1.0f), m_directionRight(1.0f, 0.0f, 0.0f), m_directionUp(0.0f, 1.0f, 0.0f),
+	m_transformation(1.0f), 
+	m_positionMatrix(1.0f), m_positionMatrixInversed(1.0f), 
+	m_rotationMatrix(1.0f), m_rotationMatrixInversed(1.0f), 
+	m_scaleMatrix(1.0f), m_scaleMatrixInversed(1.0f),
 	m_positionChanged(true), m_rotationChanged(true), m_scaleChanged(true), m_transformationChanged(true)
 {
 }
@@ -44,6 +48,13 @@ mat4 Transformable::getPositionMatrix() const
 	return m_positionMatrix;
 }
 
+mat4 Transformable::getPositionMatrixInversed() const
+{
+	updatePosition();
+
+	return m_positionMatrixInversed;
+}
+
 mat4 Transformable::getRotationMatrix() const
 {
 	updateRotation();
@@ -51,11 +62,25 @@ mat4 Transformable::getRotationMatrix() const
 	return m_rotationMatrix;
 }
 
+mat4 Transformable::getRotationMatrixInversed() const
+{
+	updateRotation();
+
+	return m_rotationMatrixInversed;
+}
+
 mat4 Transformable::getScaleMatrix() const
 {
 	updateScale();
 
 	return m_scaleMatrix;
+}
+
+mat4 Transformable::getScaleMatrixInversed() const
+{
+	updateScale();
+
+	return m_scaleMatrixInversed;
 }
 
 void Transformable::move(float x, float y, float z)
@@ -184,29 +209,31 @@ vec3 Transformable::getScale() const
 
 vec3 Transformable::getDirectionFront() const
 {
-	vec4 temp(0.0f, 0.0f, -1.0f, 1.0f);
-	temp = getRotationMatrix() * temp;
-	temp /= temp.w;
-	vec3 result(temp.x, temp.y, temp.z);
-	return glm::normalize(result);
+	updateRotation();
+
+	return m_directionFront;
 }
 
 vec3 Transformable::getDirectionRight() const
 {
-	return glm::normalize(glm::cross(getDirectionFront(), vec3(0.0f, 1.0f, 0.0f)));
+	updateRotation();
+
+	return m_directionRight;
 }
 
 vec3 Transformable::getDirectionUp() const
 {
-	vec3 directionFront = getDirectionFront();
+	updateRotation();
 
-	return glm::normalize(glm::cross(glm::cross(directionFront, vec3(0.0f, 1.0f, 0.0f)), directionFront));
+	return m_directionUp;
 }
 
 void Transformable::updatePosition() const
 {
 	if (m_positionChanged) {
 		m_positionMatrix = glm::translate(mat4(1.0f), m_position);
+		m_positionMatrixInversed = glm::translate(mat4(1.0f), -m_position);
+
 		m_positionChanged = false;
 		m_transformationChanged = true;
 	}
@@ -216,6 +243,18 @@ void Transformable::updateRotation() const
 {
 	if (m_rotationChanged) {
 		m_rotationMatrix = glm::mat4_cast(m_rotation);
+		m_rotationMatrixInversed = glm::inverse(m_rotationMatrix);
+
+		// update direction also
+		vec4 temp(0.0f, 0.0f, -1.0f, 1.0f);
+		temp = m_rotationMatrix * temp;
+		temp /= temp.w;
+		vec3 directionFront(temp.x, temp.y, temp.z);
+
+		m_directionFront = glm::normalize(directionFront);
+		m_directionRight = glm::cross(m_directionFront, vec3(0.0f, 1.0f, 0.0f));
+		m_directionUp = glm::cross(m_directionRight, m_directionFront);
+
 		m_rotationChanged = false;
 		m_transformationChanged = true;
 	}
@@ -225,6 +264,9 @@ void Transformable::updateScale() const
 {
 	if (m_scaleChanged) {
 		m_scaleMatrix = glm::scale(mat4(1.0f), m_scale);
+		m_scaleMatrixInversed = glm::scale(mat4(1.0f), 
+			vec3(1.0f / m_scale.x, 1.0f / m_scale.y, 1.0f / m_scale.z));
+
 		m_scaleChanged = false;
 		m_transformationChanged = true;
 	}

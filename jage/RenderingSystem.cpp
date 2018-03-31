@@ -94,7 +94,7 @@ void RenderingSystem::update(const float dt)
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	for (size_t i = 0; i < deferredRenderCommands.size(); ++i) {
-		renderCustomCommand(&deferredRenderCommands[i], m_mainCameraData.get(), false);
+		renderCustomCommand(&deferredRenderCommands[i], false);
 	}
 
 	// render all shadow casters
@@ -178,14 +178,14 @@ void RenderingSystem::update(const float dt)
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	for (size_t i = 0; i < customRenderCommands.size(); ++i) {
-		renderCustomCommand(&customRenderCommands[i], m_mainCameraData.get(), true);
+		renderCustomCommand(&customRenderCommands[i], true);
 	}
 
 	// render meshes with alpha materials
 	std::vector<RenderCommand> alphaRenderCommands = m_commandBuffer->getAlphaRenderCommands(true);
 
 	for (size_t i = 0; i < alphaRenderCommands.size(); ++i) {
-		renderCustomCommand(&alphaRenderCommands[i], m_mainCameraData.get(), true);
+		renderCustomCommand(&alphaRenderCommands[i], true);
 	}
 
 	// post processing
@@ -225,6 +225,7 @@ void RenderingSystem::update(const float dt)
 void RenderingSystem::setMainCamera(std::shared_ptr<GameObject> camera)
 {
 	if (camera != nullptr) {
+		m_mainCamera = camera;
 		m_mainCameraData = camera->getComponent<CameraComponent>();
 	}
 }
@@ -249,7 +250,7 @@ void RenderingSystem::addPostProcess(size_t order, Material * material)
 	m_postProcessCommands.emplace(order, material);
 }
 
-void RenderingSystem::renderCustomCommand(const RenderCommand * command, CameraComponent* cameraData, bool affectRenderState)
+void RenderingSystem::renderCustomCommand(const RenderCommand * command, bool affectRenderState)
 {
 	const Mesh* mesh;
 	const Material* material;
@@ -276,8 +277,9 @@ void RenderingSystem::renderCustomCommand(const RenderCommand * command, CameraC
 
 	RenderStateManager::setCurrentShader(shader);
 	shader->setUniform("u_transformation", command->transform);
-	shader->setUniform("u_cameraViewProjection", cameraData->getViewProjectionMatrix());
-	shader->setUniform("u_cameraProjection", cameraData->getProjectionMatrix());
+	shader->setUniform("u_cameraViewProjection", m_mainCameraData->getViewProjectionMatrix());
+	shader->setUniform("u_cameraProjection", m_mainCameraData->getProjectionMatrix());
+	shader->setUniform("u_cameraViewRotation", m_mainCamera->getRotationMatrix());
 
 	const auto& textures = material->getTextures();
 	for (size_t i = 0; i < textures.size(); ++i) {
