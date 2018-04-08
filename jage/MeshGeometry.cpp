@@ -41,9 +41,9 @@ MeshGeometry MeshGeometry::createPlane(const vec2 & halfSize, unsigned int xSegm
 	float dX = 1.0f / xSegments;
 	float dY = 1.0f / ySegments;
 
-	for (int y = 0; y <= ySegments; ++y)
+	for (int y = 0; y <= static_cast<int>(ySegments); ++y)
 	{
-		for (int x = 0; x <= xSegments; ++x)
+		for (int x = 0; x <= static_cast<int>(xSegments); ++x)
 		{
 			if (vertexComponents & POSITIONS) {
 				result.positions.push_back(vec3(dX * x * 2.0f - 1.0f, 0.0f, dY * y * 2.0f - 1.0f));
@@ -60,11 +60,11 @@ MeshGeometry MeshGeometry::createPlane(const vec2 & halfSize, unsigned int xSegm
 	}
 
 	bool oddRow = false;
-	for (int y = 0; y < ySegments; ++y)
+	for (int y = 0; y < static_cast<int>(ySegments); ++y)
 	{
 		if (!oddRow)
 		{
-			for (int x = 0; x <= xSegments; ++x)
+			for (int x = 0; x <= static_cast<int>(xSegments); ++x)
 			{
 				result.indices.push_back(y       * (xSegments + 1) + x);
 				result.indices.push_back((y + 1) * (xSegments + 1) + x);
@@ -72,7 +72,7 @@ MeshGeometry MeshGeometry::createPlane(const vec2 & halfSize, unsigned int xSegm
 		}
 		else
 		{
-			for (int x = xSegments; x >= 0; --x)
+			for (int x = static_cast<int>(xSegments); x >= 0; --x)
 			{
 				result.indices.push_back((y + 1) * (xSegments + 1) + x);
 				result.indices.push_back(y       * (xSegments + 1) + x);

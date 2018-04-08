@@ -14,6 +14,8 @@ public:
 	Shader();
 	~Shader();
 
+	void bind();
+
 	bool attachPart(const std::string& source, GLenum type, std::string& infoLog);
 	bool link(std::string& infoLog);
 

@@ -16,7 +16,6 @@ void RenderCommandBuffer::push(Mesh * mesh, const mat4 & transform, Material * m
 
 
 	if (material->isBlendingEnabled()) {
-		material->setType(Material::CUSTOM);
 		m_alphaRenderCommands.emplace_back(mesh, transform, material);
 	}
 	else {
@@ -26,7 +25,7 @@ void RenderCommandBuffer::push(Mesh * mesh, const mat4 & transform, Material * m
 			m_deferredRenderCommands.emplace_back(mesh, transform, material);
 			break;
 
-		case Material::CUSTOM:
+		case Material::FORWARD:
 		{
 			RenderCommand command(mesh, transform, material);
 

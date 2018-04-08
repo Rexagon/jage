@@ -22,7 +22,7 @@ void Mesh::init(const MeshGeometry& geometry)
 	// Calculating buffer layout
 	m_topology = geometry.topology;
 
-	m_indexCount = geometry.indices.size();
+	m_indexCount = static_cast<unsigned int>(geometry.indices.size());
 	m_vertexCount = 0;
 	m_attributeCount = 0;
 
@@ -30,7 +30,7 @@ void Mesh::init(const MeshGeometry& geometry)
 
 	size_t positionsBufferSize = 0;
 	if (geometry.vertexComponents & MeshGeometry::POSITIONS) {
-		m_vertexCount = geometry.positions.size();
+		m_vertexCount = static_cast<unsigned int>(geometry.positions.size());
 		positionsBufferSize = sizeof(vec3) * m_vertexCount;
 		bufferSize += positionsBufferSize;
 		++m_attributeCount;
@@ -97,7 +97,7 @@ void Mesh::draw() const
 {
 	glBindVertexArray(m_VAO);
 
-	for (int i = 0; i < m_attributeCount; ++i) {
+	for (unsigned int i = 0; i < m_attributeCount; ++i) {
 		glEnableVertexAttribArray(i);
 	}
 
@@ -105,7 +105,7 @@ void Mesh::draw() const
 	glDrawElements(m_topology, m_indexCount, GL_UNSIGNED_INT, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-	for (int i = 0; i < m_attributeCount; ++i) {
+	for (unsigned int i = 0; i < m_attributeCount; ++i) {
 		glDisableVertexAttribArray(i);
 	}
 

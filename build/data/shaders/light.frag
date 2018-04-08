@@ -2,10 +2,10 @@
 
 uniform sampler2D u_albedoTexture;
 uniform sampler2D u_normalsTexture;
-uniform sampler2D u_positionsTexture;
+uniform sampler2D u_specularTexture;
 uniform sampler2D u_depthTexture;
 uniform sampler2D u_lightDepthTexture;
-uniform int u_isShadowsEnabled;
+uniform int u_areShadowsEnabled;
 uniform vec3 u_direction;
 uniform vec3 u_color;
 
@@ -21,13 +21,15 @@ void main()
         discard;
     }
 
+    vec4 albedo = texture(u_albedoTexture, v_texCoord);
+
     vec3 normal = texture(u_normalsTexture, v_texCoord).xyz;
     normal = normal * 2.0 - 1.0;
 
     vec4 position = u_inversedViewProjection * vec4(v_texCoord * 2.0 - 1.0, fragmentDepth, 1.0);
     position /= position.w;
 
-    vec3 result = u_color * dot(normal, u_direction);
+    vec3 result = u_color * albedo.xyz * dot(normal, u_direction);
 
     vec4 fragmentLightPosition = u_lightViewProjection * position;
     fragmentLightPosition.xyz /= fragmentLightPosition.w;

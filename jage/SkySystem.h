@@ -1,9 +1,11 @@
 #pragma once
 
+#include <memory>
+
 #include "Mesh.h"
-#include "Material.h"
 #include "GameObject.h"
-#include "SunComponent.h"
+#include "SkyMaterial.h"
+#include "MeshComponent.h"
 #include "EntityManager.h"
 
 namespace Events
@@ -20,6 +22,7 @@ public:
 	void update(const float dt) override;
 
 	void setSun(std::shared_ptr<GameObject> sun);
+
 	std::shared_ptr<GameObject> createSun();
 
 	void setTime(unsigned int hours, unsigned int minutes = 0);
@@ -32,13 +35,13 @@ private:
 
 	float m_delay;
 	unsigned int m_currentTime;
-	ComponentHandle<SunComponent> m_sunComponent;
+
+	std::shared_ptr<GameObject> m_sun;
+	ComponentHandle<MeshComponent> m_skyRenderingData;
 
 	float m_azimuth;
 	float m_inclination;
-	vec3 m_direction;
-	bool m_direcitonChanged;
+	bool m_sunChanged;
 
 	std::unique_ptr<Mesh> m_cube;
-	std::unique_ptr<Material> m_skyMaterial;
 };

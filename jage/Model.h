@@ -29,12 +29,12 @@ private:
 
 		mat4 localTransformation;
 		Mesh* mesh;
-		Material* material;
+		MeshMaterial* material;
 	};
 
 	Node m_rootNode;
 	std::vector<Node*> m_nodes;
 
 	std::vector<Mesh> m_meshes;
-	std::vector<Material> m_materials;
+	std::vector<MeshMaterial> m_materials;
 };

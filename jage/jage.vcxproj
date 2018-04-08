@@ -200,6 +200,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AbberationMaterial.cpp" />
     <ClCompile Include="CameraComponent.cpp" />
     <ClCompile Include="Core.cpp" />
     <ClCompile Include="CursorManager.cpp" />
@@ -208,19 +209,21 @@
     <ClCompile Include="FirstPersonController.cpp" />
     <ClCompile Include="FontFactory.cpp" />
     <ClCompile Include="FrameBuffer.cpp" />
+    <ClCompile Include="FxaaMaterial.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Grid.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="LightComponent.cpp" />
+    <ClCompile Include="LightMaterial.cpp" />
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Material.cpp" />
-    <ClCompile Include="MaterialManager.cpp" />
     <ClCompile Include="Math.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MeshGeometry.cpp" />
     <ClCompile Include="MeshComponent.cpp" />
+    <ClCompile Include="MeshMaterial.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelFactory.cpp" />
     <ClCompile Include="MusicFactory.cpp" />
@@ -232,26 +235,29 @@
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShaderFactory.cpp" />
+    <ClCompile Include="SkyMaterial.cpp" />
     <ClCompile Include="SkySystem.cpp" />
     <ClCompile Include="SoundBufferFactory.cpp" />
-    <ClCompile Include="SunComponent.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="TextureFactory.cpp" />
     <ClCompile Include="Time.cpp" />
     <ClCompile Include="Transformable.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AbberationMaterial.h" />
     <ClInclude Include="AbstractFactory.h" />
     <ClInclude Include="CameraComponent.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="Core.h" />
     <ClInclude Include="CursorManager.h" />
+    <ClInclude Include="LightMaterial.h" />
     <ClInclude Include="Delegate.h" />
     <ClInclude Include="EntityManager.h" />
     <ClInclude Include="FileManager.h" />
     <ClInclude Include="FirstPersonController.h" />
     <ClInclude Include="FontFactory.h" />
     <ClInclude Include="FrameBuffer.h" />
+    <ClInclude Include="FxaaMaterial.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="Grid.h" />
@@ -259,11 +265,11 @@
     <ClInclude Include="LightComponent.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="Material.h" />
-    <ClInclude Include="MaterialManager.h" />
     <ClInclude Include="Math.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshGeometry.h" />
     <ClInclude Include="MeshComponent.h" />
+    <ClInclude Include="MeshMaterial.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModelFactory.h" />
     <ClInclude Include="MusicFactory.h" />
@@ -275,9 +281,9 @@
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShaderFactory.h" />
+    <ClInclude Include="SkyMaterial.h" />
     <ClInclude Include="SkySystem.h" />
     <ClInclude Include="SoundBufferFactory.h" />
-    <ClInclude Include="SunComponent.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TextureFactory.h" />
     <ClInclude Include="Time.h" />

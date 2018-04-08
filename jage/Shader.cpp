@@ -1,6 +1,6 @@
 #include "Shader.h"
 
-#include "Log.h"
+#include "RenderStateManager.h"
 
 Shader::Shader()
 {
@@ -14,6 +14,11 @@ Shader::~Shader()
 	for (auto& shader : m_shaders) {
 		glDeleteShader(shader);
 	}
+}
+
+void Shader::bind()
+{
+	RenderStateManager::setCurrentShader(this);
 }
 
 bool Shader::attachPart(const std::string & source, GLenum type, std::string& infoLog)

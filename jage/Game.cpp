@@ -18,7 +18,6 @@ void Game::onInit()
 
 	ResourceManager::bind<ModelFactory>("castle", "castle.fbx");
 	auto castle = ResourceManager::get<Model>("castle")->createGameObject(m_entityManager.get(), "castle");
-	castle->setScale(0.01f);
 	castle->setPosition(15.0f, 0.0f, -15.0f);
 	castle->setRotation(0.0f, glm::pi<float>() / 4.0f, 0.0f);
 	rootObject->addChild(castle);
@@ -35,11 +34,15 @@ void Game::onInit()
 	ResourceManager::bind<ModelFactory>("terrain", "terrain.fbx");
 	auto terrain = ResourceManager::get<Model>("terrain")->createGameObject(m_entityManager.get(), "terrain");
 	terrain->setScale(100.0f, 30.0f, 100.0f);
+
+	auto terrainMesh = terrain->getChildren()[0]->getChildren()[0];
+	if (terrainMesh->isValid() && terrainMesh->hasComponent<MeshComponent>()) {
+		terrainMesh->getComponent<MeshComponent>()->getMaterial()->as<MeshMaterial>()->setUVScale(vec2(1000.0f, 1000.0f));
+	}
 	rootObject->addChild(terrain);
 
 	auto sun = m_skySystem->createSun();
 	sun->setPosition(10.0f, 5.0f, 10.0f);
-	sun->setRotation(glm::pi<float>() * 0.25f, glm::pi<float>() * 0.4f, 0.0f);
 	rootObject->addChild(sun);
 	
 	m_camera = m_entityManager->create();
@@ -49,9 +52,15 @@ void Game::onInit()
 
 	// Initializing systems
 	m_renderingSystem->setMainCamera(m_camera);
-	m_renderingSystem->addPostProcess(0, MaterialManager::getFxaaMaterial());
+
+	m_fxaaMaterial = std::make_unique<FxaaMaterial>();
+	m_renderingSystem->addPostProcess(0, m_fxaaMaterial.get());
+
+	m_abberationMaterial = std::make_unique<AbberationMaterial>();
+	m_renderingSystem->addPostProcess(1, m_abberationMaterial.get());
 
 	m_skySystem->setSun(sun);
+	m_skySystem->setTime(8, 0);
 
 	onResize(toGLM((Core::getWindow().getSize())));
 }
