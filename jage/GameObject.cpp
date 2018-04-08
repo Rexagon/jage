@@ -338,14 +338,14 @@ vec3 GameObject::getPosition() const
 
 void GameObject::rotate(float x, float y, float z)
 {
-	m_rotation = quat(vec3(x, y, z)) * m_rotation;
+	m_rotation = quat(vec3(math::radians(x), math::radians(y), math::radians(z))) * m_rotation;
 	m_rotation = glm::normalize(m_rotation);
 	m_rotationChanged = true;
 }
 
 void GameObject::rotate(const vec3 & eulerAngles)
 {
-	m_rotation = quat(eulerAngles) * m_rotation;
+	m_rotation = quat(math::radians(eulerAngles)) * m_rotation;
 	m_rotation = glm::normalize(m_rotation);
 	m_rotationChanged = true;
 }
@@ -359,14 +359,14 @@ void GameObject::rotate(const quat & rotation)
 
 void GameObject::setRotation(float x, float y, float z)
 {
-	m_rotation = quat(vec3(x, y, z));
+	m_rotation = quat(vec3(math::radians(x), math::radians(y), math::radians(z)));
 	m_rotation = glm::normalize(m_rotation);
 	m_rotationChanged = true;
 }
 
 void GameObject::setRotation(const vec3 & eulerAngles)
 {
-	m_rotation = quat(eulerAngles);
+	m_rotation = quat(math::radians(eulerAngles));
 	m_rotation = glm::normalize(m_rotation);
 	m_rotationChanged = true;
 }

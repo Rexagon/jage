@@ -52,6 +52,12 @@ sf::Vector3i toSFML(const ivec3& v);
 
 namespace math
 {
+	float radians(float d);
+	vec3 radians(const vec3& d);
+
+	float degrees(float r);
+	vec3 degrees(const vec3& r);
+
 	float interpolate(const std::vector<std::pair<float, float>>& curve, float x);
 
 	sf::Color lerp(const sf::Color& a, const sf::Color& b, float t);

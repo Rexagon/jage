@@ -19,7 +19,7 @@ void Game::onInit()
 	ResourceManager::bind<ModelFactory>("castle", "castle.fbx");
 	auto castle = ResourceManager::get<Model>("castle")->createGameObject(m_entityManager.get(), "castle");
 	castle->setPosition(15.0f, 0.0f, -15.0f);
-	castle->setRotation(0.0f, glm::pi<float>() / 4.0f, 0.0f);
+	castle->setRotation(0.0f, 45.0f, 0.0f);
 	rootObject->addChild(castle);
 
 	ResourceManager::bind<ModelFactory>("baracks", "baracks.fbx");
@@ -37,7 +37,7 @@ void Game::onInit()
 
 	auto terrainMesh = terrain->getChildren()[0]->getChildren()[0];
 	if (terrainMesh->isValid() && terrainMesh->hasComponent<MeshComponent>()) {
-		terrainMesh->getComponent<MeshComponent>()->getMaterial()->as<MeshMaterial>()->setUVScale(vec2(1000.0f, 1000.0f));
+		terrainMesh->getComponent<MeshComponent>()->getMaterial()->as<MeshMaterial>()->setUVScale(vec2(2000.0f, 2000.0f));
 	}
 	rootObject->addChild(terrain);
 

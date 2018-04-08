@@ -65,6 +65,13 @@ void * ModelFactory::load()
 
 				try {
 					albedoTexture = ResourceManager::get<Texture>(file.C_Str());
+					albedoTexture->generateMipmap();
+					albedoTexture->setFilters(GL_LINEAR_MIPMAP_NEAREST, GL_LINEAR_MIPMAP_NEAREST);
+					
+					float aniso = 0.0f;
+					glBindTexture(GL_TEXTURE_2D, albedoTexture->getHandle());
+					glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &aniso);
+					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, aniso);
 				}
 				catch (const std::exception& e) {
 					Log::write("ERROR:", e.what());

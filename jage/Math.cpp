@@ -58,6 +58,26 @@ sf::Vector3i toSFML(const ivec3 & v)
 }
 
 
+float math::radians(float d)
+{
+	return d * 0.01745329251994329576923690768489f;
+}
+
+vec3 math::radians(const vec3 & d)
+{
+	return d * 0.01745329251994329576923690768489f;
+}
+
+float math::degrees(float r)
+{
+	return r * 57.295779513082320876798154814105f;
+}
+
+vec3 math::degrees(const vec3 & r)
+{
+	return r * 57.295779513082320876798154814105f;
+}
+
 float math::interpolate(const std::vector<std::pair<float, float>>& curve, float x)
 {
 	if (x > curve.back().first) {

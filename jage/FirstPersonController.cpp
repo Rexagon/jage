@@ -3,7 +3,7 @@
 #include "Core.h"
 
 FirstPersonController::FirstPersonController() :
-	m_rotations(0.0f, 0.0f), m_speed(10.0f)
+	m_rotations(0.0f, 0.0f), m_speed(10.0f), m_rotationSpeed(40.0f)
 {
 }
 
@@ -40,8 +40,8 @@ void FirstPersonController::update(const float dt, std::shared_ptr<GameObject> g
 	}
 
 	if (Input::getMouse(MouseButton::Right)) {
-		m_rotations.x -= Input::getMouseDeltaPosition().y * dt;
-		m_rotations.y -= Input::getMouseDeltaPosition().x * dt;
+		m_rotations.x -= Input::getMouseDeltaPosition().y * m_rotationSpeed * dt;
+		m_rotations.y -= Input::getMouseDeltaPosition().x * m_rotationSpeed * dt;
 
 		gameObject->setRotation(m_rotations.x, 0.0f, 0.0f);
 		gameObject->rotate(0.0f, m_rotations.y, 0.0f);

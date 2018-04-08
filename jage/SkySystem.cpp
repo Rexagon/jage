@@ -21,7 +21,7 @@ void SkySystem::update(const float dt)
 		float seconds;
 		m_delay = std::modf(m_delay, &seconds);
 		m_currentTime += static_cast<unsigned int>(seconds);
-		m_inclination = m_currentTime / 43200.0f * glm::pi<float>();
+		m_inclination = m_currentTime / 43200.0f * 180.0f - 90.00f;
 		m_sunChanged = true;
 	}
 }
@@ -48,7 +48,7 @@ std::shared_ptr<GameObject> SkySystem::createSun()
 void SkySystem::setTime(unsigned int hours, unsigned int minutes)
 {
 	m_currentTime = hours * 60 * 60 + minutes * 60;
-	m_inclination = m_currentTime / 43200.0f * glm::pi<float>() - glm::pi<float>() / 2.0f;
+	m_inclination = m_currentTime / 43200.0f * 180.0f - 90.0f;
 	m_sunChanged = true;
 }
 

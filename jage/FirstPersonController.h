@@ -15,4 +15,5 @@ public:
 private:
 	vec2 m_rotations;
 	float m_speed;
+	float m_rotationSpeed;
 };
