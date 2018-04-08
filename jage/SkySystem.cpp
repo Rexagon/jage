@@ -5,25 +5,11 @@
 #include "LightComponent.h"
 #include "ResourceManager.h"
 
-SkySystem::SkySystem()
+SkySystem::SkySystem() :
+	m_sun(nullptr), m_cube(nullptr)
 {
 	m_cube = std::make_unique<Mesh>();
 	m_cube->init(MeshGeometry::createCube());
-
-	ShaderFactory::FromFile skyVertexSource("shaders/sky.vert");
-	ShaderFactory::FromFile skyFragmentSource("shaders/sky.frag");
-	ResourceManager::bind<ShaderFactory>("sky_shader", skyVertexSource, skyFragmentSource);
-	Shader* skyShader = ResourceManager::get<Shader>("sky_shader");
-	skyShader->setAttribute(0, "position");
-	skyShader->setAttribute(1, "texCoords");
-
-	m_skyMaterial = std::make_unique<Material>(skyShader);
-	m_skyMaterial->setType(Material::CUSTOM);
-	m_skyMaterial->setShadowCastingEnabled(false);
-	m_skyMaterial->setShadowReceivingEnabled(false);
-
-	m_skyMaterial->setFaceCullingEnabled(true);
-	m_skyMaterial->setFaceCullingSide(GL_FRONT);
 }
 
 void SkySystem::update(const float dt)
@@ -43,16 +29,14 @@ void SkySystem::update(const float dt)
 void SkySystem::setSun(std::shared_ptr<GameObject> sun)
 {
 	m_sun = sun;
-	m_sunData = sun->getComponent<SunComponent>();
-	m_sunRenderingData = sun->getComponent<MeshComponent>();
+	m_skyRenderingData = sun->getComponent<MeshComponent>();
 	m_sunChanged = true;
 }
 
 std::shared_ptr<GameObject> SkySystem::createSun()
 {
 	auto sun = m_manager->create();
-	m_sunData = sun->assign<SunComponent>();
-	m_sunRenderingData = sun->assign<MeshComponent>(m_cube.get(), *m_skyMaterial.get());
+	m_skyRenderingData = sun->assign<MeshComponent>(m_cube.get(), std::move(std::make_unique<SkyMaterial>()));
 
 	auto directionalLight = sun->assign<LightComponent>();
 	directionalLight->setType(LightComponent::DIRECTIONAL);
@@ -63,7 +47,8 @@ std::shared_ptr<GameObject> SkySystem::createSun()
 
 void SkySystem::setTime(unsigned int hours, unsigned int minutes)
 {
-	m_currentTime = hours * 24 * 60 * 60 + minutes * 60;
+	m_currentTime = hours * 60 * 60 + minutes * 60;
+	m_inclination = m_currentTime / 43200.0f * glm::pi<float>() - glm::pi<float>() / 2.0f;
 	m_sunChanged = true;
 }
 
@@ -80,19 +65,13 @@ float SkySystem::getAzimuth() const
 
 void SkySystem::updateSun()
 {
-	if (m_sunChanged && m_sun != nullptr && m_sunData.isValid() && m_sunRenderingData.isValid()) {
-		Shader* skyShader = m_sunRenderingData->getMaterial().getShader();
-		skyShader->bind();
-		skyShader->setUniform("u_sunDirection", m_sun->getDirectionFront());
-		skyShader->setUniform("u_rayleigh", m_sunData->getRayleigh());
-		skyShader->setUniform("u_turbidity", m_sunData->getTurbidity());
-		skyShader->setUniform("u_mieCoefficient", m_sunData->getMieCoefficient());
-		skyShader->setUniform("u_mieDirectionalG", m_sunData->getMieDirectionalG());
-		skyShader->setUniform("u_luminance", 1.0f);
+	if (m_sunChanged && m_sun != nullptr && m_skyRenderingData.isValid()) {
+		Log::write(m_currentTime, m_inclination);
+		m_sun->setRotation(m_inclination, 0.0f, 0.0f);
+		//m_sun->rotate(0.0f, m_azimuth, 0.0f);
 
-		m_direction.x = cos(m_inclination) * sin(m_azimuth);
-		m_direction.y = sin(m_inclination);
-		m_direction.z = cos(m_inclination) * cos(m_azimuth);
+		m_skyRenderingData->getMaterial()->as<SkyMaterial>()->setSunDirection(m_sun->getDirectionFront());
+
 		m_sunChanged = false;
 	}
 }

@@ -1,9 +1,8 @@
 #pragma once
 
 #include "Mesh.h"
-#include "Material.h"
 #include "GameObject.h"
-#include "SunComponent.h"
+#include "SkyMaterial.h"
 #include "MeshComponent.h"
 #include "EntityManager.h"
 
@@ -35,14 +34,11 @@ private:
 	unsigned int m_currentTime;
 
 	std::shared_ptr<GameObject> m_sun;
-	ComponentHandle<SunComponent> m_sunData;
-	ComponentHandle<MeshComponent> m_sunRenderingData;
+	ComponentHandle<MeshComponent> m_skyRenderingData;
 
 	float m_azimuth;
 	float m_inclination;
-	vec3 m_direction;
 	bool m_sunChanged;
 
 	std::unique_ptr<Mesh> m_cube;
-	std::unique_ptr<Material> m_skyMaterial;
 };

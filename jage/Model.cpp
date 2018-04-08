@@ -31,7 +31,7 @@ std::shared_ptr<GameObject> Model::createGameObject(EntityManager * manager, con
 		gameObject->setTransformationMatrix(modelNode->localTransformation);
 
 		if (modelNode->mesh != nullptr) {
-			gameObject->assign<MeshComponent>(modelNode->mesh, *modelNode->material);
+			gameObject->assign<MeshComponent>(modelNode->mesh, std::make_shared<MeshMaterial>(*modelNode->material));
 		}
 
 		for (size_t i = 0; i < modelNode->children.size(); ++i) {

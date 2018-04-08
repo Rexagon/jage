@@ -57,6 +57,8 @@ private:
 	std::unique_ptr<FrameBuffer> m_geometryBuffer;
 	std::unique_ptr<FrameBuffer> m_mainBuffer;
 
+	Shader* m_shadowShader;
+
 	std::array<std::unique_ptr<FrameBuffer>, 2> m_postProcessBuffers;
 
 	std::unique_ptr<RenderCommandBuffer> m_commandBuffer;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <typeindex>
+
 #include <GL/glew.h>
 
 #include "Shader.h"
@@ -11,21 +13,18 @@ public:
 	enum Type
 	{
 		DEFERRED,
-		CUSTOM,
+		FORWARD,
 		POST_PROCESS
 	};
 
-	Material(Shader* shader);
+	Material(Type type, const std::type_index& classInfo);
+	virtual ~Material();
+
+	virtual void bind() = 0;
 
 	Shader* getShader() const;
 
-	void setType(Type type);
 	Type getType() const;
-	
-	void setColor(const vec4& color);
-	void setColor(const vec3& color);
-	void setColor(float r, float g, float b, float a = 1.0f);
-	vec4 getColor() const;
 
 	std::vector<Texture*>& getTextures();
 	const std::vector<Texture*>& getTextures() const;
@@ -58,12 +57,24 @@ public:
 	void setShadowReceivingEnabled(bool enabled);
 	bool isShadowReceivingEnabled() const;
 
-private:
+	std::type_index getClassInfo() const;
+
+	template<typename T>
+	bool is()
+	{
+		return std::type_index(typeid(T)) == m_classInfo;
+	}
+
+	template<typename T>
+	T* as()
+	{
+		return dynamic_cast<T*>(this);
+	}
+
+protected:
 	Shader* m_shader;
 
 	Type m_type;
-
-	vec4 m_color;
 
 	std::vector<Texture*> m_textures;
 
@@ -80,4 +91,6 @@ private:
 
 	bool m_shadowCastingEnabled;
 	bool m_shadowReceivingEnabled;
+
+	std::type_index m_classInfo;
 };

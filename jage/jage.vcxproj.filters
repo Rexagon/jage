@@ -65,9 +65,6 @@
     <ClCompile Include="Mesh.cpp">
       <Filter>Core\Stuff\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="FirstPersonController.cpp">
-      <Filter>Core\EntityComponents</Filter>
-    </ClCompile>
     <ClCompile Include="Log.cpp">
       <Filter>Core\Stuff\Log</Filter>
     </ClCompile>
@@ -98,9 +95,6 @@
     <ClCompile Include="RenderCommandBuffer.cpp">
       <Filter>Core\Stuff\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="SunComponent.cpp">
-      <Filter>Core\EntityComponents</Filter>
-    </ClCompile>
     <ClCompile Include="SkySystem.cpp">
       <Filter>Core\EntitySystems</Filter>
     </ClCompile>
@@ -110,11 +104,23 @@
     <ClCompile Include="LightComponent.cpp">
       <Filter>Core\EntityComponents</Filter>
     </ClCompile>
-    <ClCompile Include="MaterialManager.cpp">
-      <Filter>Core\Managers</Filter>
-    </ClCompile>
     <ClCompile Include="MeshGeometry.cpp">
       <Filter>Core\Stuff\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshMaterial.cpp">
+      <Filter>Core\Stuff\Materials</Filter>
+    </ClCompile>
+    <ClCompile Include="FxaaMaterial.cpp">
+      <Filter>Core\Stuff\Materials</Filter>
+    </ClCompile>
+    <ClCompile Include="FirstPersonController.cpp">
+      <Filter>Core\EntitySystems</Filter>
+    </ClCompile>
+    <ClCompile Include="LightMaterial.cpp">
+      <Filter>Core\Stuff\Materials</Filter>
+    </ClCompile>
+    <ClCompile Include="SkyMaterial.cpp">
+      <Filter>Core\Stuff\Materials</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -177,6 +183,9 @@
     </Filter>
     <Filter Include="Core\EntityComponents">
       <UniqueIdentifier>{279ace33-439b-4590-958e-e3b563c18b9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Stuff\Materials">
+      <UniqueIdentifier>{d8a1565d-fb40-4e9f-b9c8-a6ac66fe450d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -243,9 +252,6 @@
     <ClInclude Include="Mesh.h">
       <Filter>Core\Stuff\Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="FirstPersonController.h">
-      <Filter>Core\EntityComponents</Filter>
-    </ClInclude>
     <ClInclude Include="RenderingSystem.h">
       <Filter>Core\EntitySystems</Filter>
     </ClInclude>
@@ -288,20 +294,29 @@
     <ClInclude Include="SkySystem.h">
       <Filter>Core\EntitySystems</Filter>
     </ClInclude>
-    <ClInclude Include="SunComponent.h">
-      <Filter>Core\EntityComponents</Filter>
-    </ClInclude>
     <ClInclude Include="Texture.h">
       <Filter>Core\Resources\Texture</Filter>
     </ClInclude>
     <ClInclude Include="LightComponent.h">
       <Filter>Core\EntityComponents</Filter>
     </ClInclude>
-    <ClInclude Include="MaterialManager.h">
-      <Filter>Core\Managers</Filter>
-    </ClInclude>
     <ClInclude Include="MeshGeometry.h">
       <Filter>Core\Stuff\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshMaterial.h">
+      <Filter>Core\Stuff\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="FxaaMaterial.h">
+      <Filter>Core\Stuff\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="FirstPersonController.h">
+      <Filter>Core\EntitySystems</Filter>
+    </ClInclude>
+    <ClInclude Include="LightMaterial.h">
+      <Filter>Core\Stuff\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="SkyMaterial.h">
+      <Filter>Core\Stuff\Materials</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

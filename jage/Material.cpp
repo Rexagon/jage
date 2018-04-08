@@ -2,12 +2,17 @@
 
 #include "RenderStateManager.h"
 
-Material::Material(Shader * shader) :
-	m_shader(shader), m_type(DEFERRED), m_color(1.0f, 1.0f, 1.0f, 1.0f),
+Material::Material(Type type, const std::type_index& classInfo) :
+	m_shader(nullptr), m_type(type),
 	m_depthTestEnabled(true), m_depthWriteEnabled(true), m_depthTestFunction(GL_GEQUAL),
 	m_faceCullingEnabled(true), m_faceCullingSide(GL_BACK),
 	m_blendingEnabled(false), m_blendingFunctionSrc(GL_SRC_ALPHA), m_blendingFunctionDst(GL_ONE_MINUS_SRC_ALPHA),
-	m_shadowCastingEnabled(true), m_shadowReceivingEnabled(true)
+	m_shadowCastingEnabled(true), m_shadowReceivingEnabled(true),
+	m_classInfo(classInfo)
+{
+}
+
+Material::~Material()
 {
 }
 
@@ -16,34 +21,9 @@ Shader * Material::getShader() const
 	return m_shader;
 }
 
-void Material::setType(Type type)
-{
-	m_type = type;
-}
-
 Material::Type Material::getType() const
 {
 	return m_type;
-}
-
-void Material::setColor(const vec4 & color)
-{
-	m_color = color;
-}
-
-void Material::setColor(const vec3 & color)
-{
-	m_color = vec4(color, 1.0f);
-}
-
-void Material::setColor(float r, float g, float b, float a)
-{
-	m_color = vec4(r, g, b, a);
-}
-
-vec4 Material::getColor() const
-{
-	return m_color;
 }
 
 std::vector<Texture*>& Material::getTextures()
@@ -150,4 +130,9 @@ void Material::setShadowReceivingEnabled(bool enabled)
 bool Material::isShadowReceivingEnabled() const
 {
 	return m_shadowReceivingEnabled;
+}
+
+std::type_index Material::getClassInfo() const
+{
+	return m_classInfo;
 }

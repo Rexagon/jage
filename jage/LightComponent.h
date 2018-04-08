@@ -4,6 +4,7 @@
 
 #include "Math.h"
 #include "FrameBuffer.h"
+#include "LightMaterial.h"
 #include "CameraComponent.h"
 
 class LightComponent : private CameraComponent
@@ -41,10 +42,13 @@ public:
 	mat4 getViewMatrix() const;
 	mat4 getProjectionMatrix() const;
 
+	LightMaterial* getMaterial() const;
+
 private:
 	vec3 m_color;
 	Type m_type;
 
 	uvec2 m_shadowBufferSize;
+	std::unique_ptr<LightMaterial> m_material;
 	std::unique_ptr<FrameBuffer> m_shadowBuffer;
 };

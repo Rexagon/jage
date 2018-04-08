@@ -21,6 +21,12 @@ void RenderingSystem::init()
 	}
 
 	m_commandBuffer = std::make_unique<RenderCommandBuffer>(this);
+	
+	ShaderFactory::FromFile shadowVertexSource("shaders/shadow.vert");
+	ShaderFactory::FromFile shadowFragmentSource("shaders/shadow.frag");
+	ResourceManager::bind<ShaderFactory>("shadow_shader", shadowVertexSource, shadowFragmentSource);
+	m_shadowShader = ResourceManager::get<Shader>("shadow_shader");
+	m_shadowShader->setAttribute(0, "position");
 }
 
 void RenderingSystem::close()
@@ -56,7 +62,7 @@ void RenderingSystem::update(const float dt)
 		std::shared_ptr<GameObject> object = m_manager->get(id);
 
 		if (object != nullptr) {
-			m_commandBuffer->push(component.getMesh(), object->getGlobalTransformation(), &component.getMaterial());
+			m_commandBuffer->push(component.getMesh(), object->getGlobalTransformation(), component.getMaterial());
 		}
 	});
 
@@ -137,17 +143,17 @@ void RenderingSystem::update(const float dt)
 	}
 	m_geometryBuffer->getDepthStencilTexture()->bind(3);
 
-	RenderStateManager::setCurrentShader(MaterialManager::getLightShader());
-	MaterialManager::getLightShader()->setUniform("u_inversedViewProjection", glm::inverse(m_mainCameraData->getViewProjectionMatrix()));
+	mat4 inversedViewProjection = glm::inverse(m_mainCameraData->getViewProjectionMatrix());
 
-	m_manager->each<LightComponent>([this](EntityId id, LightComponent& component) {
+	m_manager->each<LightComponent>([this, &inversedViewProjection](EntityId id, LightComponent& component) {
 		std::shared_ptr<GameObject> object = m_manager->get(id);
 
-		Shader* shader = MaterialManager::getLightShader();
-		shader->setUniform("u_isShadowsEnabled", static_cast<int>(component.isShadowCastingEnabled()));
-		shader->setUniform("u_direction", object->getDirectionFront());
-		shader->setUniform("u_color", component.getColor());
-		shader->setUniform("u_lightViewProjection", component.getViewProjectionMatrix());
+		LightMaterial* lightMaterial = component.getMaterial();
+
+		lightMaterial->bind();
+		lightMaterial->setDirection(object->getDirectionFront());
+		lightMaterial->setInversedViewProjection(inversedViewProjection);
+		lightMaterial->setLightViewProjection(component.getViewProjectionMatrix());
 
 		if (component.isShadowCastingEnabled()) {
 			component.getShadowBuffer()->getDepthStencilTexture()->bind(4);
@@ -250,7 +256,7 @@ void RenderingSystem::addPostProcess(size_t order, Material * material)
 void RenderingSystem::renderCustomCommand(const RenderCommand * command, bool affectRenderState)
 {
 	const Mesh* mesh;
-	const Material* material;
+	Material* material;
 	Shader* shader;
 
 	if ((mesh = command->mesh) == nullptr ||
@@ -272,7 +278,7 @@ void RenderingSystem::renderCustomCommand(const RenderCommand * command, bool af
 		RenderStateManager::setFaceCullingSide(material->getFaceCullingSide());
 	}
 
-	RenderStateManager::setCurrentShader(shader);
+	material->bind();
 	shader->setUniform("u_transformation", command->transform);
 	shader->setUniform("u_cameraProjection", m_mainCameraData->getProjectionMatrix());
 	shader->setUniform("u_cameraViewProjection", m_mainCameraData->getViewProjectionMatrix());
@@ -288,15 +294,9 @@ void RenderingSystem::renderCustomCommand(const RenderCommand * command, bool af
 
 void RenderingSystem::renderShadowCastCommand(const RenderCommand * command, LightComponent* lightData)
 {
-	Shader* shader;
-
-	if ((shader = MaterialManager::getShadowShader()) == nullptr) {
-		return;
-	}
-
-	RenderStateManager::setCurrentShader(shader);
-	shader->setUniform("u_transformation", command->transform);
-	shader->setUniform("u_cameraViewProjection", lightData->getViewProjectionMatrix());
+	m_shadowShader->bind();
+	m_shadowShader->setUniform("u_transformation", command->transform);
+	m_shadowShader->setUniform("u_cameraViewProjection", lightData->getViewProjectionMatrix());
 
 	command->mesh->draw();
 }
@@ -314,7 +314,7 @@ void RenderingSystem::renderPostProcessingCommand(const PostProcessCommand * com
 
 	RenderStateManager::setDepthTestEnabled(false);
 
-	RenderStateManager::setCurrentShader(shader);
+	material->bind();
 	shader->setUniform("u_screenSize", m_renderSize);
 	shader->setUniform("u_screenSizeInverted", vec2(1.0f / m_renderSize.x, 1.0f / m_renderSize.y));
 	shader->setUniform("u_screenTexture", 0);

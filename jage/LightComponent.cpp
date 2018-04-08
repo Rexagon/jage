@@ -2,8 +2,10 @@
 
 LightComponent::LightComponent(const vec3 & color, Type type) :
 	m_color(color), m_type(type), 
-	m_shadowBufferSize(2048.0f, 2048.0f), m_shadowBuffer(nullptr)
+	m_shadowBufferSize(2048.0f, 2048.0f), m_shadowBuffer(nullptr),
+	m_material(nullptr)
 {
+	m_material = std::make_unique<LightMaterial>();
 }
 
 LightComponent::LightComponent(const LightComponent & other)
@@ -17,6 +19,7 @@ LightComponent::LightComponent(const LightComponent & other)
 void LightComponent::setColor(const vec3 & color)
 {
 	m_color = color;
+	m_material->setColor(color);
 }
 
 vec3 LightComponent::getColor() const
@@ -58,6 +61,8 @@ void LightComponent::setShadowCastingEnabled(bool enabled)
 	else if (m_shadowBuffer != nullptr && !enabled) {
 		m_shadowBuffer.reset();
 	}
+
+	m_material->setShadowCastingEnabled(enabled);
 }
 
 bool LightComponent::isShadowCastingEnabled() const
@@ -115,4 +120,9 @@ mat4 LightComponent::getViewMatrix() const
 mat4 LightComponent::getProjectionMatrix() const
 {
 	return CameraComponent::getProjectionMatrix();
+}
+
+LightMaterial * LightComponent::getMaterial() const
+{
+	return m_material.get();
 }

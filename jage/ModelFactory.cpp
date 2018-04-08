@@ -7,8 +7,8 @@
 #include <assimp/scene.h>
 
 #include "ResourceManager.h"
-#include "MaterialManager.h"
 #include "TextureFactory.h"
+#include "MeshMaterial.h"
 #include "FileManager.h"
 #include "Log.h"
 
@@ -39,6 +39,7 @@ void * ModelFactory::load()
 			aiProcess_GenSmoothNormals |
 			aiProcess_CalcTangentSpace |
 			aiProcess_Triangulate |
+			aiProcess_FlipUVs |
 			aiProcess_JoinIdenticalVertices |
 			aiProcess_SortByPType);
 
@@ -51,7 +52,7 @@ void * ModelFactory::load()
 		ResourceManager::bind<TextureFactory>("default_diffuse", "textures/default_diffuse.png");
 		ResourceManager::bind<TextureFactory>("default_normals", "textures/default_normals.png");
 
-		model->m_materials.resize(scene->mNumMaterials, Material(nullptr));
+		model->m_materials.resize(scene->mNumMaterials);
 		for (size_t i = 0; i < scene->mNumMaterials; ++i) {
 			const aiMaterial* materialData = scene->mMaterials[i];
 
@@ -93,7 +94,8 @@ void * ModelFactory::load()
 				normalsTexture = ResourceManager::get<Texture>("default_normals");
 			}
 
-			model->m_materials[i] = MaterialManager::createMeshMaterial(albedoTexture, normalsTexture);
+			model->m_materials[i].setAlbedoTexture(albedoTexture);
+			model->m_materials[i].setNormalsTexture(normalsTexture);
 		}
 
 		// Loading meshes

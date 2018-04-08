@@ -2,7 +2,7 @@
 
 #include "Log.h"
 
-MeshComponent::MeshComponent(Mesh * mesh, const Material& material) :
+MeshComponent::MeshComponent(Mesh * mesh, std::shared_ptr<Material> material) :
 	m_mesh(mesh), m_material(material)
 {
 }
@@ -17,12 +17,12 @@ Mesh * MeshComponent::getMesh() const
 	return m_mesh;
 }
 
-void MeshComponent::setMaterial(const Material& material)
+void MeshComponent::setMaterial(std::shared_ptr<Material> material)
 {
 	m_material = material;
 }
 
-Material& MeshComponent::getMaterial()
+Material* MeshComponent::getMaterial()
 {
-	return m_material;
+	return m_material.get();
 }
