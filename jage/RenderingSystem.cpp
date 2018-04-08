@@ -150,10 +150,11 @@ void RenderingSystem::update(const float dt)
 
 		LightMaterial* lightMaterial = component.getMaterial();
 
-		lightMaterial->bind();
 		lightMaterial->setDirection(object->getDirectionFront());
 		lightMaterial->setInversedViewProjection(inversedViewProjection);
 		lightMaterial->setLightViewProjection(component.getViewProjectionMatrix());
+
+		lightMaterial->bind();
 
 		if (component.isShadowCastingEnabled()) {
 			component.getShadowBuffer()->getDepthStencilTexture()->bind(4);

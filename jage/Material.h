@@ -14,7 +14,7 @@ public:
 	{
 		DEFERRED,
 		FORWARD,
-		POST_PROCESS
+		POST_PROCESS,
 	};
 
 	Material(Type type, const std::type_index& classInfo);

@@ -56,6 +56,9 @@ void Game::onInit()
 	m_fxaaMaterial = std::make_unique<FxaaMaterial>();
 	m_renderingSystem->addPostProcess(0, m_fxaaMaterial.get());
 
+	m_abberationMaterial = std::make_unique<AbberationMaterial>();
+	m_renderingSystem->addPostProcess(1, m_abberationMaterial.get());
+
 	m_skySystem->setSun(sun);
 	m_skySystem->setTime(8, 0);
 

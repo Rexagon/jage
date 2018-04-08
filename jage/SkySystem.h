@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "Mesh.h"
 #include "GameObject.h"
 #include "SkyMaterial.h"
@@ -20,6 +22,7 @@ public:
 	void update(const float dt) override;
 
 	void setSun(std::shared_ptr<GameObject> sun);
+
 	std::shared_ptr<GameObject> createSun();
 
 	void setTime(unsigned int hours, unsigned int minutes = 0);

@@ -200,6 +200,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AbberationMaterial.cpp" />
     <ClCompile Include="CameraComponent.cpp" />
     <ClCompile Include="Core.cpp" />
     <ClCompile Include="CursorManager.cpp" />
@@ -243,6 +244,7 @@
     <ClCompile Include="Transformable.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AbberationMaterial.h" />
     <ClInclude Include="AbstractFactory.h" />
     <ClInclude Include="CameraComponent.h" />
     <ClInclude Include="Constants.h" />

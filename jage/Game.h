@@ -7,6 +7,7 @@
 #include "RenderingSystem.h"
 #include "SkySystem.h"
 
+#include "AbberationMaterial.h"
 #include "FxaaMaterial.h"
 
 class Game : public BaseScene
@@ -28,5 +29,6 @@ private:
 	std::shared_ptr<GameObject> m_camera;
 	FirstPersonController m_cameraController;
 
+	std::unique_ptr<AbberationMaterial> m_abberationMaterial;
 	std::unique_ptr<FxaaMaterial> m_fxaaMaterial;
 };
