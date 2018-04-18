@@ -227,6 +227,7 @@
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelFactory.cpp" />
     <ClCompile Include="MusicFactory.cpp" />
+    <ClCompile Include="Packet.cpp" />
     <ClCompile Include="Pool.cpp" />
     <ClCompile Include="RenderCommandBuffer.cpp" />
     <ClCompile Include="RenderingSystem.cpp" />
@@ -272,6 +273,7 @@
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModelFactory.h" />
     <ClInclude Include="MusicFactory.h" />
+    <ClInclude Include="Packet.h" />
     <ClInclude Include="Pool.h" />
     <ClInclude Include="RenderCommandBuffer.h" />
     <ClInclude Include="RenderingSystem.h" />

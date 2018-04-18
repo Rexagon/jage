@@ -122,6 +122,9 @@
     <ClCompile Include="AbberationMaterial.cpp">
       <Filter>Core\Stuff\Materials</Filter>
     </ClCompile>
+    <ClCompile Include="Packet.cpp">
+      <Filter>Core\Network</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">
@@ -186,6 +189,9 @@
     </Filter>
     <Filter Include="Core\Stuff\Materials">
       <UniqueIdentifier>{d8a1565d-fb40-4e9f-b9c8-a6ac66fe450d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Network">
+      <UniqueIdentifier>{e4ca5f71-bf02-4dee-bdba-faf4908c123a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -317,6 +323,9 @@
     </ClInclude>
     <ClInclude Include="AbberationMaterial.h">
       <Filter>Core\Stuff\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="Packet.h">
+      <Filter>Core\Network</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
